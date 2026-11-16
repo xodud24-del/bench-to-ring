@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /hof/{id} {
+      allow read: if true;
+      allow update, delete: if false;
+      allow create: if
+        request.resource.data.keys().hasOnly(['name','nat','pos','num','seasons','pts','gp','hi','titles','mvp','allstar','score','teams','when','a','dev','at'])
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 20
+        && request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score < 100000
+        && request.resource.data.pts is number && request.resource.data.pts >= 0 && request.resource.data.pts < 200000
+        && request.resource.data.titles is number && request.resource.data.titles >= 0 && request.resource.data.titles <= 40
+        && request.resource.data.mvp is number && request.resource.data.mvp >= 0 && request.resource.data.mvp <= 40
+        && request.resource.data.seasons is number && request.resource.data.seasons <= 40
+        && request.resource.data.a is map && request.resource.data.teams is list && request.resource.data.teams.size() <= 6
+        && request.resource.data.dev is string && request.resource.data.dev.size() <= 20
+        && request.resource.data.at == request.time;
+    }
+  }
+}
