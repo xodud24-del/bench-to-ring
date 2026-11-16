@@ -991,13 +991,13 @@ function progress(){
   const before={...x};
   for(const [k] of A){
     let g=0;
-    if(age<=21)g=room(k)*rf(.07,.13)+mb*rf(.4,.9);
-    else if(age<=25)g=room(k)*rf(.045,.085)+mb*rf(.15,.55);
+    if(age<=21)g=room(k)*rf(.075,.14)+mb*rf(.45,.95);
+    else if(age<=25)g=room(k)*rf(.05,.09)+mb*rf(.18,.6);
     else if(age<=27)g=room(k)*rf(.01,.04)+mb*rf(0,.3);
     else g=rf(-.7,.3);
     if(fk.has(k))g+=(age<=25?rf(1.4,2.9):age<=28?rf(.7,1.8):rf(.2,1))*(p.buff&&p.buff.train?1.5:1);
     if(k==='iq')g+=age<34?rf(.5,1.8):0;
-    const DECL=Math.min(p.decl,31)-2,DR=p.drate*1.45;
+    const DECL=Math.min(p.decl,31)-2,DR=p.drate*1.37;
     if(age>=DECL){
       const d=(age-DECL+1)*DR*.8;
       if(['spd','jmp','sta'].includes(k))g-=rf(1.4,3.2)*DR+d*.5;
@@ -1208,6 +1208,7 @@ function act(o){
    case 'buy':G.p.retiring=0;startOwner(o);break;
    case 'nobuy':if(G.p.retiring&&!G.coach)G.q.unshift(retireChoice());break;
    case 'sell':G.p.cash+=G.owner.val*G.owner.share;endCareer();break;
+   case 'oev':{const ow=G.owner;owX(ow);const [t,x]=OEV[o.e].o[o.j][2](ow);ow.b=clamp(ow.b,-6,8);G.q.unshift({type:'info',eye:'선택의 결과',t,x});break}
   }
   save();
 }
@@ -1275,13 +1276,13 @@ function coachSeasonGo(){
   const won=po&&po.won,q=[],diff=pre-rank,dW=w-expW;
   if(head){c.hs++;c.w+=me.w;c.l+=me.l}
   c.seasons++;const du=head?-1:(c.duty||0);
-  {const ca=c.age||G.p.age;if(ca<50){c.tac=Math.min(95,c.tac+(R()<.5?1:0)+(du===0?ri(0,2):0));c.dev=Math.min(95,c.dev+(R()<.5?1:0)+(du===1?ri(0,2):0));c.lead=Math.min(95,c.lead+(R()<.4?1:0)+(won?1:0)+(du===2?ri(0,2):0))}
+  {const ca=c.age||G.p.age;if(ca<50){c.tac=Math.min(95,c.tac+(R()<.35?1:0)+(du===0?ri(0,1):0));c.dev=Math.min(95,c.dev+(R()<.35?1:0)+(du===1?ri(0,1):0));c.lead=Math.min(95,c.lead+(R()<.3?1:0)+(won?1:0)+(du===2?ri(0,2):0))}
    /* aging: skills fade from the late 40s, fast after 55 */
    if(ca>=47){const dl=ca<51?[0,2]:ca<55?[1,3]:ca<58?[2,4]:[3,6];const d0=c.tac,d1=c.dev,d2=c.lead;
      c.tac=Math.max(20,c.tac-ri(dl[0],dl[1]));c.dev=Math.max(20,c.dev-ri(dl[0],dl[1]));c.lead=Math.max(20,c.lead-ri(Math.max(0,dl[0]-1),dl[1]-1));
      const lost=(d0-c.tac)+(d1-c.dev)+(d2-c.lead);if(lost>=6)q.push({type:'info',eye:'노화',t:`${ca}세, 예전 같지\n않아요`,x:`경기 흐름을 읽는 속도가 느려졌어요. 전술 −${d0-c.tac}, 육성 −${d1-c.dev}, 리더십 −${d2-c.lead}`})}}
   {const G2=G.p;if(G2.cash==null)G2.cash=G2.earn||0;G2.cash+=({NBA:60,EURO:8,CBA:6,BL:4,NBL:3,KBL:3,GL:1,UKR:1}[lg]||2)*(head?1:c.role==='수석코치'?.4:.25)}
-  const aw=[];if(head&&dW>g*.18&&rank<=3&&R()<.22)aw.push('올해의 감독상');
+  const aw=[];if(head&&dW>g*.18&&rank<=3&&R()<.15)aw.push('올해의 감독상');
   if(won)c.titles.push(`${G.year} ${lgName(lg)} 우승 (${c.team}${head?' 감독':' 코치'})`);
   const poTxt=po?(won?'우승':roundName(lg,po.series.length?po.series[po.series.length-1].left:po.rounds)):'탈락';
   const mainK=OFFK.slice().sort((a,b)=>(B.mix[b]||0)-(B.mix[a]||0))[0];
@@ -1301,22 +1302,22 @@ function coachSeasonGo(){
      else if(sev&&ag>=55&&R()<.6)q.push({type:'choice',eye:'건강 문제',t:'의사가 지도자 생활을\n그만두라고 권했어요',x:`만 ${ag}세. 몸이 먼저예요.`,opts:[{act:'end',label:'지도자 은퇴',sub:'건강을 챙기며 커리어를 마무리해요'},{act:'hstay',label:'계속 벤치를 지킨다',sub:'위험을 감수해요'}]})}}
   c.yrs--;driftTeams();G.year++;c.age++;
   G.q=q;
-  if(head){if(dW<-g*.07)c.bad=(c.bad||0)+1;else c.bad=0}
-  if(head&&c.hs>1&&(c.bad>=2||(dW<-g*.16&&R()<.6))){G.q.push({type:'info',eye:'경질',t:`${c.team}를\n떠나게 됐어요`,x:`기대 승수 ${Math.round(expW)}승에 못 미쳐 감독직에서 물러났어요.`,feed:makeFeed(['coachFire','coachFire','coachFire'],{n:G.p.name,t:c.team},lg)});coachFree(false)}
+  if(head){if(dW<-g*.05)c.bad=(c.bad||0)+1;else c.bad=0}
+  if(head&&c.hs>1&&(c.bad>=2||(dW<-g*.12&&R()<.6))){G.q.push({type:'info',eye:'경질',t:`${c.team}를\n떠나게 됐어요`,x:`기대 승수 ${Math.round(expW)}승에 못 미쳐 감독직에서 물러났어요.`,feed:makeFeed(['coachFire','coachFire','coachFire'],{n:G.p.name,t:c.team},lg)});coachFree(false)}
   else if(c.age>=58&&c.age<63&&R()<.3+(c.age-58)*.12){G.q.push({type:'choice',eye:'은퇴 권유',t:`${c.age}세, 구단이 은퇴를\n권했어요`,x:`전술 ${c.tac} · 육성 ${c.dev} · 리더십 ${c.lead}. 나이가 들며 능력이 떨어지고 있어요.`,opts:[{act:'own',label:'구단주로 제2의 인생',sub:`보유 자금 ${won(myCash())}`},{act:'end',label:'지도자 은퇴',sub:'커리어를 마무리해요'},{act:'hstay',label:'한 시즌 더 버틴다',sub:'능력은 계속 떨어져요'}]})}
   else if(c.age>=63){G.q.push({type:'choice',eye:'지도자 은퇴',t:'예순셋, 벤치를\n떠날 때가 됐어요',x:'',opts:[{act:'own',label:'구단주로 제2의 인생',sub:`보유 자금 ${won(myCash())}`},{act:'end',label:'커리어 기록 남기기',sub:''}]})}
-  else if(c.role==='코치'&&c.seasons>=2&&R()<.18+cRating()/320+(dW>0?.1:0)){c.role='수석코치';c.yrs=2;G.q.push({type:'info',eye:'승진',t:`${c.team}\n수석코치가 됐어요`,x:'감독 바로 옆에서 경기 운영을 맡아요. 전술판이 경기에 더 크게 반영되고, 감독 제안이 들어올 수 있어요.',feed:makeFeed(['coach','coach'],{n:G.p.name,t:c.team},lg)})}
-  else if(c.role==='수석코치'&&R()<.14+cRating()/350+(dW>g*.05?.1:0))coachFree(false);
+  else if(c.role==='코치'&&c.seasons>=2&&R()<.11+cRating()/320+(dW>0?.1:0)){c.role='수석코치';c.yrs=2;G.q.push({type:'info',eye:'승진',t:`${c.team}\n수석코치가 됐어요`,x:'감독 바로 옆에서 경기 운영을 맡아요. 전술판이 경기에 더 크게 반영되고, 감독 제안이 들어올 수 있어요.',feed:makeFeed(['coach','coach'],{n:G.p.name,t:c.team},lg)})}
+  else if(c.role==='수석코치'&&R()<.09+cRating()/350+(dW>g*.05?.1:0))coachFree(false);
   else if(c.yrs<=0)coachFree(false,true);
   save();
 }
 function coachFree(selfQuit,contractEnd){
-  const c=G.coach,r=cRating(),opts=[],want=c.role==='감독'?3:c.role==='수석코치'?(R()<.45+r/300?2:0):(R()<.12+r/400?1:0);
+  const c=G.coach,r=cRating(),opts=[],want=c.role==='감독'?2:c.role==='수석코치'?(R()<.35+r/300?2:0):(R()<.08+r/400?1:0);
   for(let i=0;i<30&&opts.length<want;i++){
     const lg=pick(['KBL','KBL','BL','CBA','NBL','EURO','GL','GL','NBA','UKR']);
-    if(lg==='NBA'&&(r<76||R()<.6))continue;if(lg==='EURO'&&r<68)continue;if(lg==='CBA'&&r<58)continue;
+    if(lg==='NBA'&&(r<80||R()<.65))continue;if(lg==='EURO'&&r<72)continue;if(lg==='CBA'&&r<62)continue;
     const srt=T[lg].slice().sort((a,b)=>teamStr(lg,a)-teamStr(lg,b));const half=Math.ceil(srt.length/2);
-    const team=R()<.8?pick(srt.slice(0,half)):pick(srt.slice(half));
+    const team=R()<.88?pick(srt.slice(0,half)):pick(srt.slice(half));
     if(team===c.team||opts.some(o=>o.team===team))continue;
     const yrs=ri(2,4),rk=T[lg].length-srt.indexOf(team);opts.push({act:'chire',lg,team,yrs,label:`${team} 감독`,sub:`${lgName(lg)} · ${yrs}년 · 전력 ${rk}위 / ${T[lg].length}팀`});
   }
@@ -1442,7 +1443,7 @@ function simTacGame(lg,me,opp,B,c,infl,po){
   const dC=defPenalty(B.def,tm,ls,to),dN=defPenalty(np.def,tm,ls,to);
   const oppOffC=sideOff(lg,to,op.mix,B.def,null,null,60).e,oppOffN=sideOff(lg,to,op.mix,np.def,null,null,60).e;
   const oppOff=(oppOffN-dN)+((oppOffC-dC)-(oppOffN-dN))*infl;
-  const gap=(teamStr(lg,me)-teamStr(lg,opp))*.0105+(c?c.tmp2||0:0);
+  const gap=(teamStr(lg,me)-teamStr(lg,opp))*.0105+(c?(c.tmp2||0)-.009*infl:0);
   const rot=B.rot??1,rotA=po?[-.012,0,.01][rot]:[.008,0,-.006][rot];
   const n=possPerGame(lg,B.pace)*(.97+R()*.06);
   let a=Math.round((myOff+gap/2+rotA)*n+gauss()*6.5),b=Math.round((oppOff-gap/2)*n+gauss()*6.5);
@@ -2156,11 +2157,34 @@ const PRESSQ={
   {q:'왜 이 팀을 선택하셨나요?',a:[['우승할 수 있는 팀이라고 봤어요',{rep:2,trust:2},'구단 수뇌부가 흡족해했어요.'],['저를 가장 원해 준 팀이에요',{rep:2,trust:3},'팬들의 환영 댓글이 쏟아졌어요.'],['조건이 제일 좋았어요',{rep:-2,trust:-2},'솔직했지만 팬들은 서운해했어요.']]},
   {q:'전 소속팀 팬들에게 한마디 하신다면?',a:[['영원히 감사할 거예요',{rep:3},'전 소속팀 팬들도 박수를 보냈어요.'],['이제 과거는 과거죠',{rep:-3},'전 소속팀 팬들이 등을 돌렸어요.'],['곧 코트에서 만나요',{rep:1},'재치 있는 답변이라는 평이에요.']]}]
 };
+/* owner press: d = {fans, b (team strength), m (cash, share of club value)} */
+const OPRESSQ={
+ oNew:[
+  {q:'선수 출신 구단주는 처음입니다. 현장 운영에도 관여하실 건가요?',a:[['농구는 감독에게 맡기고 저는 지원만 하겠습니다',{fans:2,b:.5},'프런트와 현장이 안심했다는 평이에요.'],['제가 코트를 누구보다 잘 압니다. 직접 챙길 거예요',{fans:3,b:-.5},'팬들은 반겼지만 코칭스태프는 긴장했어요.'],['일단 1년은 지켜보겠습니다',{fans:1},'신중하다는 평이에요.']]},
+  {q:'인수 자금이 과하다는 지적도 있습니다.',a:[['이 구단의 가치는 숫자 이상이에요',{fans:4},'팬들이 크게 환영했어요.'],['몇 년 안에 구단 가치를 두 배로 만들겠습니다',{fans:1,m:.01},'투자자들이 반응했어요.'],['제 돈입니다. 걱정 안 하셔도 돼요',{fans:-2},'거만하다는 기사가 나왔어요.']]},
+  {q:'올 시즌 목표를 말씀해 주세요.',a:[['플레이오프입니다. 현실적으로 가겠습니다',{fans:1,b:.3},'무난한 출발이에요.'],['우승입니다. 돈은 아끼지 않겠습니다',{fans:5,m:-.01},'팬들은 열광했고 선수 에이전트들 전화가 늘었어요.'],['리빌딩부터 하겠습니다',{fans:-3,b:.8},'팬들은 실망했지만 프런트는 반겼어요.']]}],
+ oGood:[
+  {q:'성적이 좋습니다. 연장 계약이나 추가 투자 계획이 있나요?',a:[['이 흐름을 지키려면 투자를 아끼지 않겠습니다',{fans:3,b:.8,m:-.01},'선수단 분위기가 더 올라갔어요.'],['지금 전력이면 충분합니다',{fans:-1},'안주한다는 비판도 나와요.'],['감독과 선수들 덕분이에요',{fans:2,b:.3},'라커룸에서 좋은 반응이 나왔어요.']]},
+  {q:'티켓 가격 인상설이 돌고 있습니다.',a:[['팬들 부담은 늘리지 않겠습니다',{fans:4,m:-.005},'팬들이 박수를 보냈어요.'],['좋은 팀을 보려면 그만한 가치가 있죠',{fans:-4,m:.01},'수익은 늘겠지만 여론이 차가워졌어요.'],['아직 정해진 건 없습니다',{},'무난하게 넘어갔어요.']]},
+  {q:'다른 구단이 감독을 노린다는 소문이 있습니다.',a:[['우리 감독은 어디도 안 갑니다. 대우해 드릴 겁니다',{fans:2,b:.6,m:-.005},'감독이 공개적으로 감사를 전했어요.'],['감독 의사를 존중하겠습니다',{fans:-1,b:-.3},'흔들리는 분위기가 생겼어요.'],['소문에는 답하지 않겠습니다',{},'기자들이 아쉬워했어요.']]}],
+ oMid:[
+  {q:'애매한 시즌이었습니다. 다음 시즌 방향은요?',a:[['과감하게 투자해 전력을 올리겠습니다',{fans:3,b:.8,m:-.01},'팬들의 기대가 커졌어요.'],['젊은 선수 중심으로 다시 짜겠습니다',{fans:-1,b:.5},'장기적인 계획이라는 평가예요.'],['현 체제를 믿습니다',{fans:-2},'변화가 없다는 비판이 나왔어요.']]},
+  {q:'구단 매각설에 대해 한 말씀 해 주세요.',a:[['절대 팔지 않습니다. 이 팀은 제 인생이에요',{fans:5},'팬들이 안심했어요.'],['좋은 제안이 오면 생각해 볼 수 있죠',{fans:-6,m:.005},'팬들이 크게 반발했어요.'],['노코멘트',{fans:-2},'의혹이 더 커졌어요.']]}],
+ oBad:[
+  {q:'최하위권 성적입니다. 책임을 누가 져야 합니까?',a:[['최종 책임은 구단주인 저에게 있습니다',{fans:5,b:.3},'책임지는 태도에 여론이 누그러졌어요.'],['감독과 프런트를 다시 평가하겠습니다',{fans:1,b:-.3},'현장이 술렁이고 있어요.'],['선수들이 기대에 못 미쳤어요',{fans:-3,b:-.8},'선수단이 등을 돌렸다는 보도가 나왔어요.']]},
+  {q:'팬들이 경기장 밖에서 구단주 퇴진 시위를 했습니다.',a:[['팬들의 분노를 이해합니다. 투자로 증명하겠습니다',{fans:4,b:.8,m:-.012},'시위대 일부가 박수를 쳤어요.'],['구단 운영은 팬 투표로 하는 게 아닙니다',{fans:-8},'퇴진 여론이 더 커졌어요.'],['곧 팬 간담회를 열겠습니다',{fans:3},'대화하겠다는 자세가 좋은 평가를 받았어요.']]},
+  {q:'적자가 커지고 있다는 보도입니다.',a:[['단기 적자는 감수합니다. 우승이 먼저예요',{fans:3,m:-.008},'팬들은 반겼지만 투자자들은 걱정해요.'],['비용을 줄이겠습니다',{fans:-3,b:-.5,m:.01},'긴축 소식에 팬들이 실망했어요.'],['보도가 과장됐습니다',{fans:-1},'해명이 설득력이 없다는 반응이에요.']]}],
+ oChamp:[
+  {q:'우승 축하드립니다. 구단주로서 소감은요?',a:[['선수 때 우승보다 더 벅찹니다',{fans:4},'진심 어린 소감이 화제가 됐어요.'],['이건 시작일 뿐입니다. 왕조를 만들겠습니다',{fans:5,b:.5,m:-.008},'팬들이 열광했어요.'],['감독과 선수들이 다 했습니다',{fans:3,b:.6},'선수단이 감동했다는 후문이에요.']]},
+  {q:'우승 보너스와 연장 계약 요구가 쏟아질 텐데요.',a:[['다 들어줄 겁니다. 이 멤버 그대로 갑니다',{fans:4,b:1,m:-.015},'핵심 선수들이 모두 남았어요.'],['합리적인 선에서 협상하겠습니다',{fans:1,b:.3},'무난한 답변이에요.'],['우승했으니 몸값 올려서 팔 선수도 있죠',{fans:-6,m:.015},'팬들이 크게 실망했어요.']]}]
+};
+function ownerPress(kind,eye){const L=OPRESSQ[kind],qs=pick(L),x=L.length>1?L.filter(q=>q!==qs)[0]:null,ow=G.owner;return{type:'press',who:'owner',eye:eye||'구단주 기자회견',kind,qs:x&&R()<.5?[qs,x]:[qs],i:0,log:[],photo:kind==='oChamp'?1:2,team:ow.team,age:ow.age}}
 function pressEvent(kind,eye){const qs=pick(PRESSQ[kind]||PRESSQ.good),x=PRESSQ[kind].length>1?PRESSQ[kind].filter(q=>q!==qs)[0]:null;return{type:'press',eye:eye||'기자회견',kind,qs:x&&R()<.5?[qs,x]:[qs],i:0,log:[],photo:kind==='champ'?1:2}}
 function renderPress(e){
   const q=e.qs[e.i],p=G.p;
-  const prev=e.log.map(l=>`<div class="card"><p class="sub">${esc(l.q)}</p><p class="b" style="margin:6px 0 4px">"${esc(l.a)}"</p><p class="sub">${esc(l.r)} ${l.d.rep?`<i class="${l.d.rep>0?'gup':'gdn'}">평판 ${l.d.rep>0?'+':''}${l.d.rep}</i>`:''} ${l.d.trust?`<i class="${l.d.trust>0?'gup':'gdn'}">감독 신뢰 ${l.d.trust>0?'+':''}${l.d.trust}</i>`:''}</p></div>`).join('');
-  if(!q)return head(e.eye,'기자회견이\n끝났어요',`평판 ${p.rep} · 감독 신뢰 ${trustOf(p)}`)+prev+`<div class="ctaw"><button class="btn" id="ok">확인</button></div>`;
+  const own=e.who==='owner'&&G.owner,tg=(v,t,u='')=>v?`<i class="${v>0?'gup':'gdn'}">${t} ${v>0?'+':''}${v}${u}</i>`:'';
+  const prev=e.log.map(l=>`<div class="card"><p class="sub">${esc(l.q)}</p><p class="b" style="margin:6px 0 4px">"${esc(l.a)}"</p><p class="sub">${esc(l.r)} ${own?tg(l.d.fans,'팬 지지')+' '+tg(l.d.b?Math.round(l.d.b*10)/10:0,'전력')+' '+(l.d.m?`<i class="${l.d.m>0?'gup':'gdn'}">자금 ${l.d.m>0?'+':'−'}${won(Math.abs(l.d.mv||0))}</i>`:''):''}${own?'':''}${!own&&l.d.rep?`<i class="${l.d.rep>0?'gup':'gdn'}">평판 ${l.d.rep>0?'+':''}${l.d.rep}</i>`:''} ${!own&&l.d.trust?`<i class="${l.d.trust>0?'gup':'gdn'}">감독 신뢰 ${l.d.trust>0?'+':''}${l.d.trust}</i>`:''}</p></div>`).join('');
+  if(!q)return head(e.eye,'기자회견이\n끝났어요',own?`팬 지지도 ${G.owner.fans} / 100 · 개인 자산 ${won(p.cash)}`:`평판 ${p.rep} · 감독 신뢰 ${trustOf(p)}`)+prev+`<div class="ctaw"><button class="btn" id="ok">확인</button></div>`;
   const pressPhoto=`<div class="press-pix"><img id="press-photo-frame" alt="기자회견 픽셀 장면"></div>`;
   return head(e.eye,`${e.i+1}번째 질문`,'')+pressPhoto+prev+`<div class="card pressq"><div class="mic">🎙</div><p class="b">${esc(q.q)}</p></div>`+optCards(q.a.map(a=>({label:a[0]})))+`<div class="ctaw"><button class="btn" id="go"${ui.sel==null?' disabled':''}>이렇게 답할게요</button></div>`;
 }
@@ -2169,7 +2193,9 @@ function bindPress(e){
   /* Render the currently selected career player in the press scene. The shared sprite builder reads the exact face, skin, hair, body and uniform data from G.p. */
   const pp=G.p, pressColors=teamColors(pp.team);
   pressPhotoFrames(e);
-  if(go)go.onclick=()=>{const q=e.qs[e.i],a=q.a[ui.sel];ui.sel=null;const p=G.p,d=a[1];p.rep=clamp(p.rep+(d.rep||0),0,100);trustAdd(p,d.trust||0);e.log.push({q:q.q,a:a[0],r:a[2],d});e.i++;save();render()};
+  if(go)go.onclick=()=>{const q=e.qs[e.i],a=q.a[ui.sel];ui.sel=null;const p=G.p;let d=a[1];
+    if(e.who==='owner'&&G.owner){const ow=G.owner;d={...d};ow.fans=clamp(ow.fans+(d.fans||0),0,100);ow.b=clamp(ow.b+(d.b||0),-6,8);if(d.m){d.mv=ow.val*d.m*ow.share;p.cash+=d.mv}}
+    else{p.rep=clamp(p.rep+(d.rep||0),0,100);trustAdd(p,d.trust||0)}e.log.push({q:q.q,a:a[0],r:a[2],d});e.i++;save();render()};
   if(ok)ok.onclick=()=>{ui.sel=null;G.q.shift();save();render()};
 }
 function trustOf(p){if(p.trust==null)p.trust=50;return p.trust}
@@ -2264,21 +2290,52 @@ function startOwner(o){
   if(p.cash==null)p.cash=p.earn||0;p.cash-=o.val*o.share;
   G.owner={lg:o.lg,team:o.team,val:o.val,share:o.share,age,yrs:0,b:0,cq:0,fac:0,fans:50,bud:1,tix:1,titles:[],log:[],paid:o.val*o.share};
   G.q.unshift({type:'cut',cut:{kind:'oown',lg:o.lg,team:o.team,scene:8}},{type:'info',eye:'구단 인수',t:`${o.team}\n구단주가 됐어요`,x:`${lgName(o.lg)} · 지분 ${Math.round(o.share*100)}%. 취임 기자회견에서 "${pick(['우승할 때까지 투자하겠다','팬이 자랑스러운 구단을 만들겠다','10년 안에 왕조를 세우겠다'])}"고 말했어요.`,feed:makeFeed(['ownerNew','ownerNew','ownerNew'],{n:p.name,t:o.team},[NAT_LANG[p.nat]||'en'])});
+  G.q.splice(2,0,ownerPress('oNew','취임 기자회견'));
 }
+/* owner extras: arena, youth academy, star signings */
+function owX(ow){ow.arena=ow.arena||0;ow.acad=ow.acad||0;ow.yth=ow.yth||0;ow.stars=(ow.stars||[]).filter(s=>s.yrs>0);ow.did=ow.did||{};return ow.yth+ow.stars.reduce((a,s)=>a+s.v,0)}
+const owM=(ow,f)=>ow.val*f*ow.share;
+const OEV=[
+ {t:'간판 선수가\n연장 계약을 요구해요',x:'"이 팀에서 은퇴하고 싶지만 대우는 받고 싶다"고 했어요.',o:[
+  ['요구를 다 들어준다',ow=>`자금 −${won(owM(ow,.03))}`,ow=>{G.p.cash-=owM(ow,.03);ow.b+=1;ow.fans=clamp(ow.fans+3,0,100);return['간판 선수가 남았어요','팬들이 안도했고 전력도 지켰어요.']}],
+  ['적당히 깎아서 제안한다',ow=>'반반',ow=>{if(R()<.55){G.p.cash-=owM(ow,.015);ow.b+=.6;return['협상이 타결됐어요','조금 서운해했지만 사인했어요.']}ow.b-=1;ow.fans=clamp(ow.fans-4,0,100);return['협상이 결렬됐어요','간판 선수가 FA로 떠났어요.']}],
+  ['트레이드한다',ow=>`자금 +${won(owM(ow,.01))}`,ow=>{G.p.cash+=owM(ow,.01);ow.b-=.6;ow.fans=clamp(ow.fans-6,0,100);return['간판 선수를 보냈어요','유망주 두 명을 받았지만 팬들이 분노했어요.']}]]},
+ {t:'다른 도시가 연고지\n이전을 제안했어요',x:'새 구장을 공짜로 지어 주겠다고 해요.',o:[
+  ['옮긴다',ow=>'구단 가치 ↑ · 팬 대폭 ↓',ow=>{ow.val=Math.round(ow.val*1.18);ow.fans=clamp(ow.fans-25,5,100);ow.arena=Math.min(3,(ow.arena||0)+1);return['연고지를 옮겼어요','구단 가치는 뛰었지만 원래 팬들은 등을 돌렸어요.']}],
+  ['이 도시에 남는다',ow=>'팬 ↑',ow=>{ow.fans=clamp(ow.fans+7,0,100);return['연고지를 지켰어요','"이 도시를 떠나지 않겠다"는 말에 팬들이 감동했어요.']}]]},
+ {t:'방송사가 중계권\n협상을 하자고 해요',x:'',o:[
+  ['장기 계약으로 안정적으로',ow=>`자금 +${won(owM(ow,.02))}`,ow=>{G.p.cash+=owM(ow,.02);return['장기 중계권 계약','안정적인 수입이 생겼어요.']}],
+  ['단기 계약으로 크게 노린다',ow=>'도박',ow=>{if(R()<.5){G.p.cash+=owM(ow,.05);return['대박 계약','경쟁 입찰이 붙어 기대 이상으로 받았어요.']}return['계약이 틀어졌어요','방송사들이 발을 빼 이번 시즌 중계 수입이 거의 없어요.']}]]},
+ {t:'선수가 음주 사고를\n일으켰어요',x:'주전 선수라 전력 손실이 커요.',o:[
+  ['바로 방출한다',ow=>'전력 ↓ · 팬 ↑',ow=>{ow.b-=.8;ow.fans=clamp(ow.fans+4,0,100);return['단호하게 방출했어요','원칙을 지켰다는 평이에요.']}],
+  ['징계만 하고 감싼다',ow=>'팬 ↓',ow=>{ow.fans=clamp(ow.fans-7,0,100);return['징계로 마무리했어요','솜방망이 처벌이라는 비판이 쏟아졌어요.']}]]},
+ {t:'지역 아동 농구 교실\n후원 요청이 왔어요',x:'',o:[
+  ['후원한다',ow=>`자금 −${won(owM(ow,.008))}`,ow=>{G.p.cash-=owM(ow,.008);ow.fans=clamp(ow.fans+6,0,100);ow.yth=(ow.yth||0)+.2;return['농구 교실을 열었어요','지역 사회가 구단을 다시 보기 시작했어요.']}],
+  ['정중히 거절한다',ow=>'',ow=>{ow.fans=clamp(ow.fans-1,0,100);return['후원을 거절했어요','조용히 넘어갔어요.']}]]},
+ {t:'감독이 선수 영입\n전권을 달라고 해요',x:'',o:[
+  ['전권을 준다',ow=>'도박',ow=>{if(R()<.5){ow.cq=Math.min(3,(ow.cq||0)+1);return['감독이 날개를 달았어요','원하는 선수들을 데려와 팀이 단단해졌어요.']}ow.cq=(ow.cq||0)-1;return['영입이 실패했어요','비싼 선수들이 시스템에 안 맞았어요.']}],
+  ['구단주가 직접 챙긴다',ow=>'',ow=>{ow.b+=.3;return['직접 관여하기로 했어요','감독은 불만이지만 큰 문제는 없었어요.']}]]},
+ {t:'라이벌 구단이 우리 에이스에게\n몰래 접근했어요',x:'탬퍼링 의혹이에요.',o:[
+  ['리그에 공식 제소한다',ow=>'',ow=>{if(R()<.6){G.p.cash+=owM(ow,.01);return['제소가 받아들여졌어요','라이벌 구단이 벌금과 지명권을 잃었고 일부를 보상받았어요.']}ow.fans=clamp(ow.fans-2,0,100);return['증거 불충분','시끄럽기만 했어요.']}],
+  ['에이스에게 확신을 준다',ow=>`자금 −${won(owM(ow,.012))}`,ow=>{G.p.cash-=owM(ow,.012);ow.b+=.5;return['에이스를 붙잡았어요','직접 만나 미래를 약속했어요.']}]]}
+];
+function ownerEvent(){const ow=G.owner;let k=ri(0,OEV.length-1);if(ow.lastEv===k)k=(k+1)%OEV.length;ow.lastEv=k;const E=OEV[k];
+  return{type:'choice',eye:'구단 운영',t:E.t,x:E.x,opts:E.o.map((o,j)=>({act:'oev',e:k,j,label:o[0],sub:o[1](ow)}))}}
 function ownerSeasonGo(){
   const ow=G.owner,lg=ow.lg,p=G.p;
   ow.b=clamp(ow.b+[-1.2,ow.b>0?-.6:ow.b<0?.6:0,1.5][ow.bud],-6,7);
-  const eff=teamStr(lg,ow.team)+ow.b+ow.cq+ow.fac*.4+gauss()*1.5;
+  const ex=owX(ow);ow.yth=Math.min(4,ow.yth+ow.acad*.25);
+  const eff=teamStr(lg,ow.team)+ow.b+ow.cq+ow.fac*.4+ex+gauss()*1.5;
   const pre=T[lg].map(n=>({n,s:teamStr(lg,n)})).sort((a,b)=>b.s-a.s).findIndex(r=>r.n===ow.team)+1;
   const others=standingsOthers(lg,ow.team);let w=0;const g=L[lg].g,pw=1/(1+Math.exp(-(eff-L[lg].str)/4.5));for(let i=0;i<g;i++)if(R()<pw)w++;
   const me={n:ow.team,s:eff,w,l:g-w},rws=others.concat([me]).sort((a,b)=>b.w-a.w||b.s-a.s),rank=rws.indexOf(me)+1;
   let po=null;if(rank<=L[lg].po)po=playoffs(lg,rws,ow.team,eff);const won_=po&&po.won;
   const poTxt=po?(won_?'우승':roundName(lg,po.series.length?po.series[po.series.length-1].left:po.rounds)):'탈락';
   const tm=[.85,1,1.2][ow.tix],cost=ow.val*[.05,.08,.12][ow.bud];
-  const rev=ow.val*.09*(.6+ow.fans/100)*tm*(1+ow.fac*.03)+(po?ow.val*.012*(po.series?po.series.length:1):0);
+  const rev=ow.val*.09*(.6+ow.fans/100)*tm*(1+ow.fac*.03)*(1+ow.arena*.09)+(po?ow.val*.012*(po.series?po.series.length:1):0);
   const profit=rev-cost;p.cash+=profit*ow.share;
   const nT=T[lg].length,top=rank<=Math.ceil(nT/4),bot=rank>nT-Math.ceil(nT/4);
-  ow.fans=clamp(ow.fans+(top?4:bot?-4:0)+[3,0,-3][ow.tix]+(won_?8:0)+(ow.bud===2?1:ow.bud===0?-1:0),5,100);
+  ow.fans=clamp(ow.fans+(top?4:bot?-4:0)+[3,0,-3][ow.tix]+(won_?8:0)+(ow.bud===2?1:ow.bud===0?-1:0)+ow.arena,5,100);
   const old=ow.val;ow.val=Math.round(ow.val*(1+.02+(ow.fans-50)/1000+(won_?.05:0)+clamp(profit/ow.val,-.1,.1)*.3));
   if(won_)ow.titles.push(`${G.year} ${lgName(lg)} 우승 (${ow.team} 구단주)`);
   ow.log.push({y:`${G.year}–${String(G.year+1).slice(2)}`,w,l:g-w,rank,po:poTxt,profit:Math.round(profit),val:ow.val,fans:ow.fans});
@@ -2292,16 +2349,19 @@ function ownerSeasonGo(){
      q.push({type:'info',eye:'건강 문제',t:H[0],x:`${H[1]} (팬 지지 −, 치료비 ${won(cost)})`});if(sev&&ag>=62&&R()<.15+Math.max(0,ag-62)*.03)ow.dead=1}
    if(!ow.dead&&ag>=78&&R()<(ag-76)*.035)ow.dead=1;
    if(ow.dead){q.push({type:'info',eye:'부고',t:`${p.name}\n세상을 떠났어요`,x:`향년 ${ag}세. ${ow.team} 구단주로 마지막 시즌을 보냈어요. 선수들이 검은 리본을 달고 다음 경기에 나섰어요.`});q.push({type:'choice',eye:'부고',t:'커리어가\n끝났어요',x:'',opts:[{act:'death',label:'커리어 돌아보기',sub:''}]})}}
+  ow.stars.forEach(s=>s.yrs--);ow.did={};
+  if(!ow.dead){const pk=won_?'oChamp':top?(R()<.6?'oGood':null):bot?(R()<.75?'oBad':null):(R()<.4?'oMid':null);if(pk)q.push(ownerPress(pk,'시즌 결산 기자회견'));
+    if(R()<.7)q.push(ownerEvent())}
   ow.yrs++;ow.age++;driftTeams();G.year++;
   if(ow.age>=85)q.push({type:'choice',eye:'구단주 은퇴',t:'구단을 다음 세대에\n넘겨줄 때가 됐어요',x:'',opts:[{act:'sell',label:'구단 매각하고 커리어 기록 남기기',sub:''}]});
   G.q=q;save();
 }
 function homeOwner(){
-  const ow=G.owner,p=G.p,ts=Math.round(teamStr(ow.lg,ow.team)+ow.b+ow.cq+ow.fac*.4);
+  const ow=G.owner,p=G.p,ex=owX(ow),ts=Math.round(teamStr(ow.lg,ow.team)+ow.b+ow.cq+ow.fac*.4+ex);
   const sg=(id,list,val)=>`<div class="seg" data-oseg="${id}">${list.map((t,i)=>`<button class="${i===val?'on':''}" data-i="${i}">${esc(t)}</button>`).join('')}</div>`;
   return `<div class="card">${head(`${G.year} 시즌을 앞두고 있어요`,`구단주\n${ow.yrs+1}년 차`,`${esc(ow.team)} · ${lgName(ow.lg)}`)}</div>
   <div class="card wmc">${wm(ow.team)}<div class="me"><div class="mav">${avatarBox(p,72,{outfit:'suit',age:ow.age})}</div><div class="f1"><div class="nm">${esc(p.name)}</div><p class="sub tm" style="gap:6px">${badge(ow.team,20)}${ow.age}세 · 구단주 · 지분 ${Math.round(ow.share*100)}%</p></div><div class="ovr"><span>팀 전력</span><b>${ts}</b></div></div><div class="hr"></div>
-   ${rows([['구단 가치',won(ow.val)],['개인 자산',won(p.cash)],['팬 지지도',`${ow.fans} / 100`],['훈련 시설',`${ow.fac} / 5 단계`],['감독 역량',ow.cq>=2?'명장':ow.cq>=1?'좋음':ow.cq>=0?'보통':'부족']])}</div>
+   ${rows([['구단 가치',won(ow.val)],['개인 자산',won(p.cash)],['팬 지지도',`${ow.fans} / 100`],['훈련 시설',`${ow.fac} / 5 단계`],['경기장',['기본','리모델링','프리미엄 좌석','신축 아레나'][ow.arena]],['유소년 아카데미',`${ow.acad} / 3 단계`],['스타 영입 효과',ow.stars.length?ow.stars.map(s=>`+${s.v} (${s.yrs}년)`).join(', '):'없음'],['감독 역량',ow.cq>=2?'명장':ow.cq>=1?'좋음':ow.cq>=0?'보통':'부족']])}</div>
   <div class="card"><div class="ch"><h2>시즌 운영</h2></div>
    <div class="fr col"><span>선수 연봉 투자</span>${sg('bud',['긴축','보통','올인'],ow.bud)}</div>
    <p class="sub" style="margin:4px 0 10px">${['지출을 줄여 이익을 남겨요. 전력은 조금씩 떨어져요.','지금 전력을 유지해요.','비싼 선수를 모아요. 지출이 크지만 전력이 오르고 팬이 좋아해요.'][ow.bud]}</p>
@@ -2310,6 +2370,12 @@ function homeOwner(){
   ${ow.titles.length?`<div class="card"><div class="ch"><h2>구단주 우승</h2></div>${ow.titles.map(t=>`<p class="li0">🏆 ${esc(t)}</p>`).join('')}</div>`:''}
   <div class="card list">
    <button class="li" id="ofac"><div class="f1"><b>훈련 시설 투자</b><span>${ow.fac>=5?'최고 단계예요':`내 몫 ${won(ow.val*.06*ow.share)} · 전력과 수익이 영구히 올라요`}</span></div>${ICON.chev}</button>
+   <button class="li" id="ostar"><div class="f1"><b>스타 FA 영입</b><span>${ow.did.star?'이번 시즌은 이미 했어요':`내 몫 ${won(owM(ow,.05))} · 3년간 전력 상승, 실패할 수도 있어요`}</span></div>${ICON.chev}</button>
+   <button class="li" id="oarena"><div class="f1"><b>경기장 공사</b><span>${ow.arena>=3?'최고 단계예요':`내 몫 ${won(owM(ow,.1))} · 수익과 팬 지지가 매년 올라요`}</span></div>${ICON.chev}</button>
+   <button class="li" id="oacad"><div class="f1"><b>유소년 아카데미</b><span>${ow.acad>=3?'최고 단계예요':`내 몫 ${won(owM(ow,.04))} · 몇 년에 걸쳐 전력이 쌓여요`}</span></div>${ICON.chev}</button>
+   <button class="li" id="omkt"><div class="f1"><b>마케팅 캠페인</b><span>${ow.did.mkt?'이번 시즌은 이미 했어요':`내 몫 ${won(owM(ow,.015))} · 팬 지지도를 끌어올려요`}</span></div>${ICON.chev}</button>
+   <button class="li" id="oshare"><div class="f1"><b>지분 추가 매입</b><span>${ow.share>=1?'지분 100%예요':`10% 매입 ${won(ow.val*.1)} · 수익 배분이 늘어요`}</span></div>${ICON.chev}</button>
+   <button class="li" id="opress"><div class="f1"><b>기자회견 열기</b><span>${ow.did.press?'이번 시즌은 이미 했어요':'팬과 언론에 직접 메시지를 전해요'}</span></div>${ICON.chev}</button>
    <button class="li" id="ocoach"><div class="f1"><b>감독 교체</b><span>새 감독을 데려와요</span></div>${ICON.chev}</button>
    <button class="li" id="osell"><div class="f1"><b>구단 매각</b><span>지분 ${won(ow.val*ow.share)}을 받고 커리어를 마쳐요</span></div>${ICON.chev}</button>
    <button class="li" id="cnew"><div class="f1"><b>새 커리어 시작하기</b><span>처음부터 새 선수로</span></div>${ICON.chev}</button></div>
@@ -2320,6 +2386,13 @@ function bindOwner(){
   $$('[data-oseg]').forEach(g=>g.onclick=e=>{const b=e.target.closest('button');if(!b)return;ow[g.dataset.oseg]=+b.dataset.i;save();const y=window.scrollY;render();window.scrollTo(0,y)});
   const on2=(id,f)=>{const el=$('#'+id);if(el)el.onclick=f};
   on2('oplay',()=>{ownerSeasonGo();render()});
+  const buy=(id,cost,title,ok,cond)=>on2(id,()=>{if(cond&&!cond())return;const c=cost();confirmSheet(title,`내 몫 부담 ${won(c)} · 보유 ${won(G.p.cash)}`,'진행하기',()=>{if(G.p.cash<c){toast('자금이 부족해요');return}G.p.cash-=c;const m=ok();save();render();toast(m)})});
+  buy('ostar',()=>owM(ow,.05),'스타 FA를 영입할까요?',()=>{ow.did.star=1;const bust=R()<.2,v=bust?.5:ri(2,4);ow.stars.push({v,yrs:3});ow.fans=clamp(ow.fans+(bust?0:4),0,100);return bust?'영입한 스타가 시즌 전 부상을 당했어요':`스타 영입 성공 · 전력 +${v}`},()=>!ow.did.star);
+  buy('oarena',()=>owM(ow,.1),'경기장 공사를 시작할까요?',()=>{ow.arena++;ow.val=Math.round(ow.val*1.04);return['','리모델링이 끝났어요','프리미엄 좌석이 문을 열었어요','신축 아레나가 개장했어요'][ow.arena]},()=>ow.arena<3);
+  buy('oacad',()=>owM(ow,.04),'유소년 아카데미에 투자할까요?',()=>{ow.acad++;return`아카데미 ${ow.acad}단계 · 유망주들이 자라기 시작해요`},()=>ow.acad<3);
+  buy('omkt',()=>owM(ow,.015),'마케팅 캠페인을 할까요?',()=>{ow.did.mkt=1;const d=ri(4,9);ow.fans=clamp(ow.fans+d,0,100);return`팬 지지도 +${d}`},()=>!ow.did.mkt);
+  buy('oshare',()=>ow.val*Math.min(.1,1-ow.share),'지분을 더 사들일까요?',()=>{ow.share=Math.min(1,+(ow.share+.1).toFixed(2));return`지분 ${Math.round(ow.share*100)}%`},()=>ow.share<1);
+  on2('opress',()=>{if(ow.did.press)return;ow.did.press=1;const k=ow.fans<35?'oBad':ow.fans>70?'oGood':'oMid';G.q.unshift(ownerPress(k,'구단주 기자회견'));save();render()});
   on2('ofac',()=>{if(ow.fac>=5)return;const c=ow.val*.06*ow.share;confirmSheet('훈련 시설에 투자할까요?',`내 몫 부담 ${won(c)} · 보유 ${won(G.p.cash)}`,'투자하기',()=>{if(G.p.cash<c){toast('자금이 부족해요');return}G.p.cash-=c;ow.fac++;save();render();toast('새 훈련 시설이 문을 열었어요')})});
   on2('ocoach',()=>{const opts=[['유명 감독 영입',.04,()=>ri(1,3)],['젊은 코치 발탁',.01,()=>ri(-1,3)],['내부 승격',0,()=>ri(-1,1)]];
     openSheet(`<b class="big">감독 교체</b><p class="sub" style="margin:6px 0 10px">보유 ${won(G.p.cash)}</p>${opts.map((o,i)=>`<div class="slot"><div class="f1"><b>${o[0]}</b><span>${o[1]?'내 몫 '+won(ow.val*o[1]*ow.share):'비용 없음'}</span></div><div class="sbtn"><button class="mini blue" data-och="${i}">선택</button></div></div>`).join('')}<button class="btn sec" id="ochx" style="margin-top:12px">취소</button>`,()=>{
@@ -3093,9 +3166,9 @@ async function draftPhotoFrames(p,cut,info={}){
   playFrames(el,gridFrames(W,HH,fr,4),[700,160,160,160,500,300]);
 }
 async function pressPhotoFrames(e){
-  const el=$('#press-photo-frame');if(!el)return;const p=G.p,S=PHOTO_SCENES.press[(e.photo||0)%PHOTO_SCENES.press.length];
-  const sg=await photoSceneGrid(S,{player:{p,age:p.age,colors:teamColors(p.team)}});if(!sg||!el.isConnected)return;
-  const {W,H,g,load}=sg,fr=[];const lo=logoOf(p.team),li=lo?await load(lo):null;
+  const el=$('#press-photo-frame');if(!el)return;const p=G.p,S=PHOTO_SCENES.press[(e.photo||0)%PHOTO_SCENES.press.length],tm=e.team||p.team;
+  const sg=await photoSceneGrid(S,{player:{p,age:e.age||p.age,colors:teamColors(tm)}});if(!sg||!el.isConnected)return;
+  const {W,H,g,load}=sg,fr=[];const lo=logoOf(tm),li=lo?await load(lo):null;
   const stamp=(cx,cy,ls,mask,op=.82)=>{if(!li)return;ls=Math.round(ls);const d=softLogo(li,ls,1);
     for(let y=0;y<ls;y++)for(let xx=0;xx<ls;xx++){const i=(y*ls+xx)*4,a=d[i+3]/255*op;if(a<.05)continue;const X=Math.round(cx-ls/2)+xx,Y=Math.round(cy-ls/2)+y;if(X<0||Y<0||X>=W||Y>=H)continue;const b=g[Y*W+X];if(mask&&!mask(b))continue;g[Y*W+X]=b.map((v,j)=>v*(1-a)+d[i+j]*a)}};
   if(S.teamWall){/* replace the home team's logos on the wall with the player's team */
