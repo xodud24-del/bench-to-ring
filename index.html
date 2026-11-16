@@ -792,7 +792,7 @@ function baseAttrs(d,style){
   for(const k in pb) x[k]+=pb[k];
   const sb=STYLE[style||d.style]; for(const k in sb) x[k]+=sb[k];
   for(const k in x) x[k]=Math.round(clamp(x[k],22,72));
-  const pot=Math.round(59+32*Math.pow(rnd(),2.0));
+  const pot=Math.round(59+32*Math.pow(rnd(),1.2));
   return {x,pot};
 }
 function ovr(x,pos){const w=W[pos];let s=0,t=0;for(const k in w){s+=x[k]*w[k];t+=w[k]}return Math.round(s/t)}
@@ -823,7 +823,7 @@ function startCareer(){
   const {x,pot}=baseAttrs(d);
   const ylg='Y_'+d.start;
   const team=d.school&&T[ylg].includes(d.school)?d.school:pick(T[ylg]);
-  G={v:2,year:2027,p:{...d,age:16,x,pot,lg:ylg,team,yrs:3,rep:5,...(R()<.05?{iron:1,decl:ri(31,33),drate:rf(.6,.85)}:{decl:ri(28,31),drate:rf(1,1.8)}),
+  G={v:2,year:2027,p:{...d,age:16,x,pot,lg:ylg,team,yrs:3,rep:5,...(R()<.5?{iron:1,decl:ri(31,33),drate:rf(.5,.8)}:{decl:ri(28,31),drate:rf(1,1.8)}),
      focus:d.focus.length?d.focus:['슈팅','피지컬'],mil:null,milDone:false,exempt:false,half:false,sus:false,loan:null,
      log:[],tot:{gp:0,pts:0,reb:0,ast:0,stl:0,blk:0},hi:{pts:0},g40:0,td:0,titles:[],awards:[],nt:{caps:0,medals:[]},teams:[team],earn:0,sal:0,proY:0,colY:0},
      q:[],coach:null,done:false,ts:{},feed:[],used:{}};
@@ -4476,6 +4476,9 @@ function showHighlight(h,res,when){
 
 /* ---------- cutscene ---------- */
 const CUTPOSE={champ:{pose:'trophy'},cchamp:{pose:'trophy',outfit:'suit',age:52},mvp:{pose:'trophy',outfit:'suit'},nt:{pose:'medal',outfit:'national'},draft:{pose:'stand',outfit:'suit'},retire:{pose:'stand',outfit:'suit',age:38},mile:{pose:'trophy'},pts:{pose:'dunk'},big:{pose:'dunk'},award:{pose:'trophy'}};
+/* shrink a heading until it fits on one line */
+function fitOneLine(t,max,min){if(!t)return;t.style.whiteSpace='nowrap';t.style.fontSize=max+'px';t.style.display='block';t.style.maxWidth='100%';t.style.overflow='hidden';let f=max;
+  while(f>min&&t.scrollWidth>t.clientWidth+1){f-=1;t.style.fontSize=f+'px'}if(f<=min){t.style.whiteSpace='normal'}t.style.letterSpacing=f<36?'-1px':''}
 function showCut(cut,onClose){
   const p=G.p,el=$('#cut');
   const T2={
@@ -4504,6 +4507,7 @@ function showCut(cut,onClose){
    ${isCoachPix?`<div class="press-pix" style="margin:14px 0 18px"><img id="coach-photo-frame" alt=""></div>`:isDraft?draftHandshake:isAward?`<div class="award-mark"><small>${cut.kind==='mile'?'CAREER MILESTONE':'OFFICIAL SEASON HONOR'}</small><strong>${esc(cut.kind==='mile'?cut.val:cut.award)}</strong></div><div class="av" id="cav"></div>`:img?'':`<div class="av" id="cav"></div>`}
    <div class="ctl"><button class="btn" id="cx">계속</button>${img?'':`<p class="cs">수상 컷신은 선수 픽셀 캐릭터와 타이틀 배너로 표시됩니다.</p>`}</div></div>`;
   el.classList.add('on');el.scrollTop=0;el.dataset.k=cut.kind;
+  fitOneLine(el.querySelector('.bigt'),54,22);fitOneLine(el.querySelector('.award-mark strong'),34,14);
   if(isCoachPix)coachPhotoFrames(cut);
   else if(isDraft){
     const playerScene={p,age:p.age,suit:'#16171c',tie:'#eeeeea',colors:teamColors(cut.team||p.team),num:p.num};
