@@ -571,6 +571,11 @@ function makeFeed(cats,v,ctx){
     const f=useC(pick(cs),lang,seen);if(!f)continue;const t=fill(f[1],v);if(txt.has(t)||/\{\w\}/.test(t))continue;txt.add(t);nf++;
     out.splice(ri(0,out.length),0,{ko:0,lang,src:pick(FX_SRC[lang]||['X']),user:uname(),t,tr:fill(f[2],v),likes:likeN(),ago:ri(1,23)+'시간 전'});
   }
+  /* fallback: some categories have no comments in the audience's language; never leave a feed empty */
+  if(out.length<3){for(const lang of ['ko','en']){for(const cat of cats){if(out.length>=4)break;
+    if(lang==='ko'){const c=useC(cat,'ko',seen);if(!c)continue;const t=fill(c[0],v);if(txt.has(t)||/\{\w\}/.test(t))continue;txt.add(t);out.push({ko:1,src:pick(KO_SRC),user:R()<.5?koName():uname().slice(0,4)+'****',t,tag:c[1],likes:likeN(),ago:ri(1,59)+'분 전'})}
+    else{if(!(FX[cat]&&FX[cat].some(x=>x[0]==='en')))continue;const f=useC(cat,'en',seen);if(!f)continue;const t=fill(f[1],v);if(txt.has(t)||/\{\w\}/.test(t))continue;txt.add(t);out.push({ko:0,lang:'en',src:pick(FX_SRC.en||['X']),user:uname(),t,tr:fill(f[2],v),likes:likeN(),ago:ri(1,23)+'시간 전'})}}
+    if(out.length>=3)break}}
   out.forEach(c=>c.re=mkReplies(c));
   const top=out.reduce((a,b)=>!a||b.likes>a.likes?b:a,null);if(top&&top.likes>1000)top.best=1;
   return out;
