@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bench2ring.vercel.app/sitemap.xml
+Sitemap: https://bench-to-mvp.vercel.app/sitemap.xml
