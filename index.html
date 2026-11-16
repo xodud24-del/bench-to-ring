@@ -1275,7 +1275,11 @@ function coachSeasonGo(){
   const won=po&&po.won,q=[],diff=pre-rank,dW=w-expW;
   if(head){c.hs++;c.w+=me.w;c.l+=me.l}
   c.seasons++;const du=head?-1:(c.duty||0);
-  c.tac=Math.min(95,c.tac+(R()<.5?1:0)+(du===0?ri(0,2):0));c.dev=Math.min(95,c.dev+(R()<.5?1:0)+(du===1?ri(0,2):0));c.lead=Math.min(95,c.lead+(R()<.4?1:0)+(won?1:0)+(du===2?ri(0,2):0));
+  {const ca=c.age||G.p.age;if(ca<50){c.tac=Math.min(95,c.tac+(R()<.5?1:0)+(du===0?ri(0,2):0));c.dev=Math.min(95,c.dev+(R()<.5?1:0)+(du===1?ri(0,2):0));c.lead=Math.min(95,c.lead+(R()<.4?1:0)+(won?1:0)+(du===2?ri(0,2):0))}
+   /* aging: skills fade from the late 40s, fast after 55 */
+   if(ca>=47){const dl=ca<51?[0,2]:ca<55?[1,3]:ca<58?[2,4]:[3,6];const d0=c.tac,d1=c.dev,d2=c.lead;
+     c.tac=Math.max(20,c.tac-ri(dl[0],dl[1]));c.dev=Math.max(20,c.dev-ri(dl[0],dl[1]));c.lead=Math.max(20,c.lead-ri(Math.max(0,dl[0]-1),dl[1]-1));
+     const lost=(d0-c.tac)+(d1-c.dev)+(d2-c.lead);if(lost>=6)q.push({type:'info',eye:'노화',t:`${ca}세, 예전 같지\n않아요`,x:`경기 흐름을 읽는 속도가 느려졌어요. 전술 −${d0-c.tac}, 육성 −${d1-c.dev}, 리더십 −${d2-c.lead}`})}}
   {const G2=G.p;if(G2.cash==null)G2.cash=G2.earn||0;G2.cash+=({NBA:60,EURO:8,CBA:6,BL:4,NBL:3,KBL:3,GL:1,UKR:1}[lg]||2)*(head?1:c.role==='수석코치'?.4:.25)}
   const aw=[];if(head&&dW>g*.18&&rank<=3&&R()<.22)aw.push('올해의 감독상');
   if(won)c.titles.push(`${G.year} ${lgName(lg)} 우승 (${c.team}${head?' 감독':' 코치'})`);
@@ -1288,18 +1292,19 @@ function coachSeasonGo(){
   q.push({type:'cres',d:{rank,w:me.w,l:me.l,pre,po:poTxt,won,aw,gr,head,team:c.team,lg,expW:Math.round(expW),ppg:+(pf/g).toFixed(1),opg:+(pa/g).toFixed(1),prs,def:B.def,infl,role:c.role,feat:feat&&{opp:feat.opp,a:feat.a,b:feat.b,per:feat.per,opDef:feat.opDef,opMix:feat.opMix,mix:{...B.mix},def:B.def,spots:JSON.parse(JSON.stringify(B.spots)),win:feat.win}},feed:makeFeed(won?['cchamp','cchamp','coach']:['coach','coach','coach'],{n:G.p.name,t:c.team},lg)});
   if(aw.includes('올해의 감독상'))q.push({type:'cut',cut:{kind:'coty',lg,team:c.team,scene:1}});
   if(won)q.push({type:'cut',cut:{kind:'cchamp',lg,team:c.team,head}});
-  {/* health: chances rise with age */const ag=c.age||G.p.age,pr=.05+Math.max(0,ag-48)*.012;
-   if(R()<pr){const sev=R()<.12+Math.max(0,ag-60)*.02;
+  {/* health: chances rise with age */const ag=c.age||G.p.age,pr=.06+Math.max(0,ag-45)*.028;
+   if(R()<pr){const sev=R()<.14+Math.max(0,ag-52)*.045;
      const H=sev?pick([['심장 이상 소견','정밀 검사에서 심장 이상이 발견돼 시즌 막판 벤치를 비웠어요.'],['뇌혈관 질환 의심','갑작스러운 어지럼증으로 쓰러져 한 달 넘게 입원했어요.'],['허리 디스크 수술','통증을 참다 결국 수술대에 올랐어요.']]):pick([['과로로 인한 탈진','시즌 내내 밤샘 분석을 하다 결국 몸이 버티지 못했어요.'],['위궤양','성적 스트레스로 위궤양 진단을 받았어요.'],['수면 장애','연패가 이어지며 잠을 거의 못 잤어요.'],['고혈압 진단','주치의가 경기 중 흥분을 줄이라고 경고했어요.']]);
      c.tac=Math.max(20,c.tac-(sev?ri(3,6):ri(1,2)));c.lead=Math.max(20,c.lead-(sev?ri(2,4):ri(0,2)));
      q.push({type:'info',eye:'건강 문제',t:`${H[0]}`,x:`${H[1]} (전술 −, 리더십 −)`});
-     if(sev&&ag>=60&&R()<.12+Math.max(0,ag-60)*.03){q.push({type:'info',eye:'부고',t:`${G.p.name}\n세상을 떠났어요`,x:`향년 ${ag}세. ${c.team} 벤치를 지키던 중 끝내 일어나지 못했어요. 농구계 전체가 애도했어요.`});q.push({type:'choice',eye:'부고',t:'커리어가\n끝났어요',x:'',opts:[{act:'death',label:'커리어 돌아보기',sub:''}]})}
-     else if(sev&&ag>=62&&R()<.45)q.push({type:'choice',eye:'건강 문제',t:'의사가 지도자 생활을\n그만두라고 권했어요',x:`만 ${ag}세. 몸이 먼저예요.`,opts:[{act:'end',label:'지도자 은퇴',sub:'건강을 챙기며 커리어를 마무리해요'},{act:'hstay',label:'계속 벤치를 지킨다',sub:'위험을 감수해요'}]})}}
+     if(sev&&ag>=55&&R()<.1+Math.max(0,ag-55)*.05){q.push({type:'info',eye:'부고',t:`${G.p.name}\n세상을 떠났어요`,x:`향년 ${ag}세. ${c.team} 벤치를 지키던 중 끝내 일어나지 못했어요. 농구계 전체가 애도했어요.`});q.push({type:'choice',eye:'부고',t:'커리어가\n끝났어요',x:'',opts:[{act:'death',label:'커리어 돌아보기',sub:''}]})}
+     else if(sev&&ag>=55&&R()<.6)q.push({type:'choice',eye:'건강 문제',t:'의사가 지도자 생활을\n그만두라고 권했어요',x:`만 ${ag}세. 몸이 먼저예요.`,opts:[{act:'end',label:'지도자 은퇴',sub:'건강을 챙기며 커리어를 마무리해요'},{act:'hstay',label:'계속 벤치를 지킨다',sub:'위험을 감수해요'}]})}}
   c.yrs--;driftTeams();G.year++;c.age++;
   G.q=q;
   if(head){if(dW<-g*.07)c.bad=(c.bad||0)+1;else c.bad=0}
   if(head&&c.hs>1&&(c.bad>=2||(dW<-g*.16&&R()<.6))){G.q.push({type:'info',eye:'경질',t:`${c.team}를\n떠나게 됐어요`,x:`기대 승수 ${Math.round(expW)}승에 못 미쳐 감독직에서 물러났어요.`,feed:makeFeed(['coachFire','coachFire','coachFire'],{n:G.p.name,t:c.team},lg)});coachFree(false)}
-  else if(c.age>=70){G.q.push({type:'choice',eye:'지도자 은퇴',t:'일흔, 벤치를\n떠날 때가 됐어요',x:'',opts:[{act:'own',label:'구단주로 제2의 인생',sub:`보유 자금 ${won(myCash())}`},{act:'end',label:'커리어 기록 남기기',sub:''}]})}
+  else if(c.age>=58&&c.age<63&&R()<.3+(c.age-58)*.12){G.q.push({type:'choice',eye:'은퇴 권유',t:`${c.age}세, 구단이 은퇴를\n권했어요`,x:`전술 ${c.tac} · 육성 ${c.dev} · 리더십 ${c.lead}. 나이가 들며 능력이 떨어지고 있어요.`,opts:[{act:'own',label:'구단주로 제2의 인생',sub:`보유 자금 ${won(myCash())}`},{act:'end',label:'지도자 은퇴',sub:'커리어를 마무리해요'},{act:'hstay',label:'한 시즌 더 버틴다',sub:'능력은 계속 떨어져요'}]})}
+  else if(c.age>=63){G.q.push({type:'choice',eye:'지도자 은퇴',t:'예순셋, 벤치를\n떠날 때가 됐어요',x:'',opts:[{act:'own',label:'구단주로 제2의 인생',sub:`보유 자금 ${won(myCash())}`},{act:'end',label:'커리어 기록 남기기',sub:''}]})}
   else if(c.role==='코치'&&c.seasons>=2&&R()<.18+cRating()/320+(dW>0?.1:0)){c.role='수석코치';c.yrs=2;G.q.push({type:'info',eye:'승진',t:`${c.team}\n수석코치가 됐어요`,x:'감독 바로 옆에서 경기 운영을 맡아요. 전술판이 경기에 더 크게 반영되고, 감독 제안이 들어올 수 있어요.',feed:makeFeed(['coach','coach'],{n:G.p.name,t:c.team},lg)})}
   else if(c.role==='수석코치'&&R()<.14+cRating()/350+(dW>g*.05?.1:0))coachFree(false);
   else if(c.yrs<=0)coachFree(false,true);
