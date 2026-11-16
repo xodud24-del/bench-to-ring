@@ -787,7 +787,7 @@ function startCareer(){
   const {x,pot}=baseAttrs(d);
   const ylg='Y_'+d.start;
   const team=d.school&&T[ylg].includes(d.school)?d.school:pick(T[ylg]);
-  G={v:2,year:2027,p:{...d,age:16,x,pot,lg:ylg,team,yrs:3,rep:5,decl:ri(28,31),drate:rf(1,1.8),
+  G={v:2,year:2027,p:{...d,age:16,x,pot,lg:ylg,team,yrs:3,rep:5,...(R()<.05?{iron:1,decl:ri(31,33),drate:rf(.6,.85)}:{decl:ri(28,31),drate:rf(1,1.8)}),
      focus:d.focus.length?d.focus:['슈팅','피지컬'],mil:null,milDone:false,exempt:false,half:false,sus:false,loan:null,
      log:[],tot:{gp:0,pts:0,reb:0,ast:0,stl:0,blk:0},hi:{pts:0},g40:0,td:0,titles:[],awards:[],nt:{caps:0,medals:[]},teams:[team],earn:0,sal:0,proY:0,colY:0},
      q:[],coach:null,done:false,ts:{},feed:[],used:{}};
@@ -997,7 +997,7 @@ function progress(){
     else g=rf(-.7,.3);
     if(fk.has(k))g+=(age<=25?rf(1.4,2.9):age<=28?rf(.7,1.8):rf(.2,1))*(p.buff&&p.buff.train?1.5:1);
     if(k==='iq')g+=age<34?rf(.5,1.8):0;
-    const DECL=Math.min(p.decl,32)-1,DR=p.drate*1.3;
+    const DECL=Math.min(p.decl,p.iron?33:32)-1,DR=p.drate*1.3;
     if(age>=DECL){
       const d=(age-DECL+1)*DR*.8;
       if(['spd','jmp','sta'].includes(k))g-=rf(1.4,3.2)*DR+d*.5;
@@ -4295,7 +4295,7 @@ function tween(ms,fn){
 }
 /* Clutch moments: during the season the player decides the last possession; the call can flip the game. */
 function clutchScenario(p,opp){
-  const x=p.x||{},v=k=>+x[k]||50,pr=a=>clamp(.12+(a-55)*.013,.1,.82);
+  const x=p.x||{},v=k=>+x[k]||50,pr=a=>clamp(.27+(a-55)*.015,.22,.9);
   const S=[
    {t:`${opp}전 4쿼터 종료 2.4초 전`,d:'1점 뒤진 상황, 공이 내 손에 왔어요.',o:[
      {l:'버저비터를 직접 쏜다',k:'shot',p:pr(Math.max(v('three'),v('mid'))),ok:'버저와 함께 그물을 갈랐어요!',ng:'림을 맞고 튀어나왔어요.'},
