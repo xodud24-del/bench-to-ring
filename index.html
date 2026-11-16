@@ -3504,7 +3504,7 @@ function head(eye,title,desc){return `<div class="hd">${eye?`<p class="eye">${es
 
 /* ---------- 전체 명예의 전당 (공유) ---------- */
 const GH={db:null,runs:[],st:'loading',tab:'score',ro:false,pending:[]};
-function ghClean(e){const n=v=>Number.isFinite(+v)?+v:0;return {name:String(e.name||'').slice(0,20),nat:String(e.nat||''),pos:String(e.pos||''),num:n(e.num),seasons:n(e.seasons),pts:n(e.pts),gp:n(e.gp),hi:n(e.hi),titles:n(e.titles),mvp:n(e.mvp),allstar:n(e.allstar),score:n(e.score),teams:(e.teams||[]).slice(0,6).map(String),when:String(e.when||''),a:e.a||{}}}
+function ghClean(e){const n=v=>Number.isFinite(+v)?+v:0;return {name:String(e.name||'').slice(0,20),nat:String(e.nat||''),pos:String(e.pos||''),num:n(e.num),seasons:n(e.seasons),pts:n(e.pts),gp:n(e.gp),hi:n(e.hi),titles:n(e.titles),mvp:n(e.mvp),allstar:n(e.allstar),score:n(e.score),teams:(e.teams||[]).slice(0,6).map(String),when:String(e.when||''),a:JSON.parse(JSON.stringify(e.a||{}))}}
 function ghRender(){const el=document.getElementById('ghof');if(el)el.innerHTML=ghofInner();ghBind()}
 /* ▼ Firebase 설정값을 여기에 붙여넣으세요 (Firebase 콘솔 → 프로젝트 설정 → 내 앱 → SDK 설정 및 구성) */
 const FIREBASE_CONFIG={apiKey:"AIzaSyC-tgYZXW-w1gIJItp0VEZu7oH3ut-IZZ8",authDomain:"bench-to-ring-c61ce.firebaseapp.com",projectId:"bench-to-ring-c61ce",storageBucket:"bench-to-ring-c61ce.firebasestorage.app",messagingSenderId:"447864805760",appId:"1:447864805760:web:84b019431e36599d7c0965"};
