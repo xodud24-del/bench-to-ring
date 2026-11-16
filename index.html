@@ -4482,10 +4482,10 @@ function fitOneLine(t,max,min){if(!t)return;t.style.whiteSpace='nowrap';t.style.
 function showCut(cut,onClose){
   const p=G.p,el=$('#cut');
   const T2={
-    champ:()=>[`${cut.year}–${String(cut.year+1).slice(2)} ${cut.fin}`,'우승',`${cut.team}가 정상에 섰어요.${cut.fmvp?' 파이널 MVP까지 손에 넣었어요.':''}`,'champ'],
-    ochamp:()=>[`${lgName(cut.lg)} 파이널`,'구단주의 반지',`${cut.team}, 구단주로서 들어 올린 우승 트로피예요.`,'cchamp'],
-    cchamp:()=>[`${lgName(cut.lg)} 파이널`,'벤치에서 든 반지',`${cut.team}, ${cut.head?'감독':'코치'}로서 거둔 우승이에요.`,'cchamp'],
-    mvp:()=>['시즌 어워드','정규리그 MVP',`${lgName(cut.lg)}에서 가장 빛난 선수로 뽑혔어요.`,'mvp'],
+    champ:()=>cut.multi?[`${cut.fin||lgName(cut.lg)}`,`우승 ${cut.multi}회`,`${cut.years.join(', ')}${cut.teams&&cut.teams.length?' · '+cut.teams.join(', '):''}`,'champ']:[`${cut.year}–${String(cut.year+1).slice(2)} ${cut.fin}`,'우승',`${cut.team}가 정상에 섰어요.${cut.fmvp?' 파이널 MVP까지 손에 넣었어요.':''}`,'champ'],
+    ochamp:()=>cut.multi?[`${lgName(cut.lg)} 파이널`,`구단주 우승 ${cut.multi}회`,`${cut.years.join(', ')} · ${cut.team}`,'cchamp']:[`${lgName(cut.lg)} 파이널`,'구단주의 반지',`${cut.team}, 구단주로서 들어 올린 우승 트로피예요.`,'cchamp'],
+    cchamp:()=>cut.multi?[`${lgName(cut.lg)} 파이널`,`지도자 우승 ${cut.multi}회`,`${cut.years.join(', ')}${cut.teams&&cut.teams.length?' · '+cut.teams.join(', '):''}`,'cchamp']:[`${lgName(cut.lg)} 파이널`,'벤치에서 든 반지',`${cut.team}, ${cut.head?'감독':'코치'}로서 거둔 우승이에요.`,'cchamp'],
+    mvp:()=>cut.multi?[`${lgName(cut.lg)} 시즌 어워드`,`정규리그 MVP ${cut.multi}회`,`${cut.years.join(', ')}`,'mvp']:['시즌 어워드','정규리그 MVP',`${lgName(cut.lg)}에서 가장 빛난 선수로 뽑혔어요.`,'mvp'],
     nt:()=>[cut.ev,'금메달',`${flag(cut.nat)} ${C[cut.nat].n} 대표팀의 금메달이에요.`,'nt'],
     mile:()=>['커리어 기록',cut.val,'통산 기록을 새롭게 쌓았어요.','mile'],
     draft:()=>[`${lgName(cut.lg)} 드래프트`,`${cut.pick}순위`,`${cut.team}가 ${p.name}의 이름을 불렀어요. 리그 총장과 악수하며 프로 무대에 첫발을 내딛습니다.`,'draft'],
@@ -4545,8 +4545,14 @@ function reelCuts(){
     const c=G.coach;if(c&&c.hs)list.push({cut:{kind:'chire',lg:c.lg,team:c.team,role:'감독',scene:0},year:G.year,age:p.age,ca:c.age});
     if(c)(c.titles||[]).forEach(t=>list.push({cut:{kind:'cchamp',lg:c.lg,team:c.team,head:1},year:+t.slice(0,4),age:p.age,ca:c.age}));
     const o=G.owner;if(o){list.push({cut:{kind:'oown',lg:o.lg,team:o.team,scene:8},year:G.year,age:p.age,oa:o.age});(o.titles||[]).forEach(t=>list.push({cut:{kind:'ochamp',lg:o.lg,team:o.team},year:+t.slice(0,4),age:p.age,oa:o.age}))}}
+  /* the same honour won several times in one league becomes one slide with the count and the years */
+  {const grp={};list=list.filter(r=>{const k=r.cut.kind;if(!['champ','mvp','cchamp','ochamp'].includes(k))return true;const g=k+'|'+(r.cut.lg||'');
+    if(!grp[g]){grp[g]=r;r.cut={...r.cut,years:[r.year],teams:[r.cut.team].filter(Boolean)};return true}
+    grp[g].cut.years.push(r.year);if(r.cut.team&&!grp[g].cut.teams.includes(r.cut.team))grp[g].cut.teams.push(r.cut.team);
+    grp[g].last=r;return false});
+   Object.values(grp).forEach(g=>{const n=g.cut.years.length;g.cut.multi=n>1?n:0;if(g.last){g.age=g.last.age;g.ca=g.last.ca;g.oa=g.last.oa;g.cut.team=g.last.cut.team||g.cut.team}})}
   /* keep it a highlight reel: cap the repetitive kinds */
-  const cap={champ:4,mvp:3,award:4,mile:2,nt:2,cgame:1,oseason:1,chire:2,coty:1,cchamp:2,ochamp:2,draft:1,retire:1,oown:1},n={};
+  const cap={champ:9,mvp:9,award:4,mile:2,nt:2,cgame:1,oseason:1,chire:2,coty:1,cchamp:9,ochamp:9,draft:1,retire:1,oown:1},n={};
   const pri=a=>/MVP|득점왕|퍼스트|올해의 수비|신인상/.test(a)?0:1;
   const aw=list.filter((r,i,A)=>r.cut.kind==='award'&&A.findIndex(x=>x.cut.kind==='award'&&x.cut.award===r.cut.award)===i).sort((a,b)=>pri(a.cut.award)-pri(b.cut.award)).slice(0,cap.award);
   list=list.filter(r=>{const k=r.cut.kind;if(k==='award')return aw.includes(r);n[k]=(n[k]||0)+1;return n[k]<=(cap[k]??1)});
@@ -4562,16 +4568,18 @@ function playReel(onDone){
   const bar=(i,d)=>{bars.forEach((b,j)=>{b.style.transition='none';b.style.width=j<i?'100%':'0%'});requestAnimationFrame(()=>requestAnimationFrame(()=>{bars[i].style.transition=`width ${d}ms linear`;bars[i].style.width='100%'}))};
   const finish=()=>{if(ended)return;ended=true;clearTimeout(tmr);restore();cutEl.classList.remove('reeling','on');cutEl.innerHTML='';cutEl.onclick=null;
     const box=$('#reel');if(box){box.classList.add('out');setTimeout(()=>box.remove(),650)}ui.remove();G.reelSeen=1;save();onDone&&onDone()};
-  const final=()=>{cutEl.classList.remove('reeling','on');cutEl.innerHTML='';yr.textContent='';bar(N-1,4300);
+  const final=()=>{cutEl.classList.remove('reeling','on');cutEl.innerHTML='';yr.textContent='';bar(N-1,6500);
     const [c0]=teamColors(p.team),sc=G.final?G.final.score:0,box=document.createElement('div');box.id='reel';
-    box.innerHTML=`<section class="rl-s on" style="--c0:${c0}">${logoOf(p.team)?`<img class="rl-logo" src="${logoOf(p.team)}" alt="">`:''}<div class="rl-art">${avatarBox(p,300,{full:1,pose:'shoot',maxH:'100%'})}</div><div class="rl-fin"><small>${esc(POSN[p.pos]||'')} · #${p.num}</small><b>${esc(p.name)}</b><span class="rl-cnt">0</span><em>통산 득점</em><div class="rl-fs"><i>우승 ${p.titles.length}</i><i>MVP ${p.awards.filter(a=>/정규리그 MVP/.test(a)).length}</i><i>레거시 ${sc}</i></div></div></section><div class="rl-film"></div>`;
+    box.innerHTML=`<section class="rl-s on" style="--c0:${c0}">${logoOf(p.team)?`<img class="rl-logo" src="${logoOf(p.team)}" alt="">`:''}<div class="rl-art" id="rlav">${avatarBox(p,300,{full:1,pose:'shoot',maxH:'100%'})}</div><div class="rl-fin"><small>${esc(POSN[p.pos]||'')} · #${p.num}</small><b>${esc(p.name)}</b><span class="rl-cnt">0</span><em>통산 득점</em><div class="rl-fs"><i>우승 ${p.titles.length}</i><i>MVP ${p.awards.filter(a=>/정규리그 MVP/.test(a)).length}</i><i>레거시 ${sc}</i></div></div></section><div class="rl-film"></div>`;
     document.body.appendChild(box);box.onclick=finish;
+    {const so={p,age:keep.age,colors:teamColors(p.team),num:p.num},h=Math.round(innerHeight*.44);
+     (async()=>{for(let n=0;n<40&&!ended;n++){await spriteAnim('#rlav',animKeys(n%2?'shoot':'dunk'),so,Math.min(360,innerWidth*.86),h+'px',10,false);await new Promise(r=>setTimeout(r,80))}})()}
     const cn=box.querySelector('.rl-cnt'),to=p.tot.pts,t0=performance.now(),st=t=>{const q=Math.min(1,(t-t0)/1800);cn.textContent=Math.round(to*(1-Math.pow(1-q,3))).toLocaleString();if(q<1&&!ended)requestAnimationFrame(st)};requestAnimationFrame(st);
-    tmr=setTimeout(finish,4300)};
+    tmr=setTimeout(finish,6500)};
   const next=()=>{if(ended)return;clearTimeout(tmr);k++;
     if(k>=list.length){restore();return final()}
     const r=list[k];p.age=r.age||keep.age;G.year=r.year||keep.year;if(G.coach&&r.ca)G.coach.age=r.ca;if(G.owner&&r.oa)G.owner.age=r.oa;
-    yr.textContent=`${r.year||''}${r.age?` · ${r.cut.kind==='oown'||r.cut.kind==='ochamp'||r.cut.kind==='oseason'?(r.oa||r.age):(['chire','coty','cgame','cchamp'].includes(r.cut.kind)?(r.ca||r.age):r.age)}세`:''}`;
+    yr.textContent=r.cut.multi?`${r.cut.years[0]}–${r.cut.years[r.cut.years.length-1]}`:`${r.year||''}${r.age?` · ${r.cut.kind==='oown'||r.cut.kind==='ochamp'||r.cut.kind==='oseason'?(r.oa||r.age):(['chire','coty','cgame','cchamp'].includes(r.cut.kind)?(r.ca||r.age):r.age)}세`:''}`;
     showCut(r.cut,()=>{});cutEl.classList.add('reeling');cutEl.scrollTop=0;
     const d=r.cut.kind==='draft'?4200:3400;bar(k,d);tmr=setTimeout(()=>{cutEl.classList.remove('on');cutEl.innerHTML='';next()},d)};
   cutEl.onclick=e=>{if(!cutEl.classList.contains('reeling'))return;cutEl.classList.remove('on');cutEl.innerHTML='';next()};
