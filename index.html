@@ -756,7 +756,7 @@ function baseAttrs(d,style){
   for(const k in pb) x[k]+=pb[k];
   const sb=STYLE[style||d.style]; for(const k in sb) x[k]+=sb[k];
   for(const k in x) x[k]=Math.round(clamp(x[k],22,72));
-  const pot=Math.round(59+31*Math.pow(rnd(),2.1));
+  const pot=Math.round(59+32*Math.pow(rnd(),2.0));
   return {x,pot};
 }
 function ovr(x,pos){const w=W[pos];let s=0,t=0;for(const k in w){s+=x[k]*w[k];t+=w[k]}return Math.round(s/t)}
@@ -795,7 +795,7 @@ function startCareer(){
 }
 
 /* ---------- season simulation ---------- */
-function roleOf(o,ts,rep){const d=o-ts+rep/40+(G&&G.p&&G.p.push?Math.min(2,G.p.push):0)+(G&&G.p&&G.p.trust!=null?(G.p.trust-50)/40:0);if(d>=7.5)return['에이스',34];if(d>=3)return['주전',30];if(d>=-1)return['식스맨',23];if(d>=-5)return['로테이션',15];return['벤치',6]}
+function roleOf(o,ts,rep){const d=o-ts+rep/40+(G&&G.p&&G.p.push?Math.min(2,G.p.push):0)+(G&&G.p&&G.p.trust!=null?(G.p.trust-50)/40:0);if(d>=7.5)return['에이스',36];if(d>=3)return['주전',31];if(d>=-1)return['식스맨',23];if(d>=-5)return['로테이션',15];return['벤치',6]}
 function standingsOthers(lg,me){
   const rows=T[lg].filter(n=>n!==me).map(n=>({n,s:teamStr(lg,n)}));
   const g=L[lg].g, avg=L[lg].str;
@@ -851,7 +851,7 @@ function simSeason(){
   const injStart=miss?ri(0,gTot-miss):-1;
   const x=p.x, ls=LG.str, th=Math.tanh;
   const sc=(x.three*1.1+x.mid+x.drive+x.inside)/4.1;
-  const pts36=clamp(11+15*th((sc-ls)/16)+4*th((o-ts)/10)+(['슈터','슬래셔','포스트 스코어러'].includes(p.style)?1.5:0),3,34);
+  const pts36=clamp(11+17.5*th((sc-ls)/14)+5*th((o-ts)/9)+(['슈터','슬래셔','포스트 스코어러'].includes(p.style)?1.5:0),3,36);
   const reb36=clamp(5+6*th((x.reb-ls)/18)+(p.pos==='C'?2.5:p.pos==='PF'?1.5:0),1,16);
   const ast36=clamp(2.8+5*th(((x.pass*.6+x.handle*.4)-ls)/18)+(p.pos==='PG'?2.5:0),.3,12);
   const stl36=clamp(1+.9*th((x.stl-ls)/18),.1,2.8), blk36=clamp(.6+1.6*th((x.blk-ls)/18),0,3.8);
@@ -910,7 +910,7 @@ function simSeason(){
   const ppg=pg(s.pts),rpg=pg(s.reb),apg=pg(s.ast),spg=pg(s.stl),bpg=pg(s.blk);
   const impact=(ppg+rpg*1.2+apg*1.5+(spg+bpg)*2);
   const aw=[];const qual=s.gp>=gTot*.6;const lvl=o-ls+p.rep/25;
-  if(qual&&lvl>12.5&&rank<=6&&R()<.3+(lvl-12.5)*.06-(rank-1)*.03)aw.push('정규리그 MVP');
+  if(qual&&lvl>11&&rank<=8&&R()<.3+(lvl-11)*.07-(rank-1)*.025)aw.push('정규리그 MVP');
   const scoreT=20+(ls-58)*.35;
   if(qual&&ppg>=scoreT&&R()<.35+(ppg-scoreT)*.12)aw.push('득점왕');
   if(qual&&rpg>=9.5+(p.pos==='C'?1:0)&&R()<.35)aw.push('리바운드왕');
@@ -997,7 +997,7 @@ function progress(){
     else g=rf(-.7,.3);
     if(fk.has(k))g+=(age<=25?rf(1.4,2.9):age<=28?rf(.7,1.8):rf(.2,1))*(p.buff&&p.buff.train?1.5:1);
     if(k==='iq')g+=age<34?rf(.5,1.8):0;
-    const DECL=Math.min(p.decl,31)-2,DR=p.drate*1.37;
+    const DECL=Math.min(p.decl,32)-1,DR=p.drate*1.3;
     if(age>=DECL){
       const d=(age-DECL+1)*DR*.8;
       if(['spd','jmp','sta'].includes(k))g-=rf(1.4,3.2)*DR+d*.5;
