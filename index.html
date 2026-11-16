@@ -3,10 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>벤치에서 반지까지</title>
+<title>벤치에서 반지까지 - 농구 선수 키우기 게임</title>
+<meta name="description" content="고교 벤치 끝자리에서 시작해 드래프트, 국가대표, NBA 우승 반지까지. 설치 없이 브라우저에서 바로 하는 무료 농구 선수 키우기 게임. 은퇴 후 감독·구단주로 이어지고, 명예의 전당 랭킹에서 다른 플레이어와 겨뤄요.">
+<meta name="keywords" content="농구 선수 키우기, 농구 선수 키우기 게임, 농구 게임, 농구 커리어 게임, 웹 농구 게임, 벤치에서 반지까지, NBA 게임, 선수 육성 게임">
+<link rel="canonical" href="https://bench2ring.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="벤치에서 반지까지">
+<meta property="og:title" content="벤치에서 반지까지 - 농구 선수 키우기 게임">
+<meta property="og:description" content="고교 벤치에서 NBA 우승 반지까지. 무료 웹 농구 선수 키우기 게임.">
+<meta property="og:url" content="https://bench2ring.vercel.app/">
+<meta property="og:image" content="https://bench2ring.vercel.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+#about{max-width:520px;margin:0 auto;padding:8px 20px calc(120px + env(safe-area-inset-bottom));color:var(--sub);font-size:13px;line-height:1.7}#about h2{font-size:14px;color:var(--ink2);margin:0 0 6px}#about p{margin:0 0 8px}body.noabout #about{display:none}
 :root{--bg:#f2f4f6;--card:#fff;--ink:#191f28;--ink2:#333d4b;--sub:#6b7684;--line:#e5e8eb;--blue:#3182f6;--blue2:#1b64da;--bluel:#e8f3ff;--red:#f04452;--g:#f2f4f6}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;letter-spacing:-.2px}
@@ -302,6 +313,11 @@ details[open] summary{margin-bottom:6px}
 </head>
 <body>
 <div id="app"></div>
+<section id="about" aria-label="게임 소개"><h2>벤치에서 반지까지 · 농구 선수 키우기 게임</h2>
+<p>고교 농구부 벤치 끝자리에서 시작해 대학, 드래프트, 프로 무대와 국가대표를 거쳐 NBA 우승 반지까지 도전하는 무료 웹 농구 선수 키우기 게임이에요. 설치나 가입 없이 브라우저에서 바로 할 수 있고, 진행은 자동으로 저장돼요.</p>
+<p>시즌마다 훈련과 출전 시간, 이적과 계약을 직접 고르고, 경기 막판 승부처에서는 버저비터를 쏠지 동료에게 패스할지 선택해요. 은퇴한 뒤에는 감독이나 구단주로 커리어를 이어갈 수 있고, 남긴 기록은 명예의 전당과 선수·감독·구단주 랭킹에 올라가 다른 플레이어와 겨뤄요.</p>
+<p class="ab-note">비공식 팬 게임이에요. 리그·구단 명칭과 로고의 권리는 각 권리자에게 있어요.</p></section>
+
 <div id="play"></div>
 <div id="hl"></div>
 <div id="cut"></div>
@@ -3509,7 +3525,7 @@ document.addEventListener('click',e=>{
 
 /* ---------- top-level render ---------- */
 function render(){
-  const app=$('#app');document.body.classList.toggle('tabs',!!(G&&!G.done&&!G.q.length));
+  const app=$('#app');document.body.classList.toggle('tabs',!!(G&&!G.done&&!G.q.length));document.body.classList.toggle('noabout',!!(G||ui.wiz));
   if(!G){if(ui.wiz)return renderWizard();app.innerHTML=renderIntro();bindIntro();return}
   if(G.done){app.innerHTML=renderEnd();ghBind();$('#newg').onclick=()=>{G=null;store.set('b2r_game2',null);D=draft0();ui.wiz=0;render()};return}
   if(G.q.length){

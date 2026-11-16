@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bench2ring.vercel.app/sitemap.xml
