@@ -1173,6 +1173,10 @@ function graduation(){
     opts.push({act:'join',lg:home,team,yrs:3,sal:+salary(home,o).toFixed(1),label:`${team} 1군 계약`,sub:`${lgName(home)} 데뷔`});
     const t2=pick(T.NCAA);opts.push({act:'join',lg:'NCAA',team:t2,yrs:4,label:`미국 대학 진학 (${t2})`,sub:'NCAA에서 뛰며 NBA를 노려요'});
   }
+  /* a dominant high-schooler can skip college and go straight to the NBA draft, like the prep-to-pro stars */
+  const prep=o>=72||(o>=70&&p.pot>=88);
+  if(prep)opts.unshift({act:'draft',lg:'NBA',label:'NBA 드래프트 직행',sub:`고졸 프로 · OVR ${o} · 로터리 지명 유력`});
+  if(prep)return{type:'choice',eye:'졸업',t:'고교 무대는\n이미 좁아요',x:`유스 3년 동안 OVR ${o}까지 올라왔어요. NBA 스카우트들이 대학을 건너뛰고 바로 드래프트에 나오라고 해요.`,opts};
   return{type:'choice',eye:'졸업',t:'졸업 이후,\n어디로 갈까요?',x:`유스 3년 동안 OVR ${o}까지 올라왔어요. 스카우트 평가는 "${potText(p.pot)}"이에요.`,opts};
 }
 function collegeExit(){
