@@ -3814,10 +3814,10 @@ const FIREBASE_CONFIG={apiKey:"...",authDomain:"xxx.firebaseapp.com",projectId:"
 const GH_DEV=(()=>{let d=store.get('b2r_dev');if(!d){d=Math.random().toString(36).slice(2,12);store.set('b2r_dev',d)}return d})();
 const GH_FB='https://www.gstatic.com/firebasejs/10.12.2/';
 let GH_FS=null,GH_SUB=null,GH_TO=null;
-function ghMarkSent(e){const h=store.get('b2r_hof')||[];const x=h.find(v=>v.when===e.when&&v.name===e.name);if(x){x.sent=1;store.set('b2r_hof',h)}}
+function ghMarkSent(e){const h=store.get('b2r_hof')||[];const x=h.find(v=>v.when===e.when&&v.name===e.name&&v.score===e.score);if(x){x.sent2=1;store.set('b2r_hof',h)}}
 async function ghRetry(){/* 예전에 저장 실패한 내 기록을 다시 올림 */
-  const f=GH_FS,h=(store.get('b2r_hof')||[]).filter(v=>!v.sent).slice(-10);
-  for(const e of h){try{const q=await f.getDocs(f.query(f.collection(GH.db,'hof'),f.where('dev','==',GH_DEV),f.where('when','==',String(e.when||'')),f.limit(1)));if(q.empty)await ghPush(e);else ghMarkSent(e)}catch(err){}}}
+  const f=GH_FS,h=(store.get('b2r_hof')||[]).filter(v=>!v.sent2).slice(-10);
+  for(const e of h){try{const q=await f.getDocs(f.query(f.collection(GH.db,'hof'),f.where('dev','==',GH_DEV),f.where('when','==',String(e.when||'')),f.where('score','==',Math.min(99999,+e.score||0)),f.limit(1)));if(q.empty)await ghPush(e);else ghMarkSent(e)}catch(err){}}}
 async function ghPush(e){
   if(!GH.db){GH.pending.push(e);return}
   try{const d={...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()};delete d.nbamvp;delete d.povr;delete d.awn;
