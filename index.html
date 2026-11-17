@@ -989,7 +989,7 @@ function simSeason(){
   const aw=[];const qual=s.gp>=gTot*.6;const lvl=o-ls+p.rep/25;
   {const mt=LG.col?16:10,nT=T[lg].length,ppgT=20+(ls-58)*.35;if(qual&&lvl>mt&&rank<=Math.ceil(nT*.6)&&R()<.16+(lvl-mt)*.035+Math.max(0,ppg-ppgT)*.015-(rank-1)*.008)aw.push('정규리그 MVP')}
   const scoreT=20+(ls-58)*.35;
-  if(qual&&ppg>=scoreT&&R()<.35+(ppg-scoreT)*.12)aw.push('득점왕');
+  if(qual&&ppg>=scoreT&&lvl>(LG.col?13:8)&&R()<.35+(ppg-scoreT)*.12+(lvl-(LG.col?13:8))*.03)aw.push('득점왕');
   if(qual&&rpg>=9.5+(p.pos==='C'?1:0)&&R()<.35)aw.push('리바운드왕');
   if(qual&&apg>=7&&R()<.35)aw.push('어시스트왕');
   if(qual&&(x.perD+x.intD)/2-ls>9&&(spg+bpg)>2&&R()<.4)aw.push('올해의 수비수');
