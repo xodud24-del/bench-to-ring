@@ -1061,10 +1061,24 @@ function coachWord(gi,role,inj,champ,none,sus){
 }
 
 /* ---------- progression ---------- */
+/* 능력치별 한계치: 포지션·체격·개인차로 정해져서 모든 능력이 99가 되지 않게 */
+const CAP_B={
+ PG:{inside:-6,reb:-14,intD:-16,blk:-18,str:-12,jmp:-4},
+ SG:{inside:-4,pass:-3,reb:-10,intD:-12,blk:-14,str:-8},
+ SF:{handle:-1,pass:-5,reb:-4,intD:-6,blk:-8,str:-3,stl:-2},
+ PF:{three:-2,drive:-6,handle:-12,pass:-8,perD:-6,stl:-8,spd:-8},
+ C:{three:-14,mid:-8,drive:-10,handle:-18,pass:-10,perD:-10,stl:-10,spd:-12,sta:-4}};
+function attrCap(p,k){const b=BODY_IDEAL[p.pos]||[200,100],dh=clamp(((+p.h||b[0])-b[0])/4,-3,3),ape=clamp(((+p.ws||p.h)-(+p.h||0))/3,-2,3);
+  let c=p.pot+5+((CAP_B[p.pos]||{})[k]||0);
+  if(['reb','blk','intD','inside'].includes(k))c+=dh*1.3;if(['handle','spd','three'].includes(k))c-=dh*1.3;
+  if(['blk','stl','reb','perD'].includes(k))c+=ape;
+  if((p.focus||[]).some(f=>FOCUS[f].includes(k)))c+=4;if(((W[p.pos]||{})[k]||0)>=1.1)c+=2;
+  c+=(hash(String(p.name||'')+k)%7)-3;
+  return Math.round(clamp(c,40,99))}
 function progress(){
   const gap=gearStrip(G.p);
   const p=G.p,x=p.x,last=p.log[p.log.length-1]||{min:0},mb=last.min/36*2,age=p.age;
-  const top=Math.max(0,(p.pot-72)*.8),room=k=>Math.max(0,(p.pot+top+(['spd','jmp','str','sta'].includes(k)?3:0))-x[k]);
+  const top=Math.max(0,(p.pot-72)*.8),room=k=>Math.max(0,Math.min(p.pot+top+(['spd','jmp','str','sta'].includes(k)?3:0),attrCap(p,k)+6)-x[k]);
   const fk=new Set(p.focus.flatMap(f=>FOCUS[f]));
   const before={...x};
   for(const [k] of A){
@@ -1084,7 +1098,7 @@ function progress(){
     }
     /* 36세부터는 관리·아이템과 상관없이 몸이 버티지 못함 */
     if(age>=36){const e=age-35;if(["spd","jmp","sta","str"].includes(k))g-=Math.pow(e,1.6)*rf(.5,.8);else g-=e*rf(.4,.7)*(k==='iq'?.4:1)}
-    x[k]=Math.round(clamp(x[k]+g,15,Math.max(x[k],Math.min(99,p.pot+8))));
+    x[k]=Math.round(clamp(x[k]+g,15,Math.max(x[k],attrCap(p,k))));
   }
   if(p.buff)delete p.buff.train;
   p.lastGrow=0;
@@ -4163,7 +4177,7 @@ function bindLogo(){
       toast(ok?'로고를 넣었어요':'저장 공간이 부족해요. 다른 이미지를 지워 주세요');reLogo()};im.src=rd.result};rd.readAsDataURL(file)};
 }
 /* ---------- shop / retire / national-team retire / new career ---------- */
-function upX(p,o){for(const k in o)p.x[k]=Math.round(clamp(p.x[k]+o[k],15,Math.max(p.x[k],Math.min(99,p.pot+8))))}
+function upX(p,o){for(const k in o)p.x[k]=Math.round(clamp(p.x[k]+o[k],15,Math.max(p.x[k],attrCap(p,k))))}
 /* ---------- gear ---------- */
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const GSLOT=[['shoe','농구화','👟'],['sleeve','암슬리브','🦾'],['band','손목밴드','⌚'],['knee','무릎 보호대','🦵']];
