@@ -340,6 +340,8 @@ details[open] summary{margin-bottom:6px}
 @keyframes rlCut{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
 .rl-film{position:absolute;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 120px 30px rgba(0,0,0,.75);animation:rlFlick .18s steps(2) infinite}
 @keyframes rlFlick{0%{opacity:.92}100%{opacity:1}}
+.gl{white-space:nowrap}.glq{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:2px;border-radius:50%;background:rgba(127,127,127,.22);color:inherit;font-size:10px;font-style:normal;font-weight:700;line-height:1;vertical-align:2px;cursor:pointer;opacity:.85}
+.glpop{position:fixed;z-index:100001;background:#1d2330;color:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:14px;line-height:1.5}.glpop b{display:block;font-size:15px;margin-bottom:4px}.glpop p{margin:0;color:rgba(255,255,255,.85)}
 </style>
 </head>
 <body>
@@ -4576,6 +4578,88 @@ function showCut(cut,onClose){
 }
 
 /* ---------- end ---------- */
+/* ---------- basketball glossary: a small ? next to jargon, tap for the meaning ---------- */
+const GLOSS={
+ '아이솔레이션':'동료들이 한쪽으로 빠져 공간을 비워 주고, 공을 가진 선수 혼자 1대1로 공격하는 것. 줄여서 "아이솔".',
+ '아이솔':'아이솔레이션의 줄임말. 동료들이 비켜 주고 한 선수가 1대1로 공격하는 것.',
+ '앤드원':'슛을 넣으면서 동시에 파울을 얻어 낸 것. 득점이 인정되고 자유투 1개를 더 던져요.',
+ '픽앤롤':'동료가 수비수 앞에 서서 길을 막아 주고(픽), 그 동료가 바로 골대 쪽으로 굴러 들어가는(롤) 2대2 공격.',
+ '스텝백':'드리블하다가 뒤로 한 발 물러나며 수비와 거리를 벌리고 던지는 슛.',
+ '페이드어웨이':'몸을 뒤로 젖히며 점프해서 던지는 슛. 막기 어렵지만 정확도가 떨어지기 쉬워요.',
+ '플로터':'키 큰 수비수 위로 공을 높게 띄워 살짝 던져 넣는 슛.',
+ '앨리웁':'동료가 골대 근처로 띄워 준 공을 공중에서 잡아 바로 덩크나 레이업으로 넣는 것.',
+ '포스트업':'골대 근처에서 수비수를 등지고 몸싸움하며 자리를 잡아 공격하는 것.',
+ '트리플더블':'한 경기에서 득점·리바운드·어시스트 등 세 가지 기록을 모두 10개 이상 한 것.',
+ '더블더블':'한 경기에서 두 가지 기록을 10개 이상 한 것. 예: 20점 11리바운드.',
+ '버저비터':'경기나 쿼터 종료 버저가 울리는 순간 들어간 슛.',
+ '클러치':'경기 막판 승부가 갈리는 순간. 이때 강한 선수를 "클러치 플레이어"라고 해요.',
+ '스크린':'몸으로 수비수의 길을 막아 동료가 자유롭게 움직이게 해 주는 것.',
+ '트랜지션':'공격과 수비가 바뀌는 순간. 수비가 자리 잡기 전에 빠르게 치고 나가는 공격을 말하기도 해요.',
+ '속공':'상대가 수비로 돌아가기 전에 빠르게 달려 나가 득점하는 공격.',
+ '유로스텝':'골대로 돌진하다가 좌우로 크게 한 번씩 스텝을 꺾어 수비를 피하는 기술.',
+ '풀업':'드리블하다가 그 자리에서 바로 멈춰 점프슛을 던지는 것.',
+ '더블팀':'수비수 두 명이 한 선수를 동시에 막는 것.',
+ '턴오버':'실책으로 공격권을 상대에게 넘겨주는 것. 패스 미스, 공 뺏김 등.',
+ '야투율':'던진 슛 중 들어간 비율. 자유투는 빼고 계산해요.',
+ '로터리':'드래프트 상위 지명권(NBA는 1~14순위). 성적이 나쁜 팀들이 추첨으로 순서를 정해요.',
+ '얼리 엔트리':'대학을 졸업하기 전에 일찍 드래프트에 나가는 것.',
+ '식스맨':'선발 5명 다음으로 가장 먼저 교체로 들어오는 핵심 후보 선수.',
+ '로테이션':'경기 중 감독이 정기적으로 기용하는 선수 명단. 여기서 빠지면 출전 시간이 거의 없어요.',
+ '컴바인':'드래프트 전에 유망주들의 키·윙스팬·점프력 등을 측정하고 실력을 보는 행사.',
+ '워크아웃':'드래프트 전에 구단이 유망주를 불러 직접 훈련시키며 평가하는 것.',
+ '루키 스케일':'드래프트 1라운드 신인 연봉. 지명 순위에 따라 정해져 있어요.',
+ '탬퍼링':'계약 중인 다른 팀 선수에게 몰래 접촉해 영입을 시도하는 규정 위반.',
+ '파이널 포':'NCAA 토너먼트의 4강. 대학 농구 최고의 무대예요.',
+ 'G리그':'NBA 아래 단계의 하부 리그. NBA로 올라가기 위한 무대예요.',
+ '미드레인지':'골밑과 3점 라인 사이의 중거리 구역, 또는 거기서 던지는 슛.',
+ '컷인':'공 없는 선수가 수비 사이로 갑자기 골대 쪽으로 파고드는 움직임.',
+ '킥아웃':'골밑으로 파고들다가 수비가 몰리면 바깥의 빈 동료에게 빼 주는 패스.',
+ '훅슛':'몸을 옆으로 돌린 채 한 팔을 크게 휘둘러 던지는 슛. 주로 빅맨이 써요.',
+ '헤지':'픽앤롤 수비에서 빅맨이 잠깐 튀어나와 공 가진 선수를 막았다가 돌아가는 수비.',
+ '블리츠':'픽앤롤 수비에서 두 명이 공 가진 선수를 강하게 덮치는 수비.',
+ '드롭 커버리지':'픽앤롤 수비에서 빅맨이 골대 근처로 내려서 골밑을 지키는 수비.',
+ '스위치':'스크린이 오면 수비수끼리 맡던 선수를 바꿔서 막는 것.',
+ '레이업':'골대 바로 앞에서 공을 살짝 올려 넣는 가장 기본적인 슛.',
+ '리바운드':'빗나간 슛을 잡아내는 것.',
+ '미스매치':'키나 스피드 차이가 크게 나는 불리한 1대1 상황.',
+ '플렉스':'베이스라인 스크린과 다운 스크린을 반복하는 공격 전술.',
+ '모션 오펜스':'정해진 패턴 없이 계속 움직이고 패스하며 빈틈을 찾는 공격 전술.',
+ '지역 방어':'사람이 아니라 구역을 나눠 맡아서 막는 수비.',
+ '맨투맨':'수비수마다 한 명씩 맡아서 끝까지 따라가는 수비.',
+ '언드래프티':'드래프트에서 지명받지 못한 선수.',
+ '샐러리캡':'한 팀이 선수 연봉으로 쓸 수 있는 총액 한도.'
+};
+const GLOSS_KEYS=Object.keys(GLOSS).sort((a,b)=>b.length-a.length);
+const GLOSS_RE=new RegExp(GLOSS_KEYS.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
+function glossMark(root){
+  if(!root||!root.isConnected)return;
+  const seen=new Set([...root.querySelectorAll('.glq')].map(e=>e.dataset.g));
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const pe=n.parentElement;if(!pe)return 2;
+    if(pe.closest('script,style,textarea,input,select,option,.gl,.glpop,svg,.rkr,#reel,#reelui,.nogl'))return 2;
+    if(/^\S{2,}\d{1,3}$/.test(n.nodeValue.trim()))return 2;
+    return GLOSS_RE.test(n.nodeValue)?(GLOSS_RE.lastIndex=0,1):(GLOSS_RE.lastIndex=0,2)}});
+  const nodes=[];while(w.nextNode())nodes.push(w.currentNode);
+  nodes.forEach(n=>{const t=n.nodeValue;let last=0,frag=null,m;GLOSS_RE.lastIndex=0;
+    while((m=GLOSS_RE.exec(t))){const k=m[0];if(seen.has(k))continue;
+      const before=t[m.index-1]||'';if(/[가-힣A-Za-z0-9]/.test(before)&&!/[ ·,(]/.test(before))continue;
+      seen.add(k);frag=frag||document.createDocumentFragment();frag.appendChild(document.createTextNode(t.slice(last,m.index)));
+      const sp=document.createElement('span');sp.className='gl';sp.textContent=k;const q=document.createElement('i');q.className='glq';q.dataset.g=k;q.textContent='?';q.setAttribute('role','button');q.setAttribute('aria-label',k+' 뜻 보기');sp.appendChild(q);frag.appendChild(sp);last=m.index+k.length}
+    if(frag){frag.appendChild(document.createTextNode(t.slice(last)));n.parentNode.replaceChild(frag,n)}});
+}
+function glossShow(el){
+  document.querySelectorAll('.glpop').forEach(x=>x.remove());
+  const k=el.dataset.g,box=document.createElement('div');box.className='glpop';
+  box.innerHTML=`<b>${esc(k)}</b><p>${esc(GLOSS[k]||'')}</p>`;document.body.appendChild(box);
+  const r=el.getBoundingClientRect(),bw=Math.min(300,innerWidth-24);box.style.width=bw+'px';
+  let x=Math.min(Math.max(12,r.left+r.width/2-bw/2),innerWidth-bw-12),y=r.bottom+8;
+  box.style.left=x+'px';box.style.top=y+'px';
+  const h=box.offsetHeight;if(y+h>innerHeight-12)box.style.top=Math.max(12,r.top-h-8)+'px';
+}
+document.addEventListener('click',e=>{const q=e.target.closest&&e.target.closest('.glq');
+  if(q){e.preventDefault();e.stopPropagation();glossShow(q);return}
+  if(!(e.target.closest&&e.target.closest('.glpop')))document.querySelectorAll('.glpop').forEach(x=>x.remove())},true);
+addEventListener('scroll',()=>document.querySelectorAll('.glpop').forEach(x=>x.remove()),true);
+{let gt=null;new MutationObserver(()=>{clearTimeout(gt);gt=setTimeout(()=>['#app','#cut','#sheet','#play','#hl'].forEach(s=>{const el=document.querySelector(s);if(el)glossMark(el)}),60)}).observe(document.body,{childList:true,subtree:true})}
 /* ---------- life reel: replays the career's own cutscenes back to back, like a flashback ---------- */
 function reelLogCut(cut){try{const p=G.p;G.reelLog=G.reelLog||[];G.reelLog.push({cut:JSON.parse(JSON.stringify(cut)),year:G.year,age:p.age,ca:G.coach?G.coach.age:null,oa:G.owner?G.owner.age:null});if(G.reelLog.length>80)G.reelLog.splice(1,1)}catch(e){}}
 function reelCuts(){
