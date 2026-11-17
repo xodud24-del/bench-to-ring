@@ -1086,9 +1086,9 @@ function buildDraft(lg){
   const resume=(aw.some(a=>/정규리그 MVP|파이널 MVP/.test(a))?4.5:0)+(aw.some(a=>/퍼스트|베스트5|올-아메리칸/.test(a))?2.5:0)+(aw.some(a=>/득점왕/.test(a))?1.5:0)+(rec.some(e=>e.po==='우승')?2:0)+((last.ppg||0)>=20?2:(last.ppg||0)>=15?1:0);
   const base=lg==='NBA'?60:L[lg].str-19;
   const v=(o-base-((p.log||[]).some(e=>L[e.lg]&&L[e.lg].col)?2:1))+(p.pot-80)*.12+(20-p.age)*.4+resume*.25+(p.stock||0);
-  let pk=Math.max(1,Math.round(n*(1-v/12.5)+gauss()*1.5));
+  let pk=Math.max(1,Math.round(1+(13.5-v)*(lg==='NBA'?3.8:n/12.5)+gauss()*1.5));
   const prep=!(p.log||[]).some(e=>L[e.lg]&&L[e.lg].col),need=prep?73:75;if(o>=need&&pk>1&&R()<.85)pk=1;else if(o<need&&pk===1)pk=2;
-  pk=clamp(pk,1,n*2+3);if(lg==='NBA'&&pk>n*1.4)pk=n*2+1;
+  pk=clamp(pk,1,n*2+3);
   if(p.wo){const i=order.indexOf(p.wo);if(i>=0){const slot=pk>n?i+1+n:i+1;if(Math.abs(slot-pk)<=5&&R()<.65)pk=slot}}
   const undrafted=pk>n*2;
   const team=undrafted?null:order[(pk-1)%n];
