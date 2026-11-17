@@ -2467,7 +2467,7 @@ Object.assign(KO,{
 function endCareer(){
   const p=G.p,c=G.coach;if(!p.legacyDone)legacyEvents();
   const sc=Math.round(p.tot.pts/100+p.titles.length*25+p.awards.filter(a=>/MVP/.test(a)).length*30+p.awards.filter(a=>/올스타/.test(a)).length*5+p.nt.medals.length*8+(c?c.titles.length*20+c.hs:0)+(G.owner?G.owner.titles.length*20+G.owner.yrs*2:0));
-  const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:p.awards.filter(a=>/정규리그 MVP/.test(a)).length,allstar:p.awards.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,ctitles:c?c.titles.length:0,otitles:G.owner?G.owner.titles.length:0,oval:G.owner?G.owner.val:0,crec:c?`${c.w}승 ${c.l}패`:'',score:sc,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
+  const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:p.awards.filter(a=>/정규리그 MVP/.test(a)).length,nbamvp:p.awards.filter(a=>/NBA 정규리그 MVP/.test(a)).length,allstar:p.awards.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,ctitles:c?c.titles.length:0,otitles:G.owner?G.owner.titles.length:0,oval:G.owner?G.owner.val:0,crec:c?`${c.w}승 ${c.l}패`:'',score:sc,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
   if(c&&(c.seasons||c.log.length)){e.cy=c.seasons||c.log.length;e.cw=c.w;e.cl=c.l;e.coty=c.log.filter(x=>x.aw&&String(x.aw).includes('올해의 감독상')).length;e.cteam=c.team;e.clg=c.lg;e.cscore=Math.round(e.ctitles*25+e.coty*10+c.w*.2+e.cy*2)}
   if(G.owner&&G.owner.yrs>0){const ow=G.owner;e.oy=ow.yrs;e.ofans=Math.round(ow.fans||0);e.oteam=ow.team;e.olg=ow.lg;e.oscore=Math.round(e.otitles*25+ow.yrs*3+Math.log10(1+Math.max(0,ow.val||0))*10)}
   const hof=store.get('b2r_hof')||[];hof.push(e);store.set('b2r_hof',hof);ghPush(e);
@@ -3716,6 +3716,7 @@ function head(eye,title,desc){return `<div class="hd">${eye?`<p class="eye">${es
 const GH={db:null,runs:[],st:'loading',tab:'score',ro:false,pending:[]};
 function ghClean(e){const n=v=>Number.isFinite(+v)?+v:0,t=v=>String(v||'').slice(0,30);
   const o={name:String(e.name||'').slice(0,20),nat:String(e.nat||''),pos:String(e.pos||''),num:n(e.num),seasons:n(e.seasons),pts:n(e.pts),gp:n(e.gp),hi:n(e.hi),titles:n(e.titles),mvp:n(e.mvp),allstar:n(e.allstar),score:n(e.score),teams:(e.teams||[]).slice(0,6).map(String),when:String(e.when||''),a:JSON.parse(JSON.stringify(e.a||{}))};
+  {const nm=n(e.nbamvp!=null?e.nbamvp:(e.a&&e.a.nbamvp));o.a.nbamvp=nm;o.nbamvp=nm}
   if(e.cscore!=null){Object.assign(o,{cy:n(e.cy),cw:n(e.cw),cl:n(e.cl),ctitles:n(e.ctitles),coty:n(e.coty),cteam:t(e.cteam),clg:t(e.clg),cscore:n(e.cscore)})}
   if(e.oscore!=null){Object.assign(o,{oy:n(e.oy),otitles:n(e.otitles),oval:n(e.oval),ofans:n(e.ofans),oteam:t(e.oteam),olg:t(e.olg),oscore:n(e.oscore)})}
   return o}
@@ -3731,7 +3732,7 @@ const GH_FB='https://www.gstatic.com/firebasejs/10.12.2/';
 let GH_FS=null,GH_SUB=null,GH_TO=null;
 async function ghPush(e){
   if(!GH.db){GH.pending.push(e);return}
-  try{await GH_FS.addDoc(GH_FS.collection(GH.db,'hof'),{...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()})}
+  try{const d={...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()};delete d.nbamvp;await GH_FS.addDoc(GH_FS.collection(GH.db,'hof'),d)}
   catch(err){GH.ro=true;ghRender()}
 }
 function ghSub(){
@@ -3767,7 +3768,7 @@ function ghBind(){const ro=document.getElementById('rkopen');if(ro)ro.onclick=rk
 /* ---------- 랭킹 화면 (선수 · 감독 · 구단주) ---------- */
 const RK={role:'p',sort:'score',unsub:null,rows:[],st:'idle',mine:null,myRank:null};
 const RK_DEF={
-  p:{n:'선수',sorts:[['score','종합 점수'],['pts','통산 득점'],['titles','우승'],['mvp','MVP']],has:e=>true},
+  p:{n:'선수',sorts:[['score','종합 점수'],['pts','통산 득점'],['titles','우승'],['nbamvp','NBA MVP'],['mvp','MVP']],has:e=>true},
   c:{n:'감독',sorts:[['cscore','종합 점수'],['cw','통산 승리'],['ctitles','우승'],['coty','올해의 감독']],has:e=>e.cscore!=null},
   o:{n:'구단주',sorts:[['oscore','종합 점수'],['otitles','우승'],['oval','구단 가치'],['oy','운영 기간']],has:e=>e.oscore!=null}};
 function rkVal(e,k){const v=e[k]||0;return k==='pts'||k==='cw'?`${v.toLocaleString()}`:k==='oval'?won(v):k==='oy'?`${v}년`:k==='score'||k==='cscore'||k==='oscore'?`${v}점`:`${v}회`}
@@ -3780,11 +3781,11 @@ function rkSub(){
   RK.st='loading';rkRender();
   const f=GH_FS,col=f.collection(GH.db,'hof');
   const to=setTimeout(()=>{if(RK.st==='loading'){RK.st='slow';rkRender()}},10000);
-  RK.unsub=f.onSnapshot(f.query(col,f.orderBy(RK.sort,'desc'),f.limit(100)),snap=>{
+  const fk=RK.sort==='nbamvp'?'a.nbamvp':RK.sort;RK.unsub=f.onSnapshot(f.query(col,f.orderBy(fk,'desc'),f.limit(100)),snap=>{
     clearTimeout(to);RK.rows=snap.docs.map(d=>{const v=d.data()||{};return {...ghClean(v),me:v.dev===GH_DEV,id:d.id}});RK.st='ok';rkRender();
   },()=>{clearTimeout(to);RK.st='err';RK.rows=local.map(e=>({...e,me:true}));rkRender()});
   if(RK.mine&&f.getCountFromServer){const key=RK.sort,mv=RK.mine[key]||0;
-    f.getCountFromServer(f.query(col,f.where(key,'>',mv))).then(c=>{if(RK.sort===key){RK.myRank=c.data().count+1;rkRender()}}).catch(()=>{})}
+    f.getCountFromServer(f.query(col,f.where(key==='nbamvp'?'a.nbamvp':key,'>',mv))).then(c=>{if(RK.sort===key){RK.myRank=c.data().count+1;rkRender()}}).catch(()=>{})}
 }
 function rkOpen(){
   let v=document.getElementById('rankv');
@@ -3814,7 +3815,7 @@ function rkRender(){
 function rkDetail(e,i){
   const L2=(a,b)=>`<div class="rkd"><span>${a}</span><b>${b}</b></div>`;
   let h=`<div class="rkdh">${bustImg({...e.a,num:e.num,nat:e.nat,pos:e.pos,name:e.name},64)}<div><b class="big">${esc(e.name)}</b><p class="sub">${RK_DEF[RK.role].n} 랭킹 ${i+1}위 · #${e.num} ${esc(e.pos)} · ${flag(e.nat)} ${C[e.nat]?C[e.nat].n:''}</p></div></div>`;
-  h+=`<p class="rksec">선수 커리어</p>`+L2('시즌',`${e.seasons}시즌`)+L2('통산 득점',`${e.pts.toLocaleString()}점 (${e.gp}경기)`)+L2('커리어 하이',`${e.hi}점`)+L2('우승 · MVP · 올스타',`${e.titles} · ${e.mvp} · ${e.allstar}`)+(e.teams.length?L2('뛴 팀',e.teams.map(esc).join(' → ')):'');
+  h+=`<p class="rksec">선수 커리어</p>`+L2('시즌',`${e.seasons}시즌`)+L2('통산 득점',`${e.pts.toLocaleString()}점 (${e.gp}경기)`)+L2('커리어 하이',`${e.hi}점`)+L2('우승 · MVP · 올스타',`${e.titles} · ${e.mvp} · ${e.allstar}`)+(e.nbamvp?L2('NBA MVP',`${e.nbamvp}회`):'')+(e.teams.length?L2('뛴 팀',e.teams.map(esc).join(' → ')):'');
   if(e.cscore!=null)h+=`<p class="rksec">감독</p>`+L2('팀',esc(e.cteam))+L2('통산 성적',`${e.cy}시즌 ${e.cw}승 ${e.cl}패`)+L2('우승 · 올해의 감독',`${e.ctitles} · ${e.coty}`);
   if(e.oscore!=null)h+=`<p class="rksec">구단주</p>`+L2('구단',esc(e.oteam))+L2('운영 기간',`${e.oy}년`)+L2('우승',`${e.otitles}회`)+L2('구단 가치',won(e.oval));
   h+=`${e.when?`<p class="sub" style="margin-top:12px">은퇴 ${esc(e.when)}</p>`:''}<button class="btn sec" id="rkdx" style="margin-top:14px">닫기</button>`;
@@ -4497,7 +4498,7 @@ function showCut(cut,onClose){
     champ:()=>cut.multi?[`${cut.fin||lgName(cut.lg)}`,`우승 ${cut.multi}회`,`${cut.years.join(', ')}${cut.teams&&cut.teams.length?' · '+cut.teams.join(', '):''}`,'champ']:[`${cut.year}–${String(cut.year+1).slice(2)} ${cut.fin}`,'우승',`${cut.team}가 정상에 섰어요.${cut.fmvp?' 파이널 MVP까지 손에 넣었어요.':''}`,'champ'],
     ochamp:()=>cut.multi?[`${lgName(cut.lg)} 파이널`,`구단주 우승 ${cut.multi}회`,`${cut.years.join(', ')} · ${cut.team}`,'cchamp']:[`${lgName(cut.lg)} 파이널`,'구단주의 반지',`${cut.team}, 구단주로서 들어 올린 우승 트로피예요.`,'cchamp'],
     cchamp:()=>cut.multi?[`${lgName(cut.lg)} 파이널`,`지도자 우승 ${cut.multi}회`,`${cut.years.join(', ')}${cut.teams&&cut.teams.length?' · '+cut.teams.join(', '):''}`,'cchamp']:[`${lgName(cut.lg)} 파이널`,'벤치에서 든 반지',`${cut.team}, ${cut.head?'감독':'코치'}로서 거둔 우승이에요.`,'cchamp'],
-    mvp:()=>cut.multi?[`${lgName(cut.lg)} 시즌 어워드`,`정규리그 MVP ${cut.multi}회`,`${cut.years.join(', ')}`,'mvp']:['시즌 어워드','정규리그 MVP',`${lgName(cut.lg)}에서 가장 빛난 선수로 뽑혔어요.`,'mvp'],
+    mvp:()=>cut.multi?[`${lgName(cut.lg)} 시즌 어워드`,`${cut.lg==='NBA'?'NBA MVP':'정규리그 MVP'} ${cut.multi}회`,`${cut.years.join(', ')}`,'mvp']:['시즌 어워드',cut.lg==='NBA'?'NBA MVP':'정규리그 MVP',`${lgName(cut.lg)}에서 가장 빛난 선수로 뽑혔어요.`,'mvp'],
     nt:()=>[cut.ev,'금메달',`${flag(cut.nat)} ${C[cut.nat].n} 대표팀의 금메달이에요.`,'nt'],
     mile:()=>['커리어 기록',cut.val,'통산 기록을 새롭게 쌓았어요.','mile'],
     draft:()=>[`${lgName(cut.lg)} 드래프트`,`${cut.pick}순위`,`${cut.team}가 ${p.name}의 이름을 불렀어요. 리그 총장과 악수하며 프로 무대에 첫발을 내딛습니다.`,'draft'],
@@ -4583,7 +4584,7 @@ function playReel(onDone){
     const box=$('#reel');if(box){box.classList.add('out');setTimeout(()=>box.remove(),650)}ui.remove();G.reelSeen=1;save();onDone&&onDone()};
   const final=()=>{cutEl.classList.remove('reeling','on');cutEl.innerHTML='';yr.textContent='';bar(N-1,6500);
     const [c0]=teamColors(p.team),sc=G.final?G.final.score:0,box=document.createElement('div');box.id='reel';
-    box.innerHTML=`<section class="rl-s on" style="--c0:${c0}">${logoOf(p.team)?`<img class="rl-logo" src="${logoOf(p.team)}" alt="">`:''}<div class="rl-art" id="rlav">${avatarBox(p,300,{full:1,pose:'shoot',maxH:'100%'})}</div><div class="rl-fin"><small>${esc(POSN[p.pos]||'')} · #${p.num}</small><b>${esc(p.name)}</b><span class="rl-cnt">0</span><em>통산 득점</em><div class="rl-fs"><i>우승 ${p.titles.length}</i><i>MVP ${p.awards.filter(a=>/정규리그 MVP/.test(a)).length}</i><i>레거시 ${sc}</i></div></div></section><div class="rl-film"></div>`;
+    box.innerHTML=`<section class="rl-s on" style="--c0:${c0}">${logoOf(p.team)?`<img class="rl-logo" src="${logoOf(p.team)}" alt="">`:''}<div class="rl-art" id="rlav">${avatarBox(p,300,{full:1,pose:'shoot',maxH:'100%'})}</div><div class="rl-fin"><small>${esc(POSN[p.pos]||'')} · #${p.num}</small><b>${esc(p.name)}</b><span class="rl-cnt">0</span><em>통산 득점</em><div class="rl-fs"><i>우승 ${p.titles.length}</i>${p.awards.some(a=>/NBA 정규리그 MVP/.test(a))?`<i>NBA MVP ${p.awards.filter(a=>/NBA 정규리그 MVP/.test(a)).length}</i>`:`<i>MVP ${p.awards.filter(a=>/정규리그 MVP/.test(a)).length}</i>`}<i>레거시 ${sc}</i></div></div></section><div class="rl-film"></div>`;
     document.body.appendChild(box);box.onclick=finish;
     {const so={p,age:keep.age,colors:teamColors(p.team),num:p.num},h=Math.round(innerHeight*.44);
      (async()=>{for(let n=0;n<40&&!ended;n++){await spriteAnim('#rlav',animKeys(n%2?'shoot':'dunk'),so,Math.min(360,innerWidth*.86),h+'px',10,false);await new Promise(r=>setTimeout(r,80))}})()}
@@ -4602,7 +4603,7 @@ function playReel(onDone){
 function renderEnd(){
   const e=G.final,p=G.p;
   return `<div class="bar0"><b>커리어 끝</b></div><div class="card center"><div class="bigav">${avatarBox(p,180,{full:1,pose:'shoot',maxH:'320px'})}</div>${head(`${POSN[e.pos]} · 선수 ${e.seasons}시즌`,`${e.name}의\n농구 인생`)}</div>
-  <div class="card">${rows([['통산',`${e.gp}경기 ${e.pts.toLocaleString()}득점`],['우승',e.titles+'회'],['정규리그 MVP',e.mvp+'회'],['올스타',e.allstar+'회'],['국가대표 메달',e.medals+'개'],...(G.coach?[['지도자',`${e.crec} · 우승 ${e.ctitles}회`]]:[]),['레거시 점수',e.score,'blue']])}</div>${(p.hof||[]).length||(p.retNum||[]).length?`<div class="card"><div class="ch"><h2>명예의 전당 · 영구결번</h2></div>${(p.hof||[]).map(h=>`<p class="li0">🏛️ ${esc(h.n)} 헌액${h.first?' (첫 해 헌액)':''}</p>`).join('')}${(p.retNum||[]).map(r=>`<p class="li0">👕 ${esc(r.team)} #${r.num} 영구결번</p>`).join('')}</div>`:''}
+  <div class="card">${rows([['통산',`${e.gp}경기 ${e.pts.toLocaleString()}득점`],['우승',e.titles+'회'],...(e.nbamvp?[['NBA MVP',e.nbamvp+'회']]:[]),['정규리그 MVP',e.mvp+'회'],['올스타',e.allstar+'회'],['국가대표 메달',e.medals+'개'],...(G.coach?[['지도자',`${e.crec} · 우승 ${e.ctitles}회`]]:[]),['레거시 점수',e.score,'blue']])}</div>${(p.hof||[]).length||(p.retNum||[]).length?`<div class="card"><div class="ch"><h2>명예의 전당 · 영구결번</h2></div>${(p.hof||[]).map(h=>`<p class="li0">🏛️ ${esc(h.n)} 헌액${h.first?' (첫 해 헌액)':''}</p>`).join('')}${(p.retNum||[]).map(r=>`<p class="li0">👕 ${esc(r.team)} #${r.num} 영구결번</p>`).join('')}</div>`:''}
   <div class="card" id="ghof">${ghofInner()}</div>
   <div class="card list"><button class="li" id="reelgo"><div class="f1"><b>인생 다시 보기</b><span>커리어 전체를 처음부터 다시 봐요</span></div>${ICON.chev}</button></div>
   <div class="ctaw"><button class="btn" id="newg">새로운 인생 시작하기</button></div>`;
