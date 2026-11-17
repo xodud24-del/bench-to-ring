@@ -1176,7 +1176,7 @@ function afterSeason(res){
       q.push({type:'info',eye:'입대',t:'국군체육부대(상무)에\n입대해요',x:'만 28세, 더는 입대를 미룰 수 없어요. 상무에서 한 시즌을 보내고 전역 후 원소속팀 후반기에 합류합니다.',feed:makeFeed(['military','military','military'],{n:p.name,t:p.team},'')});
       p.mil={now:true,lg:p.lg,team:p.team,yrs:p.yrs};p.lg='MIL';p.team='국군체육부대 상무';
     }else if(p.yrs<=0)q.push(...freeAgency());
-    if(p.age>=41){q.length=0;q.push({type:'result',res});q.push({type:'info',eye:'은퇴',t:'유니폼을\n벗을 때가 됐어요',x:'만 41세, 더 이상 계약해 주는 팀이 없어요.'});q.push(retireChoice())}
+    if(p.age>=41&&o<L[p.lg].str-6&&!(L[p.lg].pro&&p.yrs>0)){q.length=0;q.push({type:'result',res});q.push({type:'info',eye:'은퇴',t:'유니폼을\n벗을 때가 됐어요',x:`만 ${p.age}세, 실력이 떨어져 더 이상 계약해 주는 팀이 없어요.`});q.push(retireChoice())}
     else if(p.age>=38||(p.age>=34&&o<L[p.lg].str-8)){
       q.push({type:'choice',eye:'은퇴 고민',t:'몸이 예전 같지\n않아요',x:`만 ${p.age}세. 결정은 지금 하지 않아도 돼요.`,opts:[{act:'stay',label:'한 시즌 더 뛴다',sub:'은퇴는 홈 화면에서 언제든 할 수 있어요'},{act:'retire',label:'은퇴한다',sub:'선수 생활을 마무리해요'}]});
     }
