@@ -1075,6 +1075,8 @@ function progress(){
       else if(k==='str')g-=age>=DECL+2?rf(.8,2)*DR*.7:0;
       else if(k!=='iq'&&age>=DECL+1)g-=rf(.5,1.8)*DR+d*.15;
     }
+    /* 36세부터는 관리·아이템과 상관없이 몸이 버티지 못함 */
+    if(age>=36){const e=age-35;if(["spd","jmp","sta","str"].includes(k))g-=Math.pow(e,1.6)*rf(.5,.8);else g-=e*rf(.4,.7)*(k==='iq'?.4:1)}
     x[k]=Math.round(clamp(x[k]+g,15,Math.max(x[k],Math.min(99,p.pot+8))));
   }
   if(p.buff)delete p.buff.train;
