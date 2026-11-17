@@ -816,7 +816,10 @@ function baseAttrs(d,style){
   for(const k in pb) x[k]+=pb[k];
   const sb=STYLE[style||d.style]; for(const k in sb) x[k]+=sb[k];
   for(const k in x) x[k]=Math.round(clamp(x[k],22,72));
-  const pot=Math.round(59+40*Math.pow(rnd(),3.6));
+  /* body type changes WHICH skills are strong, not how good the player is overall: pull every build to a similar starting OVR
+     by lifting (or trimming) the skills that matter for the position */
+  {const tgt=47+r(-3,3),w=W[d.pos];for(let it=0;it<3;it++){const dl=tgt-ovr(x,d.pos);if(Math.abs(dl)<.5)break;for(const k in w)x[k]=Math.round(clamp(x[k]+dl*(it?1.6:1),22,72))}}
+  const pot=Math.round(59+40*Math.pow(rnd(),3.1));
   return {x,pot};
 }
 function ovr(x,pos){const w=W[pos];let s=0,t=0;for(const k in w){s+=x[k]*w[k];t+=w[k]}return Math.round(s/t)}
