@@ -2823,16 +2823,21 @@ function drawFace(S,W,H,art,lab,p,look,noFace){
       if(onChin||sideBurn||jaw)cells.push([x,y,d])}
     cells.forEach(([x,y,d])=>{if(bd===1){if((x+y)%2===0||d===1)lab[I(x,y)]=14}else if(d===1||y>=mb+1)lab[I(x,y)]=15;else if((x+y)%2===0)lab[I(x,y)]=14});
   }
-  /* thick full beard: sideburns down the jaw, the whole chin and around the mouth */
+  /* full beard, LeBron style: thick along the jaw and chin, skin left around the lips and on the cheeks */
   if(bd===4||bd===5){
-    const tex=(x,y)=>((x*3+y*5)%4===0?.86:(x+y)%2?.96:1.06);
+    const tex=(x,y)=>((x*3+y*5)%4===0?.88:(x+y)%2?.97:1.05);
     const inFace=(x,y)=>has(x,y)&&(lab[I(x,y)]===1||lab[I(x,y)]===14||lab[I(x,y)]===13);
-    for(let y=eyY+4;y<=ey0+15;y++)for(let x=Math.round(cx0)-9;x<=Math.round(cx0)+10;x++){if(!inFace(x,y))continue;
-      let d=9;for(let k=1;k<=4;k++){if(!inFace(x-k,y)||!inFace(x+k,y)||!inFace(x,y+k)){d=k;break}}
-      const dx=Math.abs(x+.5-(mcx)),side=d<=(y<mY?1:2),chin=y>=mb&&dx<=6,aroundMouth=y>=mY&&dx>=3.5&&dx<=5;
-      if(side||chin||aroundMouth)hr(x,y,tex(x,y))}
-    /* keep the lips readable */
-    MG.forEach((row,ry)=>[...row].forEach((ch,i)=>{if(ch==='M')fix(mcx-2+i,mY+ry,M)}));
+    const cx=mcx-.5,cxi=Math.round(cx0);
+    for(let y=eyY+3;y<=ey0+14;y++){
+      if(!inFace(cxi,y)&&!inFace(cxi+1,y))continue;
+      let xl=cxi;while(inFace(xl-1,y))xl--;let xr=cxi;while(inFace(xr+1,y))xr++;
+      const th=y<mY-2?1:y<mY?2:y<=mb?3:99;
+      for(let x=xl;x<=xr;x++){const dx=Math.abs(x-cx),side=Math.min(x-xl,xr-x);
+        if(y>=mY-1&&y<=mb+1&&dx<=3.5)continue;
+        if(side>=th)continue;
+        if(y>mb+1&&dx>(xr-xl)/2-(y-mb-2)*1.3)continue;
+        const soft=(y<mY-2&&side===0&&(x+y)%2)||(y===mb+1&&dx<=4.5&&(x+y)%2);
+        if(soft)lab[I(x,y)]=14;else hr(x,y,tex(x,y))}}
   }
   /* mustache: thicker in the middle, a notch under the nose, tips curling down to the mouth corners */
   if(bd===3||bd===5){
