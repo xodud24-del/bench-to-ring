@@ -982,8 +982,8 @@ function simSeason(){
   if(aw.includes('정규리그 MVP'))cuts.push({kind:'mvp',lg});
   const cinematicAwards=aw.filter(a=>/득점왕|리바운드왕|어시스트왕|스틸왕|블록왕|퍼스트 팀|세컨드 팀|서드 팀|올-디펜시브|올해의 수비수|수비 베스트5|신인상|신인 베스트5|베스트5|올스타전 MVP|올스타$|기량발전상|클러치 선수|콘테스트 우승|NBA컵 MVP|파이널 MVP/.test(a)&&a!=='파이널 MVP');
   cinematicAwards.forEach(a=>cuts.push({kind:'award',lg,award:a}));
-  if(p.tot.pts>=10000&&!p.m10k){p.m10k=1;cuts.push({kind:'mile',val:'통산 10,000득점'})}
-  else if(p.tot.pts>=5000&&!p.m5k){p.m5k=1;cuts.push({kind:'mile',val:'통산 5,000득점'})}
+  {const had=p.mPts!=null?p.mPts:(p.m10k?10000:p.m5k?5000:0),mk=Math.floor(p.tot.pts/5000)*5000;
+   if(mk>had&&mk>0){p.mPts=mk;cuts.push({kind:'mile',val:`통산 ${mk.toLocaleString()}득점`,anim:pick(['shoot','dunk','driveR'])})}else if(p.mPts==null)p.mPts=had}
   if(LG.pro&&!half){p.proY=(p.proY||0)+1;p.earn+=p.sal||salary(lg,o)}
   if(LG.pro){if(p.cash==null)p.cash=p.earn||0;p.cash+=(p.sal||salary(lg,o))*(['NBA','GL'].includes(lg)?1.4:1)*(half?.5:1)+Math.max(0,(p.rep-20)*.02)}
   if(LG.pro&&!half&&(p.spons||[]).length){if(p.cash==null)p.cash=p.earn||0;p.cash+=sponsorPay(p)}
@@ -4524,7 +4524,8 @@ function showCut(cut,onClose){
         /덩크|슬램/i.test(awardText)?'dunk':
         /드리블|어시스트|플레이메이커/i.test(awardText)?'driveR':
         /득점|슈팅|3점|클러치|MVP|신인|올스타|퍼스트|세컨드|서드|베스트|기량발전|리바운드/i.test(awardText)?'shoot':'shoot';
-      if(/득점/.test(awardText)){
+      if(cut.kind==='mile'&&cut.anim){spriteAnim('#cav',animKeys(cut.anim),so,Math.min(320,innerWidth*.78),'48vh',10,true)}
+      else if(/득점/.test(awardText)){
         /* 득점왕: 덩크와 슈팅을 번갈아 보여줌 */
         const host=$('#cav');(async()=>{await new Promise(r=>setTimeout(r,900));for(let n=0;n<400&&host&&host.isConnected;n++){
           await spriteAnim('#cav',animKeys(n%3===2?'shoot':'dunk'),so,Math.min(320,innerWidth*.78),'48vh',9,false);
@@ -4554,7 +4555,7 @@ function reelCuts(){
     grp[g].last=r;return false});
    Object.values(grp).forEach(g=>{const n=g.cut.years.length;g.cut.multi=n>1?n:0;if(g.last){g.age=g.last.age;g.ca=g.last.ca;g.oa=g.last.oa;g.cut.team=g.last.cut.team||g.cut.team}})}
   /* keep it a highlight reel: cap the repetitive kinds */
-  const cap={champ:9,mvp:9,award:4,mile:2,nt:2,cgame:1,oseason:1,chire:2,coty:1,cchamp:9,ochamp:9,draft:1,retire:1,oown:1},n={};
+  const cap={champ:9,mvp:9,award:4,mile:4,nt:2,cgame:1,oseason:1,chire:2,coty:1,cchamp:9,ochamp:9,draft:1,retire:1,oown:1},n={};
   const pri=a=>/MVP|득점왕|퍼스트|올해의 수비|신인상/.test(a)?0:1;
   const aw=list.filter((r,i,A)=>r.cut.kind==='award'&&A.findIndex(x=>x.cut.kind==='award'&&x.cut.award===r.cut.award)===i).sort((a,b)=>pri(a.cut.award)-pri(b.cut.award)).slice(0,cap.award);
   list=list.filter(r=>{const k=r.cut.kind;if(k==='award')return aw.includes(r);n[k]=(n[k]||0)+1;return n[k]<=(cap[k]??1)});
