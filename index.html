@@ -340,7 +340,7 @@ details[open] summary{margin-bottom:6px}
 @keyframes rlCut{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
 .rl-film{position:absolute;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 120px 30px rgba(0,0,0,.75);animation:rlFlick .18s steps(2) infinite}
 @keyframes rlFlick{0%{opacity:.92}100%{opacity:1}}
-.gl{white-space:nowrap}.glq{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:2px;border-radius:50%;background:rgba(127,127,127,.22);color:inherit;font-size:10px;font-style:normal;font-weight:700;line-height:1;vertical-align:2px;cursor:pointer;opacity:.85}
+gl-w.gl{display:inline!important;white-space:nowrap;font:inherit;color:inherit}gl-q.glq{display:inline-flex!important;position:static!important;align-items:center;justify-content:center;width:15px!important;height:15px!important;min-width:0!important;padding:0!important;margin:0 0 0 3px!important;border:0!important;border-radius:50%!important;background:rgba(127,127,127,.22)!important;color:inherit!important;font-size:10px!important;font-style:normal;font-weight:700;line-height:1!important;vertical-align:2px;cursor:pointer;opacity:.85;box-shadow:none!important}
 .glpop{position:fixed;z-index:100001;background:#1d2330;color:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:14px;line-height:1.5}.glpop b{display:block;font-size:15px;margin-bottom:4px}.glpop p{margin:0;color:rgba(255,255,255,.85)}
 .hhead{padding:4px 4px 10px}.hhead b{display:block;font-size:24px;font-weight:700;letter-spacing:-.5px}.hhead span{font-size:14px;color:var(--sub)}
 .meinfo{margin:12px 0 2px;font-size:14px;color:var(--sub)}
@@ -4715,7 +4715,7 @@ function glossMark(root){
     while((m=GLOSS_RE.exec(t))){const k=m[0];if(seen.has(k))continue;
       const before=t[m.index-1]||'';if(/[가-힣A-Za-z0-9]/.test(before)&&!/[ ·,(]/.test(before))continue;
       seen.add(k);frag=frag||document.createDocumentFragment();frag.appendChild(document.createTextNode(t.slice(last,m.index)));
-      const sp=document.createElement('span');sp.className='gl';sp.textContent=k;const q=document.createElement('i');q.className='glq';q.dataset.g=k;q.textContent='?';q.setAttribute('role','button');q.setAttribute('aria-label',k+' 뜻 보기');sp.appendChild(q);frag.appendChild(sp);last=m.index+k.length}
+      const sp=document.createElement('gl-w');sp.className='gl';sp.textContent=k;const q=document.createElement('gl-q');q.className='glq';q.dataset.g=k;q.textContent='?';q.setAttribute('role','button');q.setAttribute('aria-label',k+' 뜻 보기');sp.appendChild(q);frag.appendChild(sp);last=m.index+k.length}
     if(frag){frag.appendChild(document.createTextNode(t.slice(last)));n.parentNode.replaceChild(frag,n)}});
 }
 function glossShow(el){
