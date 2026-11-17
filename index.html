@@ -347,6 +347,9 @@ details[open] summary{margin-bottom:6px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.tile{padding:14px 6px;border-radius:14px;background:#fff;font-size:15px;font-weight:600;color:var(--ink,#191f28);text-align:center}
 .ntline{margin:4px 4px 0;font-size:13px;color:var(--sub)}
 .minor{display:flex;justify-content:center;gap:10px;margin:18px 0 8px;font-size:13px;color:var(--sub)}.minor button{color:var(--sub);font-size:13px;text-decoration:underline;text-underline-offset:3px}.minor i{font-style:normal}
+.card.pick .ofr{display:flex;align-items:center;gap:10px}.ofr .f1{min-width:0}.ofr .f1 b{display:block;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ofr .f1 b em{font-style:normal;font-size:11px;color:var(--blue);font-weight:600}.ofr .f1 span{font-size:13px;color:var(--sub)}
+.ofv{text-align:right;flex-shrink:0}.ofv b{display:block;font-size:15px;font-weight:700}.ofv b.neg{color:var(--blue)}.ofv span{font-size:12px;color:var(--sub)}.ofr .rad{flex-shrink:0}
+.card.pick:has(.ofr){padding:14px 16px;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -986,6 +989,7 @@ function simSeason(){
   aw.forEach(a=>p.awards.push(`${G.year} ${lgName(lg)} ${a}`));
   const cuts=[];
   if(champ)cuts.push({kind:'champ',lg,team:p.team,fin:L[lg].fin,fmvp:aw.some(a=>/파이널 MVP|대회 MVP/.test(a)),year:G.year});
+  if(aw.some(a=>/파이널 MVP/.test(a)))cuts.push({kind:'fmvp',lg,team:p.team,year:G.year});
   if(aw.includes('정규리그 MVP'))cuts.push({kind:'mvp',lg});
   const cinematicAwards=aw.filter(a=>/득점왕|리바운드왕|어시스트왕|스틸왕|블록왕|퍼스트 팀|세컨드 팀|서드 팀|올-디펜시브|올해의 수비수|수비 베스트5|신인상|신인 베스트5|베스트5|올스타전 MVP|올스타$|기량발전상|클러치 선수|콘테스트 우승|NBA컵 MVP|파이널 MVP/.test(a)&&a!=='파이널 MVP');
   cinematicAwards.forEach(a=>cuts.push({kind:'award',lg,award:a}));
@@ -2474,7 +2478,7 @@ Object.assign(KO,{
 function endCareer(){
   const p=G.p,c=G.coach;if(!p.legacyDone)legacyEvents();
   const sc=Math.round(p.tot.pts/100+p.titles.length*25+p.awards.filter(a=>/MVP/.test(a)).length*30+p.awards.filter(a=>/올스타/.test(a)).length*5+p.nt.medals.length*8+(c?c.titles.length*20+c.hs:0)+(G.owner?G.owner.titles.length*20+G.owner.yrs*2:0));
-  const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:p.awards.filter(a=>/정규리그 MVP/.test(a)).length,nbamvp:p.awards.filter(a=>/NBA 정규리그 MVP/.test(a)).length,allstar:p.awards.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,ctitles:c?c.titles.length:0,otitles:G.owner?G.owner.titles.length:0,oval:G.owner?G.owner.val:0,crec:c?`${c.w}승 ${c.l}패`:'',score:sc,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
+  const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:p.awards.filter(a=>/정규리그 MVP/.test(a)).length,nbamvp:p.awards.filter(a=>/NBA 정규리그 MVP/.test(a)).length,povr:Math.max(0,...(p.log||[]).map(e=>+e.ovr||+e.o||0),curOvr()),awn:p.awards.length,allstar:p.awards.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,ctitles:c?c.titles.length:0,otitles:G.owner?G.owner.titles.length:0,oval:G.owner?G.owner.val:0,crec:c?`${c.w}승 ${c.l}패`:'',score:sc,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
   if(c&&(c.seasons||c.log.length)){e.cy=c.seasons||c.log.length;e.cw=c.w;e.cl=c.l;e.coty=c.log.filter(x=>x.aw&&String(x.aw).includes('올해의 감독상')).length;e.cteam=c.team;e.clg=c.lg;e.cscore=Math.round(e.ctitles*25+e.coty*10+c.w*.2+e.cy*2)}
   if(G.owner&&G.owner.yrs>0){const ow=G.owner;e.oy=ow.yrs;e.ofans=Math.round(ow.fans||0);e.oteam=ow.team;e.olg=ow.lg;e.oscore=Math.round(e.otitles*25+ow.yrs*3+Math.log10(1+Math.max(0,ow.val||0))*10)}
   const hof=store.get('b2r_hof')||[];hof.push(e);store.set('b2r_hof',hof);ghPush(e);
@@ -3492,7 +3496,7 @@ const DRAFT_GIF_KBL='data:image/gif;base64,R0lGODlhAAOwAYcAAO/x/Ozt+Oro9Obn6+nl8
 const PRESS_PIXEL_SCENE='data:image/png;base64,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';
 const SIGNATURE_SHOE_PIXEL='data:image/png;base64,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';
 const trophyOf=lg=>TROPHY[lg]||TROPHY.etc;
-const CUTSPR={ochamp:['suit',60],champ:['driveR'],cchamp:['suit',52],mvp:['mvp'],nt:['driveW'],draft:['suit'],retire:['suit',38],mile:['mvp'],award:['mvp']};
+const CUTSPR={ochamp:['suit',60],champ:['driveR'],cchamp:['suit',52],mvp:['mvp'],fmvp:['mvp'],nt:['driveW'],draft:['suit'],retire:['suit',38],mile:['mvp'],award:['mvp']};
 
 /* ---------- real team colours + badges ---------- */
 const TEAMC={
@@ -3750,7 +3754,7 @@ function head(eye,title,desc){return `<div class="hd">${eye?`<p class="eye">${es
 const GH={db:null,runs:[],st:'loading',tab:'score',ro:false,pending:[]};
 function ghClean(e){const n=v=>Number.isFinite(+v)?+v:0,t=v=>String(v||'').slice(0,30);
   const o={name:String(e.name||'').slice(0,20),nat:String(e.nat||''),pos:String(e.pos||''),num:n(e.num),seasons:n(e.seasons),pts:n(e.pts),gp:n(e.gp),hi:n(e.hi),titles:n(e.titles),mvp:n(e.mvp),allstar:n(e.allstar),score:n(e.score),teams:(e.teams||[]).slice(0,6).map(String),when:String(e.when||''),a:JSON.parse(JSON.stringify(e.a||{}))};
-  {const nm=n(e.nbamvp!=null?e.nbamvp:(e.a&&e.a.nbamvp));o.a.nbamvp=nm;o.nbamvp=nm}
+  {const nm=n(e.nbamvp!=null?e.nbamvp:(e.a&&e.a.nbamvp));o.a.nbamvp=nm;o.nbamvp=nm;const po=n(e.povr!=null?e.povr:(e.a&&e.a.povr)),aw=n(e.awn!=null?e.awn:(e.a&&e.a.awn));o.a.povr=po;o.povr=po;o.a.awn=aw;o.awn=aw}
   if(e.cscore!=null){Object.assign(o,{cy:n(e.cy),cw:n(e.cw),cl:n(e.cl),ctitles:n(e.ctitles),coty:n(e.coty),cteam:t(e.cteam),clg:t(e.clg),cscore:n(e.cscore)})}
   if(e.oscore!=null){Object.assign(o,{oy:n(e.oy),otitles:n(e.otitles),oval:n(e.oval),ofans:n(e.ofans),oteam:t(e.oteam),olg:t(e.olg),oscore:n(e.oscore)})}
   return o}
@@ -3766,7 +3770,7 @@ const GH_FB='https://www.gstatic.com/firebasejs/10.12.2/';
 let GH_FS=null,GH_SUB=null,GH_TO=null;
 async function ghPush(e){
   if(!GH.db){GH.pending.push(e);return}
-  try{const d={...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()};delete d.nbamvp;await GH_FS.addDoc(GH_FS.collection(GH.db,'hof'),d)}
+  try{const d={...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()};delete d.nbamvp;delete d.povr;delete d.awn;await GH_FS.addDoc(GH_FS.collection(GH.db,'hof'),d)}
   catch(err){GH.ro=true;ghRender()}
 }
 function ghSub(){
@@ -3800,26 +3804,35 @@ function ghBind(){const ro=document.getElementById('rkopen');if(ro)ro.onclick=rk
 
 
 /* ---------- 랭킹 화면 (선수 · 감독 · 구단주) ---------- */
-const RK={role:'p',sort:'score',unsub:null,rows:[],st:'idle',mine:null,myRank:null};
+const RK={role:'p',sort:'legend',unsub:null,rows:[],st:'idle',mine:null,myRank:null};
 const RK_DEF={
-  p:{n:'선수',sorts:[['score','종합 점수'],['pts','통산 득점'],['titles','우승'],['nbamvp','NBA MVP'],['mvp','MVP']],has:e=>true},
+  p:{n:'선수',sorts:[['legend','NBA MVP 순'],['score','레거시 점수'],['pts','통산 득점'],['titles','우승'],['mvp','전체 MVP']],has:e=>true},
   c:{n:'감독',sorts:[['cscore','종합 점수'],['cw','통산 승리'],['ctitles','우승'],['coty','올해의 감독']],has:e=>e.cscore!=null},
   o:{n:'구단주',sorts:[['oscore','종합 점수'],['otitles','우승'],['oval','구단 가치'],['oy','운영 기간']],has:e=>e.oscore!=null}};
-function rkVal(e,k){const v=e[k]||0;return k==='pts'||k==='cw'?`${v.toLocaleString()}`:k==='oval'?won(v):k==='oy'?`${v}년`:k==='score'||k==='cscore'||k==='oscore'?`${v}점`:`${v}회`}
+const rkLeg=(a,b)=>(b.nbamvp||0)-(a.nbamvp||0)||(b.povr||0)-(a.povr||0)||(b.awn||0)-(a.awn||0)||(b.pts||0)-(a.pts||0);
+function rkVal(e,k){if(k==='legend')return `NBA MVP ${e.nbamvp||0}${e.povr?` · OVR ${e.povr}`:''}`;const v=e[k]||0;return k==='pts'||k==='cw'?`${v.toLocaleString()}`:k==='oval'?won(v):k==='oy'?`${v}년`:k==='score'||k==='cscore'||k==='oscore'?`${v}점`:`${v}회`}
 function rkLocal(){return (store.get('b2r_hof')||[]).map(ghClean).filter(RK_DEF[RK.role].has)}
 function rkSub(){
   if(RK.unsub){RK.unsub();RK.unsub=null}
-  const local=rkLocal().sort((a,b)=>(b[RK.sort]||0)-(a[RK.sort]||0));
+  const local=rkLocal().sort(RK.sort==='legend'?rkLeg:(a,b)=>(b[RK.sort]||0)-(a[RK.sort]||0));
   RK.mine=local[0]||null;RK.myRank=null;
   if(!GH.db){RK.rows=local.map(e=>({...e,me:true}));RK.st='local';rkRender();return}
   RK.st='loading';rkRender();
   const f=GH_FS,col=f.collection(GH.db,'hof');
   const to=setTimeout(()=>{if(RK.st==='loading'){RK.st='slow';rkRender()}},10000);
-  const fk=RK.sort==='nbamvp'?'a.nbamvp':RK.sort;RK.unsub=f.onSnapshot(f.query(col,f.orderBy(fk,'desc'),f.limit(100)),snap=>{
+  if(RK.sort==='legend'){
+    /* NBA MVP first, then peak OVR, awards, points: merge the NBA MVP leaders with the overall leaders and sort here */
+    const qa=f.query(col,f.orderBy('a.nbamvp','desc'),f.limit(100)),qb=f.query(col,f.orderBy('score','desc'),f.limit(100)),got={a:null,b:null};
+    const done=()=>{if(!got.a&&!got.b)return;clearTimeout(to);const m=new Map();[...(got.a||[]),...(got.b||[])].forEach(d=>m.set(d.id,d));
+      RK.rows=[...m.values()].sort(rkLeg).slice(0,100);RK.st='ok';if(RK.mine){const i=RK.rows.findIndex(r=>r.me&&r.name===RK.mine.name&&r.pts===RK.mine.pts);RK.myRank=i>=0?i+1:null}rkRender()};
+    const map=snap=>snap.docs.map(d=>{const v=d.data()||{};return {...ghClean(v),me:v.dev===GH_DEV,id:d.id}});
+    const ua=f.onSnapshot(qa,sn=>{got.a=map(sn);done()},()=>{got.a=[];done()}),ub=f.onSnapshot(qb,sn=>{got.b=map(sn);done()},()=>{got.b=got.b||[];if(!got.a){clearTimeout(to);RK.st='err';RK.rows=local.map(e=>({...e,me:true}));rkRender()}});
+    RK.unsub=()=>{ua();ub()};return}
+  const fk=RK.sort;RK.unsub=f.onSnapshot(f.query(col,f.orderBy(fk,'desc'),f.limit(100)),snap=>{
     clearTimeout(to);RK.rows=snap.docs.map(d=>{const v=d.data()||{};return {...ghClean(v),me:v.dev===GH_DEV,id:d.id}});RK.st='ok';rkRender();
   },()=>{clearTimeout(to);RK.st='err';RK.rows=local.map(e=>({...e,me:true}));rkRender()});
   if(RK.mine&&f.getCountFromServer){const key=RK.sort,mv=RK.mine[key]||0;
-    f.getCountFromServer(f.query(col,f.where(key==='nbamvp'?'a.nbamvp':key,'>',mv))).then(c=>{if(RK.sort===key){RK.myRank=c.data().count+1;rkRender()}}).catch(()=>{})}
+    f.getCountFromServer(f.query(col,f.where(key,'>',mv))).then(c=>{if(RK.sort===key){RK.myRank=c.data().count+1;rkRender()}}).catch(()=>{})}
 }
 function rkOpen(){
   let v=document.getElementById('rankv');
@@ -3849,7 +3862,7 @@ function rkRender(){
 function rkDetail(e,i){
   const L2=(a,b)=>`<div class="rkd"><span>${a}</span><b>${b}</b></div>`;
   let h=`<div class="rkdh">${bustImg({...e.a,num:e.num,nat:e.nat,pos:e.pos,name:e.name},64)}<div><b class="big">${esc(e.name)}</b><p class="sub">${RK_DEF[RK.role].n} 랭킹 ${i+1}위 · #${e.num} ${esc(e.pos)} · ${flag(e.nat)} ${C[e.nat]?C[e.nat].n:''}</p></div></div>`;
-  h+=`<p class="rksec">선수 커리어</p>`+L2('시즌',`${e.seasons}시즌`)+L2('통산 득점',`${e.pts.toLocaleString()}점 (${e.gp}경기)`)+L2('커리어 하이',`${e.hi}점`)+L2('우승 · MVP · 올스타',`${e.titles} · ${e.mvp} · ${e.allstar}`)+(e.nbamvp?L2('NBA MVP',`${e.nbamvp}회`):'')+(e.teams.length?L2('뛴 팀',e.teams.map(esc).join(' → ')):'');
+  h+=`<p class="rksec">선수 커리어</p>`+L2('시즌',`${e.seasons}시즌`)+L2('통산 득점',`${e.pts.toLocaleString()}점 (${e.gp}경기)`)+L2('커리어 하이',`${e.hi}점`)+L2('NBA MVP',`${e.nbamvp||0}회`)+(e.povr?L2('최고 OVR',e.povr):'')+L2('우승 · 전체 MVP · 올스타',`${e.titles} · ${e.mvp} · ${e.allstar}`)+(e.teams.length?L2('뛴 팀',e.teams.map(esc).join(' → ')):'');
   if(e.cscore!=null)h+=`<p class="rksec">감독</p>`+L2('팀',esc(e.cteam))+L2('통산 성적',`${e.cy}시즌 ${e.cw}승 ${e.cl}패`)+L2('우승 · 올해의 감독',`${e.ctitles} · ${e.coty}`);
   if(e.oscore!=null)h+=`<p class="rksec">구단주</p>`+L2('구단',esc(e.oteam))+L2('운영 기간',`${e.oy}년`)+L2('우승',`${e.otitles}회`)+L2('구단 가치',won(e.oval));
   h+=`${e.when?`<p class="sub" style="margin-top:12px">은퇴 ${esc(e.when)}</p>`:''}<button class="btn sec" id="rkdx" style="margin-top:14px">닫기</button>`;
@@ -4343,8 +4356,7 @@ function watchCoachGame(d){
 }
 function renderOffers(e){
   const o=curOvr();
-  return head(e.eye,e.t,e.x)+e.offers.map((f,i)=>{const on=ui.sel===i;return `<div class="card pick${e.anim?'':' offer'}${on?' on':''}" data-o="${i}" style="animation-delay:${i*.35}s"><p class="eye">📞 ${f.resign?'원소속팀':i===0?'에이전트에게 연락이 왔어요':'또 다른 제안'}</p><div class="pk"><div class="tm">${badge(f.team,44)}<div><b class="big">${esc(f.team)}</b><p class="sub">${lgName(f.lg)}${f.loan?' · 1년 임대':''}${f.neg?' · 협상 성공':''}</p></div></div><i class="rad">${on?ICON.check:''}</i></div>
-   <div class="hr"></div>${rows([['계약',f.loan?'1년 임대':`${f.yrs}년`],['연봉',salText(f.lg,f.sal),f.neg?'blue':''],['예상 역할',f.role],['팀 전력',Math.round(teamStr(f.lg,f.team))]])}</div>`}).join('')+
+  return head(e.eye,e.t,e.x)+e.offers.map((f,i)=>{const on=ui.sel===i;return `<div class="card pick${e.anim?'':' offer'}${on?' on':''}" data-o="${i}" style="animation-delay:${i*.35}s"><div class="ofr">${badge(f.team,34)}<div class="f1"><b>${esc(f.team)}${f.resign?' <em>원소속팀</em>':''}</b><span>${lgName(f.lg)} · ${f.role} · 전력 ${Math.round(teamStr(f.lg,f.team))}</span></div><div class="ofv"><b class="${f.neg?'neg':''}">${f.loan?'임대':salText(f.lg,f.sal).replace('연 ','')}</b><span>${f.loan?'1년':`${f.yrs}년 계약`}</span></div><i class="rad">${on?ICON.check:''}</i></div></div>`}).join('')+
   (e.stay?`<div class="card pick${ui.sel===-1?' on':''}" data-o="-1"><div class="pk"><b class="big">지금 팀에 남기</b><i class="rad">${ui.sel===-1?ICON.check:''}</i></div></div>`:'')+
   (e.retire?`<button class="tb" id="oret" style="display:block;margin:4px auto 0">은퇴하기</button>`:'')+
   `<div class="ctaw"><div class="two"><button class="btn sec" id="neg"${ui.sel==null||ui.sel<0||e.offers[ui.sel].negT?' disabled':''}>연봉 더 요구하기</button><button class="btn" id="go"${ui.sel==null?' disabled':''}>${ui.sel===-1?'남을게요':'계약하기'}</button></div></div>`;
@@ -4550,13 +4562,14 @@ function showHighlight(h,res,when){
 }
 
 /* ---------- cutscene ---------- */
-const CUTPOSE={champ:{pose:'trophy'},cchamp:{pose:'trophy',outfit:'suit',age:52},mvp:{pose:'trophy',outfit:'suit'},nt:{pose:'medal',outfit:'national'},draft:{pose:'stand',outfit:'suit'},retire:{pose:'stand',outfit:'suit',age:38},mile:{pose:'trophy'},pts:{pose:'dunk'},big:{pose:'dunk'},award:{pose:'trophy'}};
+const CUTPOSE={fmvp:{pose:'trophy'},champ:{pose:'trophy'},cchamp:{pose:'trophy',outfit:'suit',age:52},mvp:{pose:'trophy',outfit:'suit'},nt:{pose:'medal',outfit:'national'},draft:{pose:'stand',outfit:'suit'},retire:{pose:'stand',outfit:'suit',age:38},mile:{pose:'trophy'},pts:{pose:'dunk'},big:{pose:'dunk'},award:{pose:'trophy'}};
 /* shrink a heading until it fits on one line */
 function fitOneLine(t,max,min){if(!t)return;t.style.whiteSpace='nowrap';t.style.fontSize=max+'px';t.style.display='block';t.style.maxWidth='100%';t.style.overflow='hidden';let f=max;
   while(f>min&&t.scrollWidth>t.clientWidth+1){f-=1;t.style.fontSize=f+'px'}if(f<=min){t.style.whiteSpace='normal'}t.style.letterSpacing=f<36?'-1px':''}
 function showCut(cut,onClose){
   const p=G.p,el=$('#cut');
   const T2={
+    fmvp:()=>cut.multi?[`${L[cut.lg]?L[cut.lg].fin:lgName(cut.lg)}`,`파이널 MVP ${cut.multi}회`,`${cut.years.join(', ')}`,'mvp']:[`${cut.year}–${String(cut.year+1).slice(2)} ${L[cut.lg]?L[cut.lg].fin:lgName(cut.lg)}`,'파이널 MVP',`${cut.team}의 우승을 이끈 파이널 최고의 선수로 뽑혔어요.`,'mvp'],
     champ:()=>cut.multi?[`${cut.fin||lgName(cut.lg)}`,`우승 ${cut.multi}회`,`${cut.years.join(', ')}${cut.teams&&cut.teams.length?' · '+cut.teams.join(', '):''}`,'champ']:[`${cut.year}–${String(cut.year+1).slice(2)} ${cut.fin}`,'우승',`${cut.team}가 정상에 섰어요.${cut.fmvp?' 파이널 MVP까지 손에 넣었어요.':''}`,'champ'],
     ochamp:()=>cut.multi?[`${lgName(cut.lg)} 파이널`,`구단주 우승 ${cut.multi}회`,`${cut.years.join(', ')} · ${cut.team}`,'cchamp']:[`${lgName(cut.lg)} 파이널`,'구단주의 반지',`${cut.team}, 구단주로서 들어 올린 우승 트로피예요.`,'cchamp'],
     cchamp:()=>cut.multi?[`${lgName(cut.lg)} 파이널`,`지도자 우승 ${cut.multi}회`,`${cut.years.join(', ')}${cut.teams&&cut.teams.length?' · '+cut.teams.join(', '):''}`,'cchamp']:[`${lgName(cut.lg)} 파이널`,'벤치에서 든 반지',`${cut.team}, ${cut.head?'감독':'코치'}로서 거둔 우승이에요.`,'cchamp'],
@@ -4573,7 +4586,7 @@ function showCut(cut,onClose){
     retire:()=>['은퇴식',`#${p.num}`,`${p.name}의 선수 생활이 끝났어요. ${legacyOf(p).ret.length?'등번호가 경기장 천장에 걸려요.':'마지막 경기를 마치고 코트를 떠나요.'}`,'retire']
   }[cut.kind]();
   const isCoachPix=['chire','coty','cgame','oown','oseason'].includes(cut.kind);const slot=T2[3],isAward=['award','mile'].includes(cut.kind),own=(isAward||cut.kind==='draft'||isCoachPix)?null:(IMG.get(slot)||CUTDEF[slot]||null),isT=['champ','cchamp','ochamp'].includes(cut.kind),img=own||(isT?trophyOf(cut.lg):null);
-  const conf=['champ','cchamp','ochamp','nt','mvp','draft'].includes(cut.kind)?`<div class="conf">${Array.from({length:70},()=>`<i style="left:${rf(0,100)}%;animation-duration:${rf(2.5,5)}s;animation-delay:${rf(0,2)}s;background:${pick(['#3182f6','#fff','#ffd43b','#9fc3ff'])}"></i>`).join('')}</div>`:'';
+  const conf=['champ','cchamp','ochamp','nt','mvp','fmvp','draft'].includes(cut.kind)?`<div class="conf">${Array.from({length:70},()=>`<i style="left:${rf(0,100)}%;animation-duration:${rf(2.5,5)}s;animation-delay:${rf(0,2)}s;background:${pick(['#3182f6','#fff','#ffd43b','#9fc3ff'])}"></i>`).join('')}</div>`:'';
   const isDraft=cut.kind==='draft';
   const commNat=['KBL','UKR','MIL','Y_KR'].includes(cut.lg)?'KR':cut.lg==='NBA'||cut.lg==='GL'||cut.lg==='NCAA'?'US':({BL:'JP',CBA:'CN',NBL:'AU',EURO:'FR'}[cut.lg]||'US');
   const comm=cut.lg==='NBA'?{...draft0(),name:'리그 총장',nat:'US',skin:0,hair:6,hairc:0,beard:0,band:0,num:0,mouth:1,fshape:2,h:185,wt:82,team:cut.team||p.team}:{...draft0(),name:'리그 총장',nat:commNat,skin:commNat==='KR'||commNat==='JP'||commNat==='CN'?2:commNat==='US'?3:1,hair:1,hairc:commNat==='KR'||commNat==='JP'||commNat==='CN'?0:1,beard:0,band:0,num:0,mouth:1,h:178,wt:76,team:cut.team||p.team};
@@ -4589,7 +4602,7 @@ function showCut(cut,onClose){
     const commScene={p:comm,age:cut.lg==='NBA'?62:56,suit:'#23389c',tie:'#101218',colors:['#e8e8e8','#24427e'],num:0};
     draftPhotoFrames(p,cut,{comm,logo:logoOf(cut.team||p.team),colors:teamColors(cut.team||p.team),title:`${cut.lg==='KBL'?'KBL':cut.lg==='NBA'?'NBA':lgName(cut.lg)} DRAFT ${G.year||''}`.trim(),sub:`#${cut.pick}`});
   }
-  else if(!img){const cs=isAward?['shoot']:(CUTSPR[cut.kind]||['driveR']);const age=cs[1]||p.age;const so={p,age,suit:suitOf(p),tie:pick(TIE_COL),opp:cut.kind==='mvp'?mvpTrophy(cut.lg):undefined,colors:cut.kind==='nt'?(NATC[p.nat]||['#f2f2f0','#24427e']):teamColors(cut.team||p.team),num:p.num,
+  else if(!img){const cs=isAward?['shoot']:(CUTSPR[cut.kind]||['driveR']);const age=cs[1]||p.age;const so={p,age,suit:suitOf(p),tie:pick(TIE_COL),opp:cut.kind==='mvp'?mvpTrophy(cut.lg):cut.kind==='fmvp'?['#e2b64a','#1b1b1b']:undefined,colors:cut.kind==='nt'?(NATC[p.nat]||['#f2f2f0','#24427e']):teamColors(cut.team||p.team),num:p.num,
       fallback:avatarBox(p,Math.min(300,innerWidth*.72),{full:1,maxH:'48vh',...CUTPOSE[cut.kind]})};
     if(isAward){
       const awardText=String(cut.award||cut.val||'');
@@ -4668,7 +4681,7 @@ function glossMark(root){
   if(!root||!root.isConnected)return;
   const seen=new Set([...root.querySelectorAll('.glq')].map(e=>e.dataset.g));
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const pe=n.parentElement;if(!pe)return 2;
-    if(pe.closest('script,style,textarea,input,select,option,.gl,.glpop,svg,.rkr,#reel,#reelui,.nogl,.slot b,.gt,.gname,.chip,.tile,.minor'))return 2;
+    if(pe.closest('script,style,textarea,input,select,option,.gl,.glpop,svg,.rkr,#reel,#reelui,.nogl,.slot b,.gt,.gname,.chip,.tile,.minor,.ofr'))return 2;
     if(/^\S{2,}\d{1,3}$/.test(n.nodeValue.trim()))return 2;
     return GLOSS_RE.test(n.nodeValue)?(GLOSS_RE.lastIndex=0,1):(GLOSS_RE.lastIndex=0,2)}});
   const nodes=[];while(w.nextNode())nodes.push(w.currentNode);
@@ -4704,13 +4717,13 @@ function reelCuts(){
     if(c)(c.titles||[]).forEach(t=>list.push({cut:{kind:'cchamp',lg:c.lg,team:c.team,head:1},year:+t.slice(0,4),age:p.age,ca:c.age}));
     const o=G.owner;if(o){list.push({cut:{kind:'oown',lg:o.lg,team:o.team,scene:8},year:G.year,age:p.age,oa:o.age});(o.titles||[]).forEach(t=>list.push({cut:{kind:'ochamp',lg:o.lg,team:o.team},year:+t.slice(0,4),age:p.age,oa:o.age}))}}
   /* the same honour won several times in one league becomes one slide with the count and the years */
-  {const grp={};list=list.filter(r=>{const k=r.cut.kind;if(!['champ','mvp','cchamp','ochamp'].includes(k))return true;const g=k+'|'+(r.cut.lg||'');
+  {const grp={};list=list.filter(r=>{const k=r.cut.kind;if(!['champ','mvp','fmvp','cchamp','ochamp'].includes(k))return true;const g=k+'|'+(r.cut.lg||'');
     if(!grp[g]){grp[g]=r;r.cut={...r.cut,years:[r.year],teams:[r.cut.team].filter(Boolean)};return true}
     grp[g].cut.years.push(r.year);if(r.cut.team&&!grp[g].cut.teams.includes(r.cut.team))grp[g].cut.teams.push(r.cut.team);
     grp[g].last=r;return false});
    Object.values(grp).forEach(g=>{const n=g.cut.years.length;g.cut.multi=n>1?n:0;if(g.last){g.age=g.last.age;g.ca=g.last.ca;g.oa=g.last.oa;g.cut.team=g.last.cut.team||g.cut.team}})}
   /* keep it a highlight reel: cap the repetitive kinds */
-  const cap={champ:9,mvp:9,award:4,mile:4,nt:2,cgame:1,oseason:1,chire:2,coty:1,cchamp:9,ochamp:9,draft:1,retire:1,oown:1},n={};
+  const cap={champ:9,mvp:9,fmvp:9,award:4,mile:4,nt:2,cgame:1,oseason:1,chire:2,coty:1,cchamp:9,ochamp:9,draft:1,retire:1,oown:1},n={};
   const pri=a=>/MVP|득점왕|퍼스트|올해의 수비|신인상/.test(a)?0:1;
   const aw=list.filter((r,i,A)=>r.cut.kind==='award'&&A.findIndex(x=>x.cut.kind==='award'&&x.cut.award===r.cut.award)===i).sort((a,b)=>pri(a.cut.award)-pri(b.cut.award)).slice(0,cap.award);
   list=list.filter(r=>{const k=r.cut.kind;if(k==='award')return aw.includes(r);n[k]=(n[k]||0)+1;return n[k]<=(cap[k]??1)});
