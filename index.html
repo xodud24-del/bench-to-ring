@@ -3799,6 +3799,7 @@ function head(eye,title,desc){return `<div class="hd">${eye?`<p class="eye">${es
 const GH={db:null,runs:[],st:'loading',tab:'score',ro:false,pending:[]};
 function ghClean(e){const n=v=>Number.isFinite(+v)?+v:0,t=v=>String(v||'').slice(0,30);
   const o={name:String(e.name||'').slice(0,20),nat:String(e.nat||''),pos:String(e.pos||''),num:n(e.num),seasons:n(e.seasons),pts:n(e.pts),gp:n(e.gp),hi:n(e.hi),titles:n(e.titles),mvp:n(e.mvp),allstar:n(e.allstar),score:n(e.score),teams:(e.teams||[]).slice(0,6).map(String),when:String(e.when||''),a:JSON.parse(JSON.stringify(e.a||{}))};
+  for(const k of ['seasons','titles','mvp','score','pts','cscore','cw','ctitles','coty','oscore','otitles','oy'])if(o.a['r_'+k]!=null){e={...e,[k]:o.a['r_'+k]};if(k in o)o[k]=n(o.a['r_'+k])}
   {const nm=n(e.nbamvp!=null?e.nbamvp:(e.a&&e.a.nbamvp));o.a.nbamvp=nm;o.nbamvp=nm;const po=n(e.povr!=null?e.povr:(e.a&&e.a.povr)),aw=n(e.awn!=null?e.awn:(e.a&&e.a.awn));o.a.povr=po;o.povr=po;o.a.awn=aw;o.awn=aw}
   if(e.cscore!=null){Object.assign(o,{cy:n(e.cy),cw:n(e.cw),cl:n(e.cl),ctitles:n(e.ctitles),coty:n(e.coty),cteam:t(e.cteam),clg:t(e.clg),cscore:n(e.cscore)})}
   if(e.oscore!=null){Object.assign(o,{oy:n(e.oy),otitles:n(e.otitles),oval:n(e.oval),ofans:n(e.ofans),oteam:t(e.oteam),olg:t(e.olg),oscore:n(e.oscore)})}
@@ -3813,10 +3814,19 @@ const FIREBASE_CONFIG={apiKey:"...",authDomain:"xxx.firebaseapp.com",projectId:"
 const GH_DEV=(()=>{let d=store.get('b2r_dev');if(!d){d=Math.random().toString(36).slice(2,12);store.set('b2r_dev',d)}return d})();
 const GH_FB='https://www.gstatic.com/firebasejs/10.12.2/';
 let GH_FS=null,GH_SUB=null,GH_TO=null;
+function ghMarkSent(e){const h=store.get('b2r_hof')||[];const x=h.find(v=>v.when===e.when&&v.name===e.name);if(x){x.sent=1;store.set('b2r_hof',h)}}
+async function ghRetry(){/* 예전에 저장 실패한 내 기록을 다시 올림 */
+  const f=GH_FS,h=(store.get('b2r_hof')||[]).filter(v=>!v.sent).slice(-10);
+  for(const e of h){try{const q=await f.getDocs(f.query(f.collection(GH.db,'hof'),f.where('dev','==',GH_DEV),f.where('when','==',String(e.when||'')),f.limit(1)));if(q.empty)await ghPush(e);else ghMarkSent(e)}catch(err){}}}
 async function ghPush(e){
   if(!GH.db){GH.pending.push(e);return}
-  try{const d={...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()};delete d.nbamvp;delete d.povr;delete d.awn;await GH_FS.addDoc(GH_FS.collection(GH.db,'hof'),d)}
-  catch(err){GH.ro=true;ghRender()}
+  try{const d={...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()};delete d.nbamvp;delete d.povr;delete d.awn;
+    /* 서버 규칙 한도를 넘는 값은 실제 값을 a에 보관하고 본 필드는 한도 안으로 */
+    const cap=(k,mx)=>{if(d[k]>mx){d.a['r_'+k]=d[k];d[k]=mx}};cap('seasons',40);cap('titles',40);cap('mvp',40);cap('score',99999);cap('pts',199999);
+    if('cscore' in d){cap('cscore',99999);cap('cw',9999);cap('ctitles',60);cap('coty',60)}if('oscore' in d){cap('oscore',99999);cap('otitles',80);cap('oy',80)}
+    d.name=d.name||'선수';d.teams=(d.teams||[]).slice(0,6);
+    await GH_FS.addDoc(GH_FS.collection(GH.db,'hof'),d);ghMarkSent(e)}
+  catch(err){console.warn('hof push',err);GH.ro=true;ghRender()}
 }
 function ghSub(){
   if(!GH.db)return;if(GH_SUB)GH_SUB();clearTimeout(GH_TO);
@@ -3830,7 +3840,7 @@ function ghSub(){
   try{
     const app=await import(GH_FB+'firebase-app.js');GH_FS=await import(GH_FB+'firebase-firestore.js');
     GH.db=GH_FS.getFirestore(app.initializeApp(FIREBASE_CONFIG));ghSub();
-    const q=GH.pending.splice(0);for(const e of q)await ghPush(e);
+    const q=GH.pending.splice(0);for(const e of q)await ghPush(e);ghRetry();
   }catch(e){GH.st='off';ghRender()}
 })();
 function ghofInner(){
