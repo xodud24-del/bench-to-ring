@@ -2831,11 +2831,12 @@ function drawFace(S,W,H,art,lab,p,look,noFace){
     for(let y=eyY+3;y<=ey0+14;y++){
       if(!inFace(cxi,y)&&!inFace(cxi+1,y))continue;
       let xl=cxi;while(inFace(xl-1,y))xl--;let xr=cxi;while(inFace(xr+1,y))xr++;
-      const th=y<mY-2?1:y<mY?2:y<=mb?3:99;
+      const bt=clamp(p.bth==null?2:+p.bth,0,3),th=y<mY-2?[0,0,1,2][bt]:y<mY?[1,1,2,3][bt]:y<=mb?[1,2,3,4][bt]:99;
       for(let x=xl;x<=xr;x++){const dx=Math.abs(x-cx),side=Math.min(x-xl,xr-x);
-        if(y>=mY-1&&y<=mb+1&&dx<=3.5)continue;
+        if(y>=mY-1&&y<=mb+1&&dx<=[4.5,4,3.5,3][bt])continue;
+        if(bt===0&&y>mb+3)continue;
         if(side>=th)continue;
-        if(y>mb+1&&dx>(xr-xl)/2-(y-mb-2)*1.3)continue;
+        if(y>mb+1&&dx>(xr-xl)/2-(y-mb-2)*[2.2,1.8,1.3,1][bt])continue;
         const soft=(y<mY-2&&side===0&&(x+y)%2)||(y===mb+1&&dx<=4.5&&(x+y)%2);
         if(soft)lab[I(x,y)]=14;else hr(x,y,tex(x,y))}}
   }
@@ -3066,7 +3067,7 @@ function dressUniform(k,S,W,H,lab,grid,hpad,o,jer,acc){
 
 function sprBuild(k,o,im){
   const S=SPR[k],p=o.p,age=o.age||p.age||20;
-  const key=JSON.stringify([k,p.skin,hairIdx(p),p.hairc,p.eyec,p.ey,p.es,p.by,p.ny,p.my,p.mouth,p.band,p.face,p.wt,p.h,p.ws,o.noFace,p.fshape,p.nose,p.lip,p.brow,p.beard,p.esz,p.eyes,o.look,o.raw,age>=50,o.suit,o.colors,o.opp,o.num,o.tie,uniTeam(o),!!_logoPx[uniTeam(o)]&&_logoPx[uniTeam(o)]!=='wait']);
+  const key=JSON.stringify([k,p.skin,hairIdx(p),p.hairc,p.eyec,p.ey,p.es,p.by,p.ny,p.my,p.mouth,p.band,p.face,p.wt,p.h,p.ws,o.noFace,p.fshape,p.nose,p.lip,p.brow,p.beard,p.bth,p.esz,p.eyes,o.look,o.raw,age>=50,o.suit,o.colors,o.opp,o.num,o.tie,uniTeam(o),!!_logoPx[uniTeam(o)]&&_logoPx[uniTeam(o)]!=='wait']);
   if(_sprOut.has(key))return _sprOut.get(key);
   const W=S.w,H=S.h,cv=document.createElement('canvas');cv.width=W*2;cv.height=H;const cx=cv.getContext('2d');cx.drawImage(im,0,0);
   const d=cx.getImageData(0,0,W*2,H).data,art=new Array(W*H),lab=new Uint8Array(W*H);
@@ -3885,7 +3886,7 @@ function renderWizard(){
       <div class="fr col"><span>코</span>${seg('nose',NOSE.map(x=>x[0]),d.nose??1)}</div>
       <div class="fr col"><span>입술</span>${seg('lip',LIPS.map(x=>x[0]),d.lip??1)}</div>
       <div class="fr col"><span>눈썹</span>${seg('brow',BROW.map(x=>x[0]),d.brow??1)}</div>
-      <div class="fr col"><span>수염</span>${seg('beard',BEARD.map(x=>x[0]),d.beard??0)}</div>
+      <div class="fr col"><span>수염</span>${seg('beard',BEARD.map(x=>x[0]),d.beard??0)}</div>${(+d.beard===4||+d.beard===5)?sld('bth','수염 숱',0,3,1,d.bth??2):''}
       <div class="fr col"><span>헤어밴드</span>${seg('band',['없음','있음'],d.band)}</div></div>
      <div class="card"><div class="ch"><h2>이목구비 위치</h2></div>
       ${sld('fw','얼굴 폭',.85,1.12,.01,d.fw)}${sld('ey','눈 높이',100,122,1,d.ey)}${sld('es','눈 사이 간격',18,32,1,d.es)}${sld('esz','눈 크기',.8,1.25,.01,d.esz)}${sld('by','눈썹 높이',-3,8,1,d.by)}${sld('ny','코 위치',128,145,1,d.ny)}${sld('my','입 위치',146,160,1,d.my)}</div>`+
@@ -3941,9 +3942,9 @@ function bindWizard(){
     if(s<5){ui.wiz++;if(ui.wiz===4)ui.styleOff=0;saveD();render();window.scrollTo(0,0);return}
     openSheet(summarySheet(),bindSummary);
   };
-  $$('[data-seg]').forEach(g=>g.onclick=e=>{const b=e.target.closest('button');if(!b)return;D[g.dataset.seg]=+b.dataset.i;g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));$('#pvA').innerHTML=bustImg(D,120);saveD()});
+  $$('[data-seg]').forEach(g=>g.onclick=e=>{const b=e.target.closest('button');if(!b)return;D[g.dataset.seg]=+b.dataset.i;g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));$('#pvA').innerHTML=bustImg(D,120);saveD();if(g.dataset.seg==='beard'){const y=scrollY;render();scrollTo(0,y)}});
   $$('[data-sw]').forEach(b=>b.onclick=()=>{const k=b.dataset.sw;D[k]=+b.dataset.i;$$(`[data-sw="${k}"]`).forEach(x=>x.classList.toggle('on',x===b));$('#pvA').innerHTML=bustImg(D,120);saveD()});
-  ['fw','ey','es','esz','by','ny','my','h','ws','wt'].forEach(id=>{const el=$('#'+id);if(!el)return;el.oninput=()=>{let v=parseFloat(el.value);
+  ['fw','ey','es','esz','by','ny','my','h','ws','wt','bth'].forEach(id=>{const el=$('#'+id);if(!el)return;el.oninput=()=>{let v=parseFloat(el.value);
     if(id==='h'){D.h=v;D.ws=clamp(D.ws,v-12,v+22);$('#ws').value=D.ws;$('#wsv').textContent=D.ws+'cm'}
     else if(id==='ws'){v=clamp(v,D.h-12,D.h+22);el.value=v;D.ws=v}
     else D[id]=v;
