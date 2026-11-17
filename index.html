@@ -2398,20 +2398,20 @@ function ownerEvent(){const ow=G.owner;let k=ri(0,OEV.length-1);if(ow.lastEv===k
   return{type:'choice',eye:'구단 운영',t:E.t,x:E.x,opts:E.o.map((o,j)=>({act:'oev',e:k,j,label:o[0],sub:o[1](ow)}))}}
 function ownerSeasonGo(){
   const ow=G.owner,lg=ow.lg,p=G.p;
-  ow.b=clamp(ow.b+[-1.2,ow.b>0?-.6:ow.b<0?.6:0,1.5][ow.bud],-6,7);
+  ow.b=clamp(ow.b+[-1.5,ow.b>0?-.9:ow.b<0?.4:0,1][ow.bud],-6,6);
   const ex=owX(ow);ow.yth=Math.min(4,ow.yth+ow.acad*.25);
-  const eff=teamStr(lg,ow.team)+ow.b+ow.cq+ow.fac*.4+ex+gauss()*1.5;
+  const eff=teamStr(lg,ow.team)+ow.b+ow.cq+ow.fac*.3+ex*.7-1.8+gauss()*1.8;
   const pre=T[lg].map(n=>({n,s:teamStr(lg,n)})).sort((a,b)=>b.s-a.s).findIndex(r=>r.n===ow.team)+1;
   const others=standingsOthers(lg,ow.team);let w=0;const g=L[lg].g,pw=1/(1+Math.exp(-(eff-L[lg].str)/4.5));for(let i=0;i<g;i++)if(R()<pw)w++;
   const me={n:ow.team,s:eff,w,l:g-w},rws=others.concat([me]).sort((a,b)=>b.w-a.w||b.s-a.s),rank=rws.indexOf(me)+1;
   let po=null;if(rank<=L[lg].po)po=playoffs(lg,rws,ow.team,eff);const won_=po&&po.won;
   const poTxt=po?(won_?'우승':roundName(lg,po.series.length?po.series[po.series.length-1].left:po.rounds)):'탈락';
-  const tm=[.85,1,1.2][ow.tix],cost=ow.val*[.05,.08,.12][ow.bud];
-  const rev=ow.val*.09*(.6+ow.fans/100)*tm*(1+ow.fac*.03)*(1+ow.arena*.09)+(po?ow.val*.012*(po.series?po.series.length:1):0);
+  const tm=[.85,1,1.2][ow.tix],cost=ow.val*[.055,.088,.13][ow.bud]*(1+ow.yrs*.006);
+  const rev=ow.val*.08*(.55+ow.fans/100)*tm*(1+ow.fac*.03)*(1+ow.arena*.09)+(po?ow.val*.012*(po.series?po.series.length:1):0);
   const profit=rev-cost;p.cash+=profit*ow.share;
   const nT=T[lg].length,top=rank<=Math.ceil(nT/4),bot=rank>nT-Math.ceil(nT/4);
-  ow.fans=clamp(ow.fans+(top?4:bot?-4:0)+[3,0,-3][ow.tix]+(won_?8:0)+(ow.bud===2?1:ow.bud===0?-1:0)+ow.arena,5,100);
-  const old=ow.val;ow.val=Math.round(ow.val*(1+.02+(ow.fans-50)/1000+(won_?.05:0)+clamp(profit/ow.val,-.1,.1)*.3));
+  ow.fans=clamp(ow.fans+(top?3:bot?-7:0)+(po?0:-2)+[2,0,-4][ow.tix]+(won_?7:0)+(ow.bud===2?1:ow.bud===0?-2:0)+ow.arena,5,100);
+  const old=ow.val;ow.val=Math.round(ow.val*(1+.015+(ow.fans-55)/1000+(won_?.05:0)+clamp(profit/ow.val,-.1,.1)*.3));
   if(won_)ow.titles.push(`${G.year} ${lgName(lg)} 우승 (${ow.team} 구단주)`);
   ow.log.push({y:`${G.year}–${String(G.year+1).slice(2)}`,w,l:g-w,rank,po:poTxt,profit:Math.round(profit),val:ow.val,fans:ow.fans});
   const cats=[won_?'ownerChamp':top?'ownerGood':bot?'ownerBad':'ownerMid',won_?'ownerChamp':top?'ownerGood':bot?'ownerBad':'ownerMid'];
