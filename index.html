@@ -1081,7 +1081,12 @@ function buildDraft(lg){
   const p=G.p,o=curOvr(),n=T[lg].length;
   let order=T[lg].slice().sort((a,b)=>teamStr(lg,a)-teamStr(lg,b));
   const top=order.slice(0,4).sort(()=>R()-.5);order=top.concat(order.slice(4));
-  let pk=Math.round(n*(1-(o-(L[lg].str-5))/13)-(p.stock||0)*1.5+gauss()*2.5);
+  /* draft value: current level, ceiling, age and the amateur résumé all count, like real scouting */
+  const rec=(p.log||[]).filter(e=>!(L[e.lg]&&L[e.lg].pro)).slice(-2),aw=rec.flatMap(e=>e.aw||[]),last=rec[rec.length-1]||{};
+  const resume=(aw.some(a=>/정규리그 MVP|파이널 MVP/.test(a))?4.5:0)+(aw.some(a=>/퍼스트|베스트5|올-아메리칸/.test(a))?2.5:0)+(aw.some(a=>/득점왕/.test(a))?1.5:0)+(rec.some(e=>e.po==='우승')?2:0)+((last.ppg||0)>=20?2:(last.ppg||0)>=15?1:0);
+  const base=lg==='NBA'?60:L[lg].str-19;
+  const v=(o-base)+(p.pot-75)*.35+(21-p.age)*1+resume+(p.stock||0)*1.5;
+  let pk=Math.round(n*(1-v/16)+gauss()*2);
   pk=clamp(pk,1,n*2+3);if(lg==='NBA'&&pk>n*1.4)pk=n*2+1;
   if(p.wo){const i=order.indexOf(p.wo);if(i>=0){const slot=pk>n?i+1+n:i+1;if(Math.abs(slot-pk)<=5&&R()<.65)pk=slot}}
   const undrafted=pk>n*2;
