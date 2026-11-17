@@ -358,6 +358,10 @@ details[open] summary{margin-bottom:6px}
 .xfl{margin:0;font-size:14px;color:var(--sub)}.xfv{margin:2px 0 14px;font-size:34px;font-weight:800;letter-spacing:-.5px}
 .xfh{margin:0 10px;font-size:18px;font-weight:700;line-height:1.45}.xfs{margin:8px 0 0;font-size:13px;color:var(--sub)}
 .xfa .sub{display:flex;align-items:center;gap:6px}.xfo{display:inline-flex;width:22px;height:22px;border-radius:6px;background:var(--g);align-items:center;justify-content:center;font-size:12px}.xfq{margin:8px 0 0;font-size:17px;font-weight:700}
+.igp{margin:4px -16px 0;background:var(--card,#fff)}.igh{display:flex;align-items:center;gap:10px;padding:12px 16px}.igh div{flex:1}.igh b{display:block;font-size:15px}.igh span{font-size:12px;color:var(--sub)}.igh i{font-style:normal;color:var(--sub)}
+.iga{display:inline-flex;width:36px;height:36px;border-radius:50%;background:#111;color:#fff;font-size:12px;font-weight:800;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff,0 0 0 4px #e1306c}
+.igimg{width:100%;aspect-ratio:640/560;background:#1b1f27}.igimg img{width:100%;height:100%;display:block}.igload{width:100%;height:100%}
+.igbar{display:flex;gap:16px;padding:10px 16px 4px;font-size:22px}.iglk{margin:0;padding:0 16px;font-size:14px;font-weight:700}.igc{margin:6px 0 0;padding:0 16px 14px;font-size:14px;line-height:1.5}.igc b{margin-right:4px}
 </style>
 </head>
 <body>
@@ -4309,6 +4313,7 @@ function bindEvent(e){
   if(e.type==='combine')ok.onclick=next;
   if(e.type==='workout'&&go)go.onclick=()=>{G.p.wo=e.teams[ui.sel];G.p.stock=(G.p.stock||0)+.3;next()};
   if(e.type==='interview'){if(go)go.onclick=()=>{const a=e.q.a[ui.sel];G.p.stock=(G.p.stock||0)+a[1];e.done=a[2];ui.sel=null;save();render()};if(ok)ok.onclick=next}
+  if(e.type==='signed'&&e.from){const el=$('#hwgimg');if(el)snsDraw({team:e.team,lg:e.lg,cols:teamColors(e.team),title:'HERE WE GO',pose:'driveW',big:true,tag:'COURT INSIDER'}).then(u=>{if(el.isConnected)el.innerHTML=`<img src="${u}" alt="">`}).catch(()=>{})}
   if(e.type==='press')bindPress(e);
   if(e.type==='offers')bindOffers(e);
   if(e.type==='draftnight')runDraftNight(e);
@@ -4381,14 +4386,15 @@ function bindOffers(e){
   const r=$('#oret');if(r)r.onclick=()=>{G.q.shift();G.q.unshift(retireChoice());save();render()};
 }
 function renderSigned(e){
-  if(e.from){const p=G.p,yrs=e.loan?1:e.yrs;
-    return `<div class="xf"><span class="xfchip">${e.loan?'임대':'이적'}</span>
-     <div class="xfrow"><div class="xft">${badge(e.from.team,64)}<b>${esc(e.from.team)}</b></div><div class="xfline"><i></i></div><div class="xft on">${badge(e.team,64)}<b>${esc(e.team)}</b></div></div>
-     <p class="xfl">${e.loan?'임대 기간':e.fee?'이적료':'계약 형태'}</p><p class="xfv">${e.loan?'1년':e.fee?won(e.fee):'자유계약 (FA)'}</p>
-     <p class="xfh">${esc(e.team)}, ${esc(p.name)} ${e.loan?'임대 영입':'영입'} 공식 발표… 계약기간 ${yrs}년</p>
-     <p class="xfs">${lgName(e.lg)} · 연봉 ${salText(e.lg,e.sal).replace('연 ','')}</p></div>
-     <div class="card xfa"><p class="sub"><b class="xfo">${esc(e.outlet||'코트저널')[0]}</b> ${esc(e.outlet||'코트저널')} · 기사</p><p class="xfq">"${esc(e.team)} 합류" ${esc(p.name)}, ${yrs}년 ${e.loan?'임대':'계약'}</p><p class="quote" style="margin-top:8px">${esc(e.quote)}</p></div>
-     ${e.feed?`<div class="card">${feedHTML(e.feed)}</div>`:''}<div class="ctaw"><button class="btn" id="ok">확인</button></div>`}
+  if(e.from){const p=G.p,yrs=e.loan?1:e.yrs,f=followers(p),lk=Math.round(f*rf(.05,.09))+ri(3000,9000);
+    e.hwgLikes=e.hwgLikes||lk;
+    return `<div class="igp"><div class="igh"><span class="iga">CI</span><div><b>courtinsider</b><span>${e.loan?'임대 확정':'이적 확정'} · 방금</span></div><i>···</i></div>
+     <div class="igimg" id="hwgimg"><div class="igload"></div></div>
+     <div class="igbar"><span>♡</span><span>💬</span><span>➤</span></div>
+     <p class="iglk">좋아요 ${kfmt(e.hwgLikes)}개</p>
+     <p class="igc"><b>courtinsider</b> 🚨 HERE WE GO! ${esc(p.name)}, ${esc(e.team)}와 ${yrs}년 ${e.loan?'임대':'계약'}에 합의했다. ${esc(e.from.team)}${e.fee?`에 이적료 ${won(e.fee)}`:'를 떠나 FA로'} 이동. 서류 작업과 메디컬만 남았다 🏀✨</p></div>
+     <p class="sub" style="margin:10px 4px 0">${lgName(e.lg)} · 연봉 ${salText(e.lg,e.sal).replace('연 ','')}${e.fee?` · 이적료 ${won(e.fee)}`:''}</p>
+     ${e.feed?`<div class="card" style="margin-top:12px">${feedHTML(e.feed)}</div>`:''}<div class="ctaw"><button class="btn" id="ok">확인</button></div>`}
   return `<div class="hd"><div style="margin-bottom:12px">${badge(e.team,56)}</div><p class="eye">${e.pick?'드래프트 지명':'계약 완료'}</p><h1>${esc(e.team)}${e.team.length>8?'<br>':''}${e.loan?'로 임대 가요':`와<br>${e.yrs}년 계약했어요`}</h1></div>
   <div class="card">${rows([['리그',lgName(e.lg)],['계약',e.loan?'1년 임대':e.yrs+'년'],['연봉',salText(e.lg,e.sal)],...(e.pick?[['지명',e.pick+'순위']]:[])])}${e.loan||e.pick?'':sigBlock()}</div>
   <div class="card"><div class="ch"><h2>${e.pick?'지명 소감':'입단 기자회견'}</h2></div><p class="quote">${esc(e.quote)}</p></div>
