@@ -973,7 +973,7 @@ function simSeason(){
   const ppg=pg(s.pts),rpg=pg(s.reb),apg=pg(s.ast),spg=pg(s.stl),bpg=pg(s.blk);
   const impact=(ppg+rpg*1.2+apg*1.5+(spg+bpg)*2);
   const aw=[];const qual=s.gp>=gTot*.6;const lvl=o-ls+p.rep/25;
-  {const mt=LG.col?16:11;if(qual&&lvl>mt&&rank<=8&&R()<.3+(lvl-mt)*.07-(rank-1)*.025)aw.push('정규리그 MVP')}
+  {const mt=LG.col?16:10,nT=T[lg].length,ppgT=20+(ls-58)*.35;if(qual&&lvl>mt&&rank<=Math.ceil(nT*.6)&&R()<.16+(lvl-mt)*.035+Math.max(0,ppg-ppgT)*.015-(rank-1)*.008)aw.push('정규리그 MVP')}
   const scoreT=20+(ls-58)*.35;
   if(qual&&ppg>=scoreT&&R()<.35+(ppg-scoreT)*.12)aw.push('득점왕');
   if(qual&&rpg>=9.5+(p.pos==='C'?1:0)&&R()<.35)aw.push('리바운드왕');
