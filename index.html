@@ -802,6 +802,13 @@ if(typeof G!=='undefined'&&G&&G.p&&G.p.hair===4)G.p.hair=0;
 function save(){store.set('b2r_game2',G)}
 
 /* ---------- attributes ---------- */
+/* 포지션에 맞는 체격이면 시작 오버롤 보너스, 안 맞으면 감점 */
+const BODY_IDEAL={PG:[189,86],SG:[195,92],SF:[201,100],PF:[206,108],C:[211,115]};
+function bodyFit(d){const b=BODY_IDEAL[d.pos];if(!b)return 0;const h=+d.h||b[0],wt=+d.wt||b[1],ws=+d.ws||h;
+  const dh=Math.abs(h-b[0]),dw=Math.abs(wt-b[1]);
+  return clamp(2-Math.max(0,dh-4)*.45-Math.max(0,dw-10)*.12+clamp((ws-h)*.15,-1,1.5),-9,3.5)}
+const fitTxt=f=>f>=1.5?'잘 맞음':f>=-1?'보통':f>=-4?'조금 안 맞음':'안 맞음';
+function bestPos(d){const sc=POS.map(k=>[k,bodyFit({...d,pos:k})]).sort((a,b)=>b[1]-a[1]);return sc.filter(x=>x[1]>=sc[0][1]-.5).map(x=>x[0]).join(' · ')}
 function baseAttrs(d,style){
   const rnd=seeded(d.seed), r=(a,b)=>a+rnd()*(b-a);
   const h=d.h, ape=d.ws-d.h, bmi=d.wt/((h/100)**2);
@@ -818,7 +825,7 @@ function baseAttrs(d,style){
   for(const k in x) x[k]=Math.round(clamp(x[k],22,72));
   /* body type changes WHICH skills are strong, not how good the player is overall: pull every build to a similar starting OVR
      by lifting (or trimming) the skills that matter for the position */
-  {const tgt=47+r(-3,3),w=W[d.pos];for(let it=0;it<3;it++){const dl=tgt-ovr(x,d.pos);if(Math.abs(dl)<.5)break;for(const k in w)x[k]=Math.round(clamp(x[k]+dl*(it?1.6:1),22,72))}}
+  {const tgt=47+bodyFit(d)+r(-3,3),w=W[d.pos];for(let it=0;it<3;it++){const dl=tgt-ovr(x,d.pos);if(Math.abs(dl)<.5)break;for(const k in w)x[k]=Math.round(clamp(x[k]+dl*(it?1.6:1),22,72))}}
   const pot=Math.round(59+40*Math.pow(rnd(),3.1));
   return {x,pot};
 }
@@ -3978,7 +3985,7 @@ function renderWizard(){
     const ys=T['Y_'+d.start];if(!ys.includes(d.school))d.school=ys[0];
     h=wizTop(3,true)+head('고1, 16세에서 시작해요','어떤 선수로\n살아볼까요?')+
     `<div class="card inrow"><label class="inp f1"><span>이름</span><input id="name" maxlength="14" value="${esc(d.name)}" placeholder="이름"></label><label class="inp w80"><span>등번호</span><input id="num" type="number" min="0" max="99" value="${d.num}"></label></div>
-     <div class="card"><div class="r"><span>포지션</span>${sel('pos',POS.map(k=>[k,k+' '+POSN[k]]),d.pos)}</div>
+     <div class="card"><div class="r"><span>포지션</span>${sel('pos',POS.map(k=>[k,k+' '+POSN[k]+' · 체격 '+fitTxt(bodyFit({...d,pos:k}))]),d.pos)}</div>
       <div class="r"><span>국적</span>${sel('nat',Object.entries(C).map(([k,c])=>[k,c.f+' '+c.n]),d.nat)}</div>
       <div class="r"><span>시작 국가</span>${sel('start',START.map(k=>[k,C[k].f+' '+C[k].n]),d.start)}</div>
       <div class="r"><span>${d.start==='KR'||d.start==='JP'?'고등학교':'유스 팀'}</span>${sel('school',ys.map(t=>[t,t]),d.school)}</div></div>`+
@@ -4005,7 +4012,7 @@ function refreshBody(){
   const ape=d.ws-d.h,bmi=(d.wt/((d.h/100)**2)).toFixed(1);
   const adv=ape>=8?'팔이 길어 블록·스틸·리바운드에 유리해요':ape<=-2?'팔이 짧아 수비 범위가 좁아요':'평범한 팔 길이예요';
   const hh=d.h>=205?'골밑에서 압도적이지만 볼 핸들링이 어려워요':d.h<=180?'빠르고 핸들링이 좋지만 골밑은 힘들어요':'외곽과 안쪽을 오갈 수 있는 키예요';
-  $('#bodyinfo').innerHTML=rows([['윙스팬 지수',`${ape>=0?'+':''}${ape}cm`,ape>=8?'blue':''],['BMI',bmi],['키',hh],['팔',adv]]);
+  $('#bodyinfo').innerHTML=rows([['잘 맞는 포지션',bestPos(D),'blue'],['윙스팬 지수',`${ape>=0?'+':''}${ape}cm`,ape>=8?'blue':''],['BMI',bmi],['키',hh],['팔',adv]]);
 }
 function bindWizard(){
   const d=D,s=ui.wiz,saveD=()=>store.set('b2r_draft2',D);
