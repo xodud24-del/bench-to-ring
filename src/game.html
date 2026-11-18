@@ -1776,7 +1776,9 @@ function liveGame(cfg){
     };
     const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
     const tween=(ms,fn)=>new Promise(r=>{if((skip&&!clMode)||closed){fn(1);return r()}ms/=speed;const t0=performance.now();const st=t=>{if((skip&&!clMode)||closed){fn(1);return r()}const k=Math.min(1,(t-t0)/ms);fn(k);frame++;draw();k<1?requestAnimationFrame(st):r()};requestAnimationFrame(st)});
-    const move=async(ms,tg,bl)=>{if(R3&&bl&&bl.to){const fx=ball.hold?ball.hold.x:ball.x,fy=ball.hold?ball.hold.y:ball.y;ms=Math.max(ms,Math.hypot(bl.to.x-fx,bl.to.y-fy)*34*speed)}P.flat().forEach(p=>{p.fx=p.x;p.fy=p.y;const t=tg.get(p);p.tx=t?t[0]:p.x;p.ty=t?t[1]:p.y;p.moving=Math.hypot(p.tx-p.fx,p.ty-p.fy)>.6;if(p.moving)p.face=p.tx>p.fx?1:-1});
+    const move=async(ms,tg,bl)=>{if(R3&&bl&&bl.to){const fx=ball.hold?ball.hold.x:ball.x,fy=ball.hold?ball.hold.y:ball.y;ms=Math.max(ms,Math.min(1100,Math.hypot(bl.to.x-fx,bl.to.y-fy)*26)*speed)}
+      /* 사람은 초속 7.5m 이상으로 못 뜀: 먼 거리면 그만큼 시간을 늘림 */if(R3&&tg){let mx=0;tg.forEach((t,p)=>{mx=Math.max(mx,Math.hypot(t[0]-p.x,t[1]-p.y))});ms=Math.max(ms,mx*.3048/7.5*1000*speed)}
+      if(bl)ball.T=ms/speed/1000;P.flat().forEach(p=>{p.fx=p.x;p.fy=p.y;const t=tg.get(p);p.tx=t?t[0]:p.x;p.ty=t?t[1]:p.y;p.moving=Math.hypot(p.tx-p.fx,p.ty-p.fy)>.6;if(p.moving)p.face=p.tx>p.fx?1:-1});
       const b0=bl&&{x:ball.hold?ball.hold.x:ball.x,y:ball.hold?ball.hold.y:ball.y};if(bl){if(bl.to&&ball.hold&&bl.to!==ball.hold){ball.hold.act='pass';ball.hold.actT=performance.now();ball.hold.actD=380}ball.fl=1;ball.from=[b0.x,b0.y];ball.dest=bl.to?null:bl.pt;ball.toP=bl.to||null;ball.arc=bl.arc||0;ball.k=0;ball.hold=null}
       P.flat().forEach(p=>{const dx=p.tx-p.fx,dy=p.ty-p.fy,L=Math.hypot(dx,dy);const c=R3&&L>3?(R()-.5)*.5*Math.min(L,14):0;p.cx=(p.fx+p.tx)/2-dy/(L||1)*c;p.cy=(p.fy+p.ty)/2+dx/(L||1)*c});
       await tween(ms,k=>{const e=ease(k);P.flat().forEach(p=>{const u=1-e;p.x=u*u*p.fx+2*u*e*p.cx+e*e*p.tx;p.y=u*u*p.fy+2*u*e*p.cy+e*e*p.ty});
@@ -1786,10 +1788,10 @@ function liveGame(cfg){
       if(zone&&o.i<5){let z=zone[o.i];if(dk==='box1'&&o.i===0)return null;if(s<0)z=[94-z[0],50-z[1]];const b=ball.hold||ball;return[z[0]+(b.y-25)*.0+(b.x-z[0])*.12,z[1]+(b.y-z[1])*.22]}
       const t=dk==='drop'&&o.i===4?.55:.2;return[o.tx+(h[0]-o.tx)*t+(s>0?1:-1)*.8,o.ty+(h[1]-o.ty)*t]};
     const withDef=(tg,off,s,dk)=>{const D=P[1-off[0].team];off.forEach((o,i)=>{const t=tg.get(o)||[o.x,o.y];const ds=defSpot({i,tx:t[0],ty:t[1]},s,dk);tg.set(D[i],ds||[t[0]+(HOOPF(s)[0]-t[0])*.2,t[1]+(HOOPF(s)[1]-t[1])*.2])});return tg};
-    const MVT={jab:[800,1],pump:[900,1],jshot:[1250,.71],jfade:[1800,.66],spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1600,.87],fade:[1400,.55],turn:[2000,.65],lay:[950,.62],clutch:[1250,.78],dunk:[950,.6],dunk2:[950,.6],toma:[1100,.68]};
+    const MVT={jab:[800,1],pump:[900,1],jshot:[1000,.7],jfade:[1800,.66],spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1600,.87],fade:[1400,.55],turn:[2000,.65],lay:[950,.62],clutch:[1250,.78],dunk:[950,.6],dunk2:[950,.6],toma:[1100,.68]};
     const rt=ms=>ms*speed;/* 실제 시간(ms) → tween 시간: 동작·공은 배속과 상관없이 실제 속도 */
     const MVSET=(o,n,d,scaled)=>{o.mv=n;o.mvT=performance.now();o.mvD=scaled?(d/speed):(d||MVT[n][0])};
-    const pickMove=sh=>sh==='3'?pick(['jshot','jshot','jshot','stepback','mpull']):sh==='mid'?pick(['jshot','jshot','jfade','turn','stepback']):sh==='post'?pick(['lay','lay','clutch']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
+    const pickMove=sh=>sh==='3'?pick(['jshot','jshot','jshot','stepback']):sh==='mid'?pick(['jshot','jshot','jfade','turn','stepback']):sh==='post'?pick(['lay','lay','clutch']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
     let lastTeam=-1;
     const anim=async e=>{
       const s=e.team===0?1:-1,off=P[e.team],D=P[1-e.team],dk=e.team===0?cfg.oppDef:cfg.myDef,h=HOOPF(s);curOff=e.team;curDir=s;const ACT=(o,a,d)=>{o.act=a;o.actT=performance.now();o.actD=d/speed};shotT=e.play==='trans'?ri(16,22):ri(10,19);shotAt=performance.now();shotRate=2.4;
