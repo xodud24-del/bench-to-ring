@@ -1077,6 +1077,9 @@ function attrCap(p,k){const b=BODY_IDEAL[p.pos]||[200,100],dh=clamp(((+p.h||b[0]
   c+=(hash(String(p.name||'')+k)%7)-3;
   return Math.round(clamp(c,40,99))}
 var PTSK=.85;
+/* 레거시 점수 가중치: 약한 리그·대회 성과는 덜 쳐줌 */
+function recW(rec){let best=null;for(const k in L){const n=lgName(k);if(n&&String(rec).includes(n)&&(!best||n.length>best[0].length))best=[n,L[k].str]}return best?clamp((best[1]-40)/30,.25,1.4):1}
+function medW(m){m=String(m);return /올림픽/.test(m)?1.5:/월드컵/.test(m)?1.2:/유로바스켓|아메리컵/.test(m)?.8:/아시아컵|아시안게임/.test(m)?.45:.6}
 function progress(){
   const gap=gearStrip(G.p);
   const p=G.p,x=p.x,last=p.log[p.log.length-1]||{min:0},mb=last.min/36*2,age=p.age;
@@ -1142,8 +1145,9 @@ function buildDraft(lg){
   /* draft value: current level, ceiling, age and the amateur résumé all count, like real scouting */
   const rec=(p.log||[]).filter(e=>!(L[e.lg]&&L[e.lg].pro)).slice(-2),aw=rec.flatMap(e=>e.aw||[]),last=rec[rec.length-1]||{};
   const resume=(aw.some(a=>/정규리그 MVP|파이널 MVP/.test(a))?4.5:0)+(aw.some(a=>/퍼스트|베스트5|올-아메리칸/.test(a))?2.5:0)+(aw.some(a=>/득점왕/.test(a))?1.5:0)+(rec.some(e=>e.po==='우승')?2:0)+((last.ppg||0)>=20?2:(last.ppg||0)>=15?1:0);
+  const rw=last.lg&&L[last.lg]?clamp((L[last.lg].str-42)/15,.3,1.1):1;
   const base=lg==='NBA'?60:L[lg].str-19;
-  const v=(o-base-((p.log||[]).some(e=>L[e.lg]&&L[e.lg].col)?2:1))+(p.pot-80)*.12+(20-p.age)*.4+resume*.25+(p.stock||0);
+  const v=(o-base-((p.log||[]).some(e=>L[e.lg]&&L[e.lg].col)?2:1))+(p.pot-80)*.12+(20-p.age)*.4+resume*.25*rw+(p.stock||0);
   let pk=Math.max(1,Math.round(1+(13.5-v)*(lg==='NBA'?3.8:n/12.5)+gauss()*1.5));
   const prep=!(p.log||[]).some(e=>L[e.lg]&&L[e.lg].col),need=prep?73:75;if(o>=need&&pk>1&&R()<.85)pk=1;else if(o<need&&pk===1)pk=2;
   pk=clamp(pk,1,n*2+3);
@@ -2528,7 +2532,7 @@ Object.assign(KO,{
 /* ---------- end ---------- */
 function endCareer(){
   const p=G.p,c=G.coach;if(!p.legacyDone)legacyEvents();
-  const sc=Math.round(p.tot.pts/100+p.titles.length*25+p.awards.filter(a=>/MVP/.test(a)).length*30+p.awards.filter(a=>/올스타/.test(a)).length*5+p.nt.medals.length*8+(c?c.titles.length*20+c.hs:0)+(G.owner?G.owner.titles.length*20+G.owner.yrs*2:0));
+  const sc=Math.round(p.tot.pts/100+p.titles.reduce((t,a)=>t+25*recW(a),0)+p.awards.filter(a=>/MVP/.test(a)).reduce((t,a)=>t+30*recW(a),0)+p.awards.filter(a=>/올스타/.test(a)).reduce((t,a)=>t+5*recW(a),0)+p.nt.medals.reduce((t,m)=>t+8*medW(m),0)+(c?c.titles.length*20+c.hs:0)+(G.owner?G.owner.titles.length*20+G.owner.yrs*2:0));
   const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:p.awards.filter(a=>/정규리그 MVP/.test(a)).length,nbamvp:p.awards.filter(a=>/NBA 정규리그 MVP/.test(a)).length,povr:Math.max(0,...(p.log||[]).map(e=>+e.ovr||+e.o||0),curOvr()),awn:p.awards.length,allstar:p.awards.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,ctitles:c?c.titles.length:0,otitles:G.owner?G.owner.titles.length:0,oval:G.owner?G.owner.val:0,crec:c?`${c.w}승 ${c.l}패`:'',score:sc,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
   if(c&&(c.seasons||c.log.length)){e.cy=c.seasons||c.log.length;e.cw=c.w;e.cl=c.l;e.coty=c.log.filter(x=>x.aw&&String(x.aw).includes('올해의 감독상')).length;e.cteam=c.team;e.clg=c.lg;e.cscore=Math.round(e.ctitles*25+e.coty*10+c.w*.2+e.cy*2)}
   if(G.owner&&G.owner.yrs>0){const ow=G.owner;e.oy=ow.yrs;e.ofans=Math.round(ow.fans||0);e.oteam=ow.team;e.olg=ow.lg;e.oscore=Math.round(e.otitles*25+ow.yrs*3+Math.log10(1+Math.max(0,ow.val||0))*10)}
