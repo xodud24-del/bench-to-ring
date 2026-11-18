@@ -1779,7 +1779,7 @@ function liveGame(cfg){
     const move=async(ms,tg,bl)=>{if(R3&&bl&&bl.to){const fx=ball.hold?ball.hold.x:ball.x,fy=ball.hold?ball.hold.y:ball.y;ms=Math.max(ms,Math.min(1100,Math.hypot(bl.to.x-fx,bl.to.y-fy)*26)*speed)}
       /* 사람은 초속 7.5m 이상으로 못 뜀: 먼 거리면 그만큼 시간을 늘림 */if(R3&&tg){let mx=0;tg.forEach((t,p)=>{mx=Math.max(mx,Math.hypot(t[0]-p.x,t[1]-p.y))});ms=Math.max(ms,mx*.3048/7.5*1000*speed)}
       if(bl)ball.T=ms/speed/1000;P.flat().forEach(p=>{p.fx=p.x;p.fy=p.y;const t=tg.get(p);p.tx=t?t[0]:p.x;p.ty=t?t[1]:p.y;p.moving=Math.hypot(p.tx-p.fx,p.ty-p.fy)>.6;if(p.moving)p.face=p.tx>p.fx?1:-1});
-      const b0=bl&&{x:ball.hold?ball.hold.x:ball.x,y:ball.hold?ball.hold.y:ball.y};if(bl){if(bl.to&&ball.hold&&bl.to!==ball.hold){ball.hold.act='pass';ball.hold.actT=performance.now();ball.hold.actD=380}ball.fl=1;ball.from=[b0.x,b0.y];ball.dest=bl.to?null:bl.pt;ball.toP=bl.to||null;ball.arc=bl.arc||0;ball.k=0;ball.hold=null}
+      const b0=bl&&{x:ball.hold?ball.hold.x:ball.x,y:ball.hold?ball.hold.y:ball.y};if(bl){if(bl.to&&ball.hold&&bl.to!==ball.hold){ball.hold.act='pass';ball.hold.actT=performance.now();ball.hold.actD=380}ball.fl=1;ball.fid=(ball.fid||0)+1;ball.from=[b0.x,b0.y];ball.dest=bl.to?null:bl.pt;ball.toP=bl.to||null;ball.arc=bl.arc||0;ball.k=0;ball.hold=null}
       P.flat().forEach(p=>{const dx=p.tx-p.fx,dy=p.ty-p.fy,L=Math.hypot(dx,dy);const c=R3&&L>3?(R()-.5)*.5*Math.min(L,14):0;p.cx=(p.fx+p.tx)/2-dy/(L||1)*c;p.cy=(p.fy+p.ty)/2+dx/(L||1)*c});
       await tween(ms,k=>{const e=ease(k);P.flat().forEach(p=>{const u=1-e;p.x=u*u*p.fx+2*u*e*p.cx+e*e*p.tx;p.y=u*u*p.fy+2*u*e*p.cy+e*e*p.ty});
         if(bl){const to=bl.to?[bl.to.x,bl.to.y]:bl.pt;ball.k=k;ball.dest=to;ball.x=b0.x+(to[0]-b0.x)*k;ball.y=b0.y+(to[1]-b0.y)*k;ball.z=bl.arc?Math.sin(k*Math.PI)*bl.arc+2*(1-k):2+Math.sin(k*Math.PI)*1.5}});
@@ -1833,7 +1833,7 @@ function liveGame(cfg){
       if(e.ast!=null&&e.team===0&&off[e.ast]!==holder&&off[e.ast]!==A){await step(240,[],{to:off[e.ast]})}
       const drive=R3&&['lay','dunk','float','post'].includes(e.shot)&&e.blk==null;let drDone=false;
       const hd2=ball.hold||holder;if(hd2!==A)await step(300,drive?[]:[[A,sp]],{to:A});
-      if(drive&&(ball.hold===A)){if(R3&&(e.make||A.me))R3.zoom(A);/* 드리블로 림 근처까지 달려간 뒤(점프 지점 약 2m 앞), 거기서 뛰어서 마무리 */const mvn=pickMove(e.shot);const st=[A.x,A.y],ddx=sp[0]-st[0],ddy=sp[1]-st[1],dl=Math.hypot(ddx,ddy)||1,take=Math.max(0,dl-6.5),tk=[st[0]+ddx/dl*take,st[1]+ddy/dl*take];
+      if(drive&&(ball.hold===A)){if(R3&&(e.make||A.me))R3.zoom(A,'rim');/* 드리블로 림 근처까지 달려간 뒤(점프 지점 약 2m 앞), 거기서 뛰어서 마무리 */const mvn=pickMove(e.shot);const st=[A.x,A.y],ddx=sp[0]-st[0],ddy=sp[1]-st[1],dl=Math.hypot(ddx,ddy)||1,take=Math.max(0,dl-6.5),tk=[st[0]+ddx/dl*take,st[1]+ddy/dl*take];
         if(take>1)await step(rt(take*.3048/7*1000),[[A,tk]]);MVSET(A,mvn);const wu=rt(MVT[mvn][0]*MVT[mvn][1]);await move(wu,new Map([[A,[sp[0]-ddx/dl*.6,sp[1]-ddy/dl*.6]]]));drDone=true}
       else if(hd2!==A){}else{if(R3&&R()<.45){const dm=pick(['mcross','mcross','mlegs','behind']);const dd=MVT[dm]?MVT[dm][0]:900;MVSET(A,dm,dd,true);await step(dd,[[A,sp]])}else await step(280,[[A,sp]])}
       if(skip)return;
