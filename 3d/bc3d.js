@@ -21,6 +21,7 @@ const POSE={
  dunk:{RightArm:[0,.9,-1.35],RightForeArm:[0,0,-.1],LeftArm:[0,-.3,-.7],LeftForeArm:[0,-.4,0],Spine:[-.15,0,0],RightUpLeg:[-.9,0,0],LeftUpLeg:[.2,0,0],RightLeg:[1.4,0,0],LeftLeg:[.5,0,0],RightFoot:[.3,0,0],LeftFoot:[.4,0,0]},
  reb:{RightArm:[0,.6,-1.2],LeftArm:[0,-.6,1.2],RightForeArm:[0,.2,0],LeftForeArm:[0,-.2,0],RightUpLeg:[-.3,0,.1],LeftUpLeg:[-.3,0,-.1],RightLeg:[.6,0,0],LeftLeg:[.6,0,0]},
  block:{RightArm:[0,.55,-1.45],RightForeArm:[0,0,-.1],LeftArm:[0,-.3,-.4],LeftForeArm:[0,-.4,0],Spine:[-.05,0,0],RightUpLeg:[-.3,0,0],LeftUpLeg:[-.1,0,0],RightLeg:[.5,0,0],LeftLeg:[.3,0,0],RightFoot:[.4,0,0],LeftFoot:[.4,0,0]},
+ catch:{RightArm:[0,1.25,.12],LeftArm:[0,-1.25,-.12],RightForeArm:[0,.55,0],LeftForeArm:[0,-.55,0],RightHand:[0,0,-.2],LeftHand:[0,0,.2],Spine:[.14,0,0],RightUpLeg:[-.25,0,0],LeftUpLeg:[-.25,0,0],RightLeg:[.45,0,0],LeftLeg:[.45,0,0]},
  pass:{RightArm:[0,1.45,.3],LeftArm:[0,-1.45,-.3],RightForeArm:[0,.1,0],LeftForeArm:[0,-.1,0],Spine:[.15,0,0]},
  cele:t=>({RightArm:[0,.3,-1.3+.25*Math.sin(t*10)],LeftArm:[0,-.3,1.3-.25*Math.sin(t*10)],RightForeArm:[0,.4,0],LeftForeArm:[0,-.4,0]})};
 let DEFSH=0;const _e=new THREE.Euler(),_q=new THREE.Quaternion();
@@ -29,6 +30,7 @@ const _v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_v3=new THREE.Vector3(),_q
 function ccdStep(bone,foot,T){bone.updateMatrixWorld(true);_v1.setFromMatrixPosition(bone.matrixWorld);_v2.setFromMatrixPosition(foot.matrixWorld).sub(_v1);_v3.copy(T).sub(_v1);
   if(_v2.lengthSq()<1e-6||_v3.lengthSq()<1e-6)return;_v2.normalize();_v3.normalize();_q1.setFromUnitVectors(_v2,_v3);const an=2*Math.acos(Math.min(1,Math.abs(_q1.w)));if(an>.35)_q1.slerp(_q2.identity(),1-.35/an);
   bone.parent.getWorldQuaternion(_q2);const pinv=_q2.clone().invert();bone.quaternion.premultiply(pinv.multiply(_q1).multiply(_q2));bone.updateMatrixWorld(true)}
+function armIK(B,side,T){const up=B[side+'Arm'],lo=B[side+'ForeArm'],h=B[side+'Hand'];for(let i=0;i<4;i++){ccdStep(lo,h,T);ccdStep(up,h,T)}}
 function legIK(B,side,T){const up=B[side+'UpLeg'],lo=B[side+'Leg'],ft=B[side+'Foot'];for(let i=0;i<2;i++){ccdStep(lo,ft,T);ccdStep(up,ft,T)}}
 const lum=h=>{const c=new THREE.Color(h);return .299*c.r+.587*c.g+.114*c.b};
 export const awayJersey=cols=>{const a=cols[0],b=cols[1];if(lum(a)<.55)return[a,b&&lum(b)>.5?b:'#ffffff'];if(b&&lum(b)<.55)return[b,a];return['#1b2a5c','#ffffff']};
@@ -194,7 +196,7 @@ export async function create(el,cfg){
   const pl=[];cfg.P.forEach((tm,ti)=>tm.forEach((p,i)=>{const cols=ti===0?cfg.homeCols:cfg.awayCols,wh=ti===0;const AJ=awayJersey(cfg.awayCols);const L=p.look||{};pl.push({src:p,m:makePlayer(sc,base,{skin:p.skin||'#8d5a3b',hairc:p.hair||'#151515',hair:L.hair??0,beard:L.beard||0,band:L.band||0,bandc:wh?cols[0]:'#ffffff',num:L.num??(i*7+3),abbr:ti===0?cfg.homeAbbr:cfg.awayAbbr,jersey:wh?'#f4f4f4':AJ[0],shorts:wh?'#f4f4f4':AJ[0],trim:wh?homeTrim(cols):AJ[1],numc:wh?homeTrim(cols):'#ffffff',socks:L.socks,shoe:L.shoe,bulk:L.bulk||1,leg:L.leg||1.1,blob,me:p.me,scale:L.scale||1,yaw:ti===0?Math.PI/2:-Math.PI/2})})}));
   const ballM=new THREE.Mesh(new THREE.SphereGeometry(.12,18,14),M('#e8742a',{roughness:.55}));sc.add(ballM);const ballS=new THREE.Mesh(new THREE.PlaneGeometry(.45,.45),new THREE.MeshBasicMaterial({map:blob,transparent:true,depthWrite:false}));ballS.rotation.x=-Math.PI/2;ballS.position.y=.012;sc.add(ballS);
   const HOOP=s=>W3(s>0?88.75:5.25,25,3.05);
-  const camX={v:0,init:0};let flPrev=false,flS=null,lastBp=null,flId=-1,flT0=0;let focus=0,fz=0,fSrc=null,fp=0,fMode='';const fpPos=new THREE.Vector3();let alive=true,last=performance.now(),acc=0;
+  const camX={v:0,init:0};let flPrev=false,flS=null,lastBp=null,flId=-1,flT0=0,flHigh=false;let focus=0,fz=0,fSrc=null,fp=0,fMode='';const fpPos=new THREE.Vector3();let alive=true,last=performance.now(),acc=0;
   const ang=(a,b)=>{let d=b-a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d};
   function frame(now){if(!alive)return;const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     const B=cfg.ball,hold=B.hold&&!B.fl?B.hold:null;
@@ -208,7 +210,7 @@ export async function create(el,cfg){
       let want=m.yaw;if(sp>.4)want=Math.atan2(vel.x,vel.z);else{const tgt=hold?W3(hold.x,hold.y):W3(B.x,B.y);const off=s.team===cfg.offTeam();const aim=off?(hold===s?HOOP(cfg.dir()):tgt):tgt;if(!(hold===s&&!off))want=Math.atan2(aim.x-wp.x,aim.z-wp.z)}
       m.yaw+=ang(m.yaw,want)*Math.min(1,dt*9);m.root.rotation.y=m.yaw;
       const mvS=s.mv&&now-s.mvT<s.mvD?sampleMove(s.mv,(now-s.mvT)/s.mvD,now/1000):null;m.mvS=mvS;
-      const act=s.act&&now-s.actT<(s.actD||700)?s.act:null;
+      let act=s.act&&now-s.actT<(s.actD||700)?s.act:null;
       let pose=null,jump=0;
       if(act==='shoot'){const k=(now-s.actT)/(s.actD||700);pose=k<.45?'shootSet':'shootRel';jump=k<.25?0:Math.sin(Math.min(1,(k-.25)/.6)*Math.PI)*.45}
       else if(act==='dunk'){const k=(now-s.actT)/(s.actD||700);pose='dunk';jump=Math.sin(Math.min(1,k)*Math.PI)*.95}
@@ -216,12 +218,20 @@ export async function create(el,cfg){
       else if(act==='pass')pose='pass';else if(act==='cele')pose='cele';
       else if(hold===s)pose='dribble';
       else if(s.team!==cfg.offTeam()&&sp<4.5){pose='defend';/* 수비 슬라이드: 공 쪽을 보며 옆으로 */const tgt=hold?W3(hold.x,hold.y):W3(B.x,B.y);m.yaw+=ang(m.yaw,Math.atan2(tgt.x-wp.x,tgt.z-wp.z))*Math.min(1,dt*10);m.root.rotation.y=m.yaw;m.sh=(m.sh||0)+dt*sp*2.2;DEFSH=sp>.5?Math.sin(m.sh*3):0}
+      /* 공 받기: 패스는 두 손을 내밀어 받고, 리바운드는 공이 떨어지는 순간에 맞춰 점프해서 잡음 */
+      {const inc=B.fl&&B.toP===s&&flId===B.fid;if(inc){const arr=flT0+(B.T||.5)*1000;if(flHigh)m.rebArr=arr;else if(arr-now<430)m.catchT=arr+280}
+       if(act==='reb'){act=null;if(pose==='reb'){pose=null;jump=0}}
+       m.busy=false;if(m.rebArr&&now>m.rebArr-480&&now<m.rebArr+300){const ph=(now-(m.rebArr-480))/780;pose='reb';jump=Math.sin(Math.min(1,ph)*Math.PI)*.62;m.busy=true}
+       else if(m.catchT&&now<m.catchT&&(inc||hold===s)){pose='catch';jump=0;m.busy=true}
+       if(inc){const L=lastBp||W3(B.x,B.y);m.yaw+=ang(m.yaw,Math.atan2(L.x-wp.x,L.z-wp.z))*Math.min(1,dt*10);m.root.rotation.y=m.yaw}}
+      /* 슛·레이업·덩크 동작 중엔 항상 림을 보고 */
+      if(mvS&&s.team===cfg.offTeam()&&!/^(cross|legs|behind|spin|mcross|mlegs|jab)$/.test(s.mv)){const Hh=HOOP(cfg.dir());m.yaw+=ang(m.yaw,Math.atan2(Hh.x-wp.x,Hh.z-wp.z))*Math.min(1,dt*16);m.root.rotation.y=m.yaw}
       if(mvS){pose=mvS.pose;jump=0}
       /* 모션캡처 선택 */
       let mcN=null,mcT=0;const MCv=base.mc;
       if(MCv){if(s.mv&&MCMAP[s.mv]&&now-s.mvT<s.mvD){mcN=MCMAP[s.mv];mcT=(now-s.mvT)/s.mvD*MCv[mcN].dur}
-        else if(!act&&!mvS&&hold===s){mcN=sp>.9?'drun':'didle';m.mcClock=(m.mcClock||0)+dt*(mcN==='drun'?Math.min(1.6,Math.max(.6,sp/1.5)):1);mcT=m.mcClock}
-        else if(!act&&!mvS&&!pose&&sp>2.6){mcN='run';m.mcClock=(m.mcClock||0)+dt*Math.min(1.5,Math.max(.7,sp/3.3));mcT=m.mcClock}}
+        else if(!act&&!mvS&&!m.busy&&hold===s){mcN=sp>.9?'drun':'didle';m.mcClock=(m.mcClock||0)+dt*(mcN==='drun'?Math.min(1.6,Math.max(.6,sp/1.5)):1);mcT=m.mcClock}
+        else if(!act&&!mvS&&!m.busy&&!pose&&sp>2.6){mcN='run';m.mcClock=(m.mcClock||0)+dt*Math.min(1.5,Math.max(.7,sp/3.3));mcT=m.mcClock}}
       if(mcN&&(mcN==='didle'||mcN==='drun'))pose=null;
       m.mcw=(m.mcw||0)+((mcN?1:0)-(m.mcw||0))*Math.min(1,dt*10);if(mcN)m.mcLast=mcN,m.mcLastT=mcT;
       m.pose=pose;m.loc(sp>3.2?'run':sp>.5?'walk':'idle',sp>3.2?Math.min(1.5,sp/5):1);m.step(dt);
@@ -233,16 +243,18 @@ export async function create(el,cfg){
        if(m.lab!==undefined&&lab!==m.lab&&m.prevQ)m.xb={q:m.prevQ.map(q=>q.clone()),t:0};m.lab=lab;
        if(m.xb){m.xb.t+=dt;const u=Math.min(1,m.xb.t/.22),w=1-u*u*(3-2*u);if(w<=.001)m.xb=null;else BL.forEach((bn,i)=>bn.quaternion.slerp(m.xb.q[i],w))}
        if(!m.prevQ)m.prevQ=BL.map(bn=>bn.quaternion.clone());else BL.forEach((bn,i)=>m.prevQ[i].copy(bn.quaternion))}
-      m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.ik(dt,sp,((m.yoff||0)+jump+ry)>.05||(act&&act!=='pass'&&act!=='cele'));m.blob.position.set(wp.x,.01,wp.z);m.blob.scale.setScalar(1-jump*.35);if(m.ring)m.ring.position.set(wp.x,.015,wp.z);if(m.arrow){m.arrow.position.set(m.root.position.x,m.root.position.y+2.45*m.root.scale.y+.12*Math.sin(now/180),m.root.position.z);m.arrow.rotation.y=now/600}}
+      m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.ik(dt,sp,((m.yoff||0)+jump+ry)>.05||(act&&act!=='pass'&&act!=='cele'));
+      /* 드리블: 공이 손→바닥→손을 일정한 박자로 오가고, 드리블 손은 IK로 공 윗면에 맞춤 */
+      m.dball=null;if(hold===s&&mcN&&/^d(run|idle)$/.test(mcN)&&!m.busy){m.root.updateMatrixWorld(true);const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x),hipY=new THREE.Vector3().setFromMatrixPosition(m.bones.Hips.matrixWorld).y,Hh=Math.max(.6,hipY-.04);
+        m.dph=(m.dph||0)+dt*(sp>1?2.5:1.9);const f=m.dph%1,y=.12+(Hh-.12)*(1-Math.sin(Math.PI*f));const bpos=m.root.position.clone().setY(0).add(fw.clone().multiplyScalar(.27+.12*Math.min(1,sp/4))).add(lf.clone().multiplyScalar(-.25));bpos.y=y;m.dball=bpos;
+        const tgt=y>Hh-.3?bpos.clone().add(new THREE.Vector3(0,.115,0)).sub(fw.clone().multiplyScalar(.02)):bpos.clone().setY(Hh-.2);m.dhand=m.dhand?m.dhand.lerp(tgt,Math.min(1,dt*22)):tgt;if(m.dhand.distanceTo(tgt)>.5)m.dhand.copy(tgt);armIK(m.bones,'Right',m.dhand)}else m.dhand=null;m.blob.position.set(wp.x,.01,wp.z);m.blob.scale.setScalar(1-jump*.35);if(m.ring)m.ring.position.set(wp.x,.015,wp.z);if(m.arrow){m.arrow.position.set(m.root.position.x,m.root.position.y+2.45*m.root.scale.y+.12*Math.sin(now/180),m.root.position.z);m.arrow.rotation.y=now/600}}
     /* ball */
     let bp;
     if(B.thru!=null){bp=HOOP(cfg.dir());bp.y=3.05-B.thru*2.9}
-    else if(B.fl&&B.from&&B.dest){if(!flPrev||!flS||B.fid!==flId){/* 연달아 이어지는 패스·리바운드도 새 비행은 지금 공 위치에서 시작 */flS=lastBp?lastBp.clone():null;flId=B.fid;flT0=now}/* 공 비행은 3D 자체 시계로 진행 */const k=Math.min(1,(now-flT0)/Math.max(60,(B.T||.5)*1000)),a=flS&&B.hy0==null?flS.clone().setY(0):W3(B.from[0],B.from[1]);const rcv=B.toP?pl.find(o=>o.src===B.toP):null;/* 패스는 받는 선수의 실제 화면 위치로 */const b=rcv?rcv.m.root.position.clone().setY(0):W3(B.dest[0],B.dest[1]);const toHoop=Math.hypot(B.dest[0]-(cfg.dir()>0?88.75:5.25),B.dest[1]-25)<1.5;
+    else if(B.fl&&B.from&&B.dest){if(!flPrev||!flS||B.fid!==flId){/* 연달아 이어지는 패스·리바운드도 새 비행은 지금 공 위치에서 시작 */flS=lastBp?lastBp.clone():null;flId=B.fid;flT0=now;flHigh=!!(lastBp&&lastBp.y>2.6)}/* 공 비행은 3D 자체 시계로 진행 */const k=Math.min(1,(now-flT0)/Math.max(60,(B.T||.5)*1000)),a=flS&&B.hy0==null?flS.clone().setY(0):W3(B.from[0],B.from[1]);const rcv=B.toP?pl.find(o=>o.src===B.toP):null;/* 패스는 받는 선수의 실제 화면 위치로 */const b=rcv?rcv.m.root.position.clone().setY(0):W3(B.dest[0],B.dest[1]);const toHoop=Math.hypot(B.dest[0]-(cfg.dir()>0?88.75:5.25),B.dest[1]-25)<1.5;
       const h0=B.hy0!=null?B.hy0:flS?flS.y:toHoop?2.5:1.3,h1=toHoop?3.12:(B.hy0!=null?.12:1.25),T=B.T||.5,arc=toHoop?Math.min((B.arc||6)*.32,Math.max(.18,.1+a.distanceTo(b)*.22)):Math.min(3.5,9.8*T*T/8);/* 슛 포물선 높이는 거리에 비례: 레이업은 살짝, 3점은 높게 *//* 패스·리바운드도 중력 포물선 */bp=a.lerp(b,k);bp.y=h0+(h1-h0)*k+Math.sin(k*Math.PI)*arc}
-    else if(hold&&pl.find(o=>o.src===hold).m.mcR&&pl.find(o=>o.src===hold).m.mcw>.5){const q=pl.find(o=>o.src===hold).m;q.root.updateMatrixWorld(true);
-      /* 실제 우리 선수 손뼈 위치에서 공을 튀김: 아래쪽 손이 드리블 손 */const R_=new THREE.Vector3().setFromMatrixPosition(q.bones.RightHand.matrixWorld),L_=new THREE.Vector3().setFromMatrixPosition(q.bones.LeftHand.matrixWorld);
-      const H=R_.y<L_.y?R_:L_,key=H===R_?'r':'l';q.hr=q.hr||{r:[9,0],l:[9,0]};const rg=q.hr[key];rg[0]=Math.min(rg[0]+dt*.15,H.y);rg[1]=Math.max(rg[1]-dt*.15,H.y);if(rg[1]-rg[0]<.08)rg[1]=rg[0]+.08;
-      const u=(H.y-rg[0])/(rg[1]-rg[0]),fw=new THREE.Vector3(Math.sin(q.yaw),0,Math.cos(q.yaw));bp=H.clone().add(fw.multiplyScalar(.05));bp.y=Math.max(.12,H.y-.13-(1-u)*(H.y-.25))}
+    else if(hold&&pl.find(o=>o.src===hold).m.busy){const q=pl.find(o=>o.src===hold).m;q.root.updateMatrixWorld(true);const R_=new THREE.Vector3().setFromMatrixPosition(q.bones.RightHand.matrixWorld),L_=new THREE.Vector3().setFromMatrixPosition(q.bones.LeftHand.matrixWorld),fw=new THREE.Vector3(Math.sin(q.yaw),0,Math.cos(q.yaw));bp=R_.add(L_).multiplyScalar(.5).add(fw.multiplyScalar(.09))}
+    else if(hold&&pl.find(o=>o.src===hold).m.dball){bp=pl.find(o=>o.src===hold).m.dball.clone()}
     else if(hold&&pl.find(o=>o.src===hold).m.mvS&&pl.find(o=>o.src===hold).m.mvS.ball&&pl.find(o=>o.src===hold).m.mvS.ball[2]>.95&&!/^(cross|legs|behind|spin)$/.test(hold.mv)){/* 공은 실제 손뼈 위치에 붙음 → 팔을 다 뻗을 때까지 손에 있음 */const q=pl.find(o=>o.src===hold).m;q.root.updateMatrixWorld(true);const R=new THREE.Vector3().setFromMatrixPosition(q.bones.RightHand.matrixWorld),L=new THREE.Vector3().setFromMatrixPosition(q.bones.LeftHand.matrixWorld),fw=new THREE.Vector3(Math.sin(q.yaw+(q.mvS.yaw||0)),0,Math.cos(q.yaw+(q.mvS.yaw||0)));
       if(R.distanceTo(L)<.42)bp=R.clone().add(L).multiplyScalar(.5).add(fw.multiplyScalar(.1)).add(new THREE.Vector3(0,.04,0));else bp=R.clone().add(new THREE.Vector3(0,.13,0)).add(fw.multiplyScalar(.03))}
     else if(hold&&pl.find(o=>o.src===hold).m.mvS&&pl.find(o=>o.src===hold).m.mvS.ball){const q=pl.find(o=>o.src===hold).m,S=q.mvS,ya=q.yaw+S.yaw,fw=new THREE.Vector3(Math.sin(ya),0,Math.cos(ya)),lf=new THREE.Vector3(fw.z,0,-fw.x);bp=q.root.position.clone().setY(0).add(fw.multiplyScalar(S.ball[0]*(q.root.scale.x))).add(lf.multiplyScalar(S.ball[1]));bp.y=S.ball[2]*q.root.scale.y}

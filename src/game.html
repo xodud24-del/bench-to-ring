@@ -1791,13 +1791,15 @@ function liveGame(cfg){
     const MVT={jab:[800,1],pump:[900,1],jshot:[700,.7],jfade:[1050,.66],spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1150,.87],fade:[1400,.55],turn:[2000,.65],lay:[950,.62],clutch:[1250,.78],dunk:[1500,.48],dunk2:[1500,.48],toma:[1650,.5]};
     const rt=ms=>ms*speed;/* 실제 시간(ms) → tween 시간: 동작·공은 배속과 상관없이 실제 속도 */
     const MVSET=(o,n,d,scaled)=>{o.mv=n;o.mvT=performance.now();o.mvD=scaled?(d/speed):(d||MVT[n][0])};
-    const pickMove=sh=>sh==='3'?pick(['jshot','jshot','jshot','stepback']):sh==='mid'?pick(['jshot','jshot','jfade','turn','stepback']):sh==='post'?pick(['lay','lay','clutch']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
+    const pickMove=sh=>sh==='3'?pick(['jshot','jshot','jshot','stepback']):sh==='mid'?pick(['jshot','jshot','jfade','stepback']):sh==='post'?pick(['lay','lay','clutch']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
     let lastTeam=-1;
     const anim=async e=>{
       const s=e.team===0?1:-1,off=P[e.team],D=P[1-e.team],dk=e.team===0?cfg.oppDef:cfg.myDef,h=HOOPF(s);curOff=e.team;curDir=s;const ACT=(o,a,d)=>{o.act=a;o.actT=performance.now();o.actD=d/speed};shotT=e.play==='trans'?ri(16,22):ri(10,19);shotAt=performance.now();shotRate=2.4;
       const form=(e.team===0&&cfg.spots)?POS.map(k=>cfg.spots[k]):offOf(e.play).f.map(n=>SPOT[n]);
       if(R3)R3.zoom(null);
       let tg=new Map();
+      /* 바닥에 굴러다니는 공은 가장 가까운 공격 선수가 먼저 가서 줍고 시작 (아무도 없는 곳에서 공이 날아오지 않게) */
+      if(!ball.hold&&!ball.fl&&!skip){const near_=off.reduce((a,o)=>Math.hypot(o.x-ball.x,o.y-ball.y)<Math.hypot(a.x-ball.x,a.y-ball.y)?o:a,off[0]);const bx=clamp(ball.x,1,93),by=clamp(ball.y,1,49);if(Math.hypot(near_.x-bx,near_.y-by)>1.5){tg.set(near_,[bx,by]);await move(500,tg);tg=new Map()}ball.hold=near_}
       /* 공격권이 바뀌면 백코트에서 공을 받아 하프라인을 넘어오는 장면부터 */
       if(lastTeam!==e.team&&e.play!=='trans'&&!skip){const pg=off[0],bring=[[25,40],[6,37],[44,37],[16,29],[34,29]];off.forEach((o,i)=>tg.set(o,fc(bring[i],s)));D.forEach((d,i)=>{const t=fc(bring[i],s);tg.set(d,[t[0]+(h[0]-t[0])*.22,t[1]+(h[1]-t[1])*.22])});
         await move(1600,tg,ball.hold===pg?null:{to:pg});tg=new Map()}
