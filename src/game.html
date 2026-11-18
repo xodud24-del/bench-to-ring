@@ -1760,7 +1760,7 @@ function liveGame(cfg){
     const sc=[0,0],bx=[0,0,0,0,0],per={};
     const close=()=>{if(closed)return;closed=true;if(R3){R3.dispose();R3=null}ov.classList.remove('on');ov.innerHTML='';done()};
     $('#hskip').onclick=e=>{e.stopPropagation();skip=true;finishAll()};
-    {const SP=[[1,'0.5x'],[2,'1x'],[4,'2x'],[6,'3x']];let si=1;try{si=+localStorage.getItem('b2r_sp')||1}catch(_){}speed=SP[si][0];$('#lvsp').textContent='속도 '+SP[si][1];$('#lvsp').onclick=e=>{e.stopPropagation();si=(si+1)%SP.length;speed=SP[si][0];$('#lvsp').textContent='속도 '+SP[si][1];try{localStorage.setItem('b2r_sp',si)}catch(_){}}}
+    {const SP=[[.55,'0.5x'],[1.1,'1x'],[2.2,'2x'],[3.3,'3x']];let si=1;try{const v=localStorage.getItem('b2r_sp2');si=v==null?1:+v}catch(_){}speed=SP[si][0];$('#lvsp').textContent='속도 '+SP[si][1];$('#lvsp').onclick=e=>{e.stopPropagation();si=(si+1)%SP.length;speed=SP[si][0];$('#lvsp').textContent='속도 '+SP[si][1];try{localStorage.setItem('b2r_sp2',si)}catch(_){}}}
     const feed=(q,t,cls)=>{const d=document.createElement('div');d.className='hpl'+(cls?' '+cls:'');d.innerHTML=`<i>Q${q}</i><span>${t}</span>`;const box=$('#hp');if(box){box.prepend(d);while(box.children.length>40)box.lastChild.remove()}};
     const upd=e=>{if(closed)return;$('#sa').textContent=sc[0];$('#so').textContent=sc[1];if(e)$('#sq').textContent=`${e.q}Q ${Math.floor(e.clock/60)}:${String(Math.floor(e.clock%60)).padStart(2,'0')}`;
       if(showBox)bx.forEach((v,i)=>{const el=$('#lb'+i);if(el)el.textContent=v});else{const el=$('#lvpt');if(el)el.innerHTML=Object.entries(per).sort((a,b)=>b[1].n-a[1].n).slice(0,4).map(([k,v])=>`<div><span>${offOf(k).s}</span><b>${v.m}/${v.n}</b></div>`).join('')}};
@@ -1787,7 +1787,7 @@ function liveGame(cfg){
     const withDef=(tg,off,s,dk)=>{const D=P[1-off[0].team];off.forEach((o,i)=>{const t=tg.get(o)||[o.x,o.y];const ds=defSpot({i,tx:t[0],ty:t[1]},s,dk);tg.set(D[i],ds||[t[0]+(HOOPF(s)[0]-t[0])*.2,t[1]+(HOOPF(s)[1]-t[1])*.2])});return tg};
     const MVT={spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1600,.87],fade:[1400,.55],turn:[2000,.65],lay:[1200,.62],clutch:[1700,.78],dunk:[1300,.6],dunk2:[1300,.6],toma:[1500,.68]};
     const MVSET=(o,n,d)=>{o.mv=n;o.mvT=performance.now();o.mvD=(d||MVT[n][0])/speed};
-    const pickMove=sh=>sh==='3'?pick(['mshot','mpull','mshot3','mpull','stepback']):sh==='mid'?pick(['mpull','mshot','fade','turn','stepback']):sh==='post'?pick(['turn','turn','fade']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
+    const pickMove=sh=>sh==='3'?pick(['mshot','mpull','mshot3','mpull','stepback']):sh==='mid'?pick(['mpull','mshot','fade','turn','stepback']):sh==='post'?pick(['lay','lay','clutch']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
     const anim=async e=>{
       const s=e.team===0?1:-1,off=P[e.team],D=P[1-e.team],dk=e.team===0?cfg.oppDef:cfg.myDef,h=HOOPF(s);curOff=e.team;curDir=s;const ACT=(o,a,d)=>{o.act=a;o.actT=performance.now();o.actD=d/speed};shotT=e.play==='trans'?ri(16,22):ri(10,19);shotAt=performance.now();shotRate=2.4;
       const form=(e.team===0&&cfg.spots)?POS.map(k=>cfg.spots[k]):offOf(e.play).f.map(n=>SPOT[n]);
