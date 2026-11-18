@@ -1,5 +1,5 @@
 /* 3D 중계: liveGame의 선수·공 상태(P, ball)를 읽어서 2K 로우 카메라 느낌으로 그림 */
-import * as THREE from 'three';import {buildSkeleton,buildBody,jerseyTex} from './body.js';
+import * as THREE from 'three';import {buildSkeleton,buildBody,jerseyTex,buildBodyMH,parseHuman} from './body.js';
 const FT=.3048,W3=(x,y,z=0)=>new THREE.Vector3((x-47)*FT,z,(y-25)*FT);
 let BASE=null,CROWD=null,SCK=[],NETS=[];
 /* CMU 모션캡처(무료 공개 데이터)를 우리 뼈대에 옮긴 클립 */
@@ -8,7 +8,7 @@ function prepMC(MC){for(const k in MC){const C=MC[k];C.dur=C.n/C.fps;C.qa={};for
    for(let i=0;i<C.n;i++){const L=[H[i*6],H[i*6+1],H[i*6+2]],R=[H[i*6+3],H[i*6+4],H[i*6+5]];
      if(/shot/.test(k)){C.ball.push([(L[0]+R[0])/2,(L[1]+R[1])/2+.06,(L[2]+R[2])/2+.12]);continue}
      const h=L[1]<R[1]?0:1,P=h?R:L,[mn,mx]=rng[h],u=Math.min(1,Math.max(0,(P[1]-mn)/Math.max(.05,mx-mn)));C.ball.push([P[0],Math.max(.12,P[1]-.1-(1-u)*(P[1]-.25)),P[2]+.06])}}return MC}
-const loadBase=url=>BASE||(BASE=Promise.all([fetch(url).then(r=>r.json()),fetch(url.replace('anim.json','mocap.json')).then(r=>r.json()).catch(()=>null)]).then(([A,MC])=>({skel:A.skel,animations:Object.values(A.clips).map(c=>THREE.AnimationClip.parse(c)),mc:MC?prepMC(MC):null})));
+const loadBase=url=>BASE||(BASE=Promise.all([fetch(url).then(r=>r.json()),fetch(url.replace('anim.json','mocap.json')).then(r=>r.json()).catch(()=>null),fetch(url.replace('anim.json','human.bin')).then(r=>r.ok?r.arrayBuffer():null).then(b=>b?parseHuman(b):null).catch(()=>null)]).then(([A,MC,HU])=>({skel:A.skel,animations:Object.values(A.clips).map(c=>THREE.AnimationClip.parse(c)),mc:MC?prepMC(MC):null,human:HU})));
 const MCMAP={mshot:'shot',mpull:'shot2',mshot3:'shot3',mcross:'cross',mlegs:'legs'};
 const _qa=new THREE.Quaternion(),_qb=new THREE.Quaternion();
 const ARMS={RightArm:[0,0,1.25],LeftArm:[0,0,-1.25],RightForeArm:[0,.25,0],LeftForeArm:[0,-.25,0]};
@@ -24,6 +24,12 @@ const POSE={
  pass:{RightArm:[0,1.45,.3],LeftArm:[0,-1.45,-.3],RightForeArm:[0,.1,0],LeftForeArm:[0,-.1,0],Spine:[.15,0,0]},
  cele:t=>({RightArm:[0,.3,-1.3+.25*Math.sin(t*10)],LeftArm:[0,-.3,1.3-.25*Math.sin(t*10)],RightForeArm:[0,.4,0],LeftForeArm:[0,-.4,0]})};
 let DEFSH=0;const _e=new THREE.Euler(),_q=new THREE.Quaternion();
+/* 발 고정용 2본 IK (CCD): 무릎→고관절 순으로 발목을 목표점에 맞춤 */
+const _v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_v3=new THREE.Vector3(),_q1=new THREE.Quaternion(),_q2=new THREE.Quaternion();
+function ccdStep(bone,foot,T){bone.updateMatrixWorld(true);_v1.setFromMatrixPosition(bone.matrixWorld);_v2.setFromMatrixPosition(foot.matrixWorld).sub(_v1);_v3.copy(T).sub(_v1);
+  if(_v2.lengthSq()<1e-6||_v3.lengthSq()<1e-6)return;_v2.normalize();_v3.normalize();_q1.setFromUnitVectors(_v2,_v3);const an=2*Math.acos(Math.min(1,Math.abs(_q1.w)));if(an>.35)_q1.slerp(_q2.identity(),1-.35/an);
+  bone.parent.getWorldQuaternion(_q2);const pinv=_q2.clone().invert();bone.quaternion.premultiply(pinv.multiply(_q1).multiply(_q2));bone.updateMatrixWorld(true)}
+function legIK(B,side,T){const up=B[side+'UpLeg'],lo=B[side+'Leg'],ft=B[side+'Foot'];for(let i=0;i<2;i++){ccdStep(lo,ft,T);ccdStep(up,ft,T)}}
 const lum=h=>{const c=new THREE.Color(h);return .299*c.r+.587*c.g+.114*c.b};
 export const awayJersey=cols=>{const a=cols[0],b=cols[1];if(lum(a)<.55)return[a,b&&lum(b)>.5?b:'#ffffff'];if(b&&lum(b)<.55)return[b,a];return['#1b2a5c','#ffffff']};
 export const homeTrim=cols=>lum(cols[0])<.75?cols[0]:(cols[1]&&lum(cols[1])<.75?cols[1]:'#1b2a5c');
@@ -106,8 +112,8 @@ function courtTex(cols,logo){const c=document.createElement('canvas');c.width=20
  return t}
 function blobTex(){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,2,32,32,30);g.addColorStop(0,'rgba(0,0,0,.55)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)}
 function makePlayer(sc,base,o){
-  const LK=o.leg||1.1,S=buildSkeleton(base.skel,{leg:LK}),root=S.root,bones={};for(const b of S.bones)bones[b.name]=b;
-  const {geo,tgeo}=buildBody(S,o);const skel=new THREE.Skeleton(S.bones);
+  const LK=(o.leg||1.1)*(base.human?1.07:1),S=buildSkeleton(base.skel,{leg:LK}),root=S.root,bones={};for(const b of S.bones)bones[b.name]=b;
+  if(base.human)o.mh=1;const {geo,tgeo}=base.human?buildBodyMH(S,o,base.human):buildBody(S,o);const skel=new THREE.Skeleton(S.bones);
   const m1=new THREE.SkinnedMesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.62}));
   const m2=new THREE.SkinnedMesh(tgeo,new THREE.MeshStandardMaterial({map:jerseyTex(o),roughness:.7}));
   for(const m of [m1,m2]){root.add(m);m.bind(skel);m.frustumCulled=false}
@@ -125,6 +131,10 @@ function makePlayer(sc,base,o){
     mcPlay(name,t,w){const C=base.mc&&base.mc[name];if(!C)return null;const loop=!/shot/.test(name);let f=t*C.fps;if(loop){f=((f%C.n)+C.n)%C.n}else f=Math.min(C.n-1.001,Math.max(0,f));const i=Math.floor(f),j=loop?(i+1)%C.n:Math.min(C.n-1,i+1),a=f-i;
       for(const k in C.qa){const bn=bones[k];if(!bn)continue;const q=C.qa[k];_qa.fromArray(q,i*4);_qb.fromArray(q,j*4);_qa.slerp(_qb,a);bn.quaternion.slerp(_qa,w)}
       const lerp=(arr,s)=>[0,1,2].slice(0,s).map(c=>arr[i*s+c]+(arr[j*s+c]-arr[i*s+c])*a);return {y:lerp(C.y,1)[0],d:C.d.length?lerp(C.d,2):[0,0],ball:C.ball[i],dur:C.dur}},
+    ik(dt,sp,air){/* 천천히 움직이거나 서 있을 때 발을 바닥에 고정 (미끄러짐 제거) */const B=this.bones;this.root.updateMatrixWorld(true);const ry=this.root.position.y;this.fl=this.fl||{Left:{L:null,w:0},Right:{L:null,w:0}};
+      for(const sd of ['Left','Right']){const st=this.fl[sd],F=new THREE.Vector3().setFromMatrixPosition(B[sd+'Foot'].matrixWorld),h=F.y-ry;this.ank=this.ank==null?h:Math.min(this.ank+dt*.02,h);
+        const low=h<this.ank+.06&&!air&&sp<2.2;if(low){if(!st.L)st.L=F.clone();else if(Math.hypot(F.x-st.L.x,F.z-st.L.z)>.42)st.L=F.clone()}else if(st.L&&(air||h>this.ank+.1||sp>=2.2))st.R=st.L,st.L=null;
+        st.w+=((st.L?1:0)-st.w)*Math.min(1,dt*(st.L?14:8));const P=st.L||st.R;if(st.w<.02||!P)continue;const T=F.clone().lerp(_v3.set(P.x,F.y,P.z),st.w);legIK(B,sd,T)}},
     step(dt){this.t+=dt;mixer.update(dt);
       /* 뛸 때 상체를 앞으로 숙이고 팔을 크게 흔듦 */
       {const tl=this.loco==='run'?.38:this.loco==='walk'?.12:0;this.lean=(this.lean||0)+(tl-(this.lean||0))*Math.min(1,dt*6);const L=this.lean*(1-this.pw);
@@ -184,12 +194,16 @@ export async function create(el,cfg){
   const pl=[];cfg.P.forEach((tm,ti)=>tm.forEach((p,i)=>{const cols=ti===0?cfg.homeCols:cfg.awayCols,wh=ti===0;const AJ=awayJersey(cfg.awayCols);const L=p.look||{};pl.push({src:p,m:makePlayer(sc,base,{skin:p.skin||'#8d5a3b',hairc:p.hair||'#151515',hair:L.hair??0,beard:L.beard||0,band:L.band||0,bandc:wh?cols[0]:'#ffffff',num:L.num??(i*7+3),abbr:ti===0?cfg.homeAbbr:cfg.awayAbbr,jersey:wh?'#f4f4f4':AJ[0],shorts:wh?'#f4f4f4':AJ[0],trim:wh?homeTrim(cols):AJ[1],numc:wh?homeTrim(cols):'#ffffff',socks:L.socks,shoe:L.shoe,bulk:L.bulk||1,leg:L.leg||1.1,blob,me:p.me,scale:L.scale||1,yaw:ti===0?Math.PI/2:-Math.PI/2})})}));
   const ballM=new THREE.Mesh(new THREE.SphereGeometry(.12,18,14),M('#e8742a',{roughness:.55}));sc.add(ballM);const ballS=new THREE.Mesh(new THREE.PlaneGeometry(.45,.45),new THREE.MeshBasicMaterial({map:blob,transparent:true,depthWrite:false}));ballS.rotation.x=-Math.PI/2;ballS.position.y=.012;sc.add(ballS);
   const HOOP=s=>W3(s>0?88.75:5.25,25,3.05);
-  const camX={v:0,init:0};let flPrev=false,flS=null,lastBp=null,flId=-1;let focus=0,fz=0,fSrc=null,fp=0,fMode='';const fpPos=new THREE.Vector3();let alive=true,last=performance.now(),acc=0;
+  const camX={v:0,init:0};let flPrev=false,flS=null,lastBp=null,flId=-1,flT0=0;let focus=0,fz=0,fSrc=null,fp=0,fMode='';const fpPos=new THREE.Vector3();let alive=true,last=performance.now(),acc=0;
   const ang=(a,b)=>{let d=b-a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d};
-  function frame(now){if(!alive)return;const dt=Math.min(.05,(now-last)/1000);last=now;
+  function frame(now){if(!alive)return;const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     const B=cfg.ball,hold=B.hold&&!B.fl?B.hold:null;
     for(const q of pl){const s=q.src,m=q.m;const tgt=W3(s.x,s.y);if(!m.sp){m.sp=tgt.clone();m.sv=new THREE.Vector3()}
-      /* 가속·감속이 자연스럽게: 목표 위치를 스프링으로 따라감 */const om=7.5;const acc=tgt.clone().sub(m.sp).multiplyScalar(om*om).sub(m.sv.clone().multiplyScalar(2*om));m.sv.addScaledVector(acc,dt);if(m.sv.length()>11)m.sv.setLength(11);m.sp.addScaledVector(m.sv,dt);if(m.sp.distanceTo(tgt)>25){m.sp.copy(tgt);m.sv.set(0,0,0)}
+      /* 선수 이동은 3D가 직접: 경로를 조금 앞서 보고(lookahead) 가속도 한계 안에서 속도를 바꿈 → 순간 가속·순간 정지 없음 */
+      {let aim=tgt;if(s.mvB&&now<s.mvB+250){const k=Math.min(1,Math.max(0,(now+220-s.mvA)/Math.max(1,s.mvB-s.mvA))),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,u=1-e;aim=W3(u*u*s.fx+2*u*e*s.cx+e*e*s.tx,u*u*s.fy+2*u*e*s.cy+e*e*s.ty)}
+       const err=aim.clone().sub(m.sp);err.y=0;const d=err.length(),late=m.sp.distanceTo(tgt),vmax=late>2.5?9:7.6,amax=late>2.5?14:9;
+       const want=d>.02?err.multiplyScalar(Math.min(vmax,d/.32,Math.sqrt(2*amax*.8*d))/d):new THREE.Vector3();const dv=want.sub(m.sv),dl=dv.length(),lim=amax*dt;if(dl>lim&&dl>1e-9)dv.multiplyScalar(lim/dl);m.sv.add(dv);m.sp.addScaledVector(m.sv,dt);
+       if(m.sp.distanceTo(tgt)>25){m.sp.copy(tgt);m.sv.set(0,0,0)}}
       const wp=m.sp.clone();const vel=m.sv;const sp=Math.hypot(vel.x,vel.z);
       let want=m.yaw;if(sp>.4)want=Math.atan2(vel.x,vel.z);else{const tgt=hold?W3(hold.x,hold.y):W3(B.x,B.y);const off=s.team===cfg.offTeam();const aim=off?(hold===s?HOOP(cfg.dir()):tgt):tgt;if(!(hold===s&&!off))want=Math.atan2(aim.x-wp.x,aim.z-wp.z)}
       m.yaw+=ang(m.yaw,want)*Math.min(1,dt*9);m.root.rotation.y=m.yaw;
@@ -214,11 +228,16 @@ export async function create(el,cfg){
       m.mcR=null;if(m.mcw>.01&&m.mcLast){m.mcR=m.mcPlay(m.mcLast,mcN?mcT:m.mcLastT,m.mcw);if(m.mcR&&/^d(run|idle)$/.test(m.mcLast)){/* 드리블은 자세를 낮춰서 */const w=m.mcw,add=(bn,x)=>{_e.set(x*w,0,0);_q.setFromEuler(_e);m.bones[bn].quaternion.multiply(_q)};add('LeftUpLeg',-.42);add('RightUpLeg',-.42);add('LeftLeg',.72);add('RightLeg',.72);add('LeftFoot',-.3);add('RightFoot',-.3);add('Spine',.22);add('Spine1',.08);add('Neck',-.25);m.mcR.y-=.13*w}if(m.mcR){const sc_=m.root.scale.x;jump=jump*(1-m.mcw)+(m.mcR.y-1.04)*sc_*m.mcw;if(MCMAP[s.mv]&&mcN&&/shot/.test(mcN)){m.mcD=m.mcR.d}else m.mcD=null}}
       let rx=0,rz=0,ry=0;if(m.mcD&&m.mcR){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=(fw.x*m.mcD[1]+lf.x*m.mcD[0])*m.mcw;rz=(fw.z*m.mcD[1]+lf.z*m.mcD[0])*m.mcw}
       if(mvS){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=fw.x*mvS.root[0]+lf.x*mvS.root[1];rz=fw.z*mvS.root[0]+lf.z*mvS.root[1];ry=mvS.root[2];m.root.rotation.y=m.yaw+mvS.yaw}
-      m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.blob.position.set(wp.x,.01,wp.z);m.blob.scale.setScalar(1-jump*.35);if(m.ring)m.ring.position.set(wp.x,.015,wp.z);if(m.arrow){m.arrow.position.set(m.root.position.x,m.root.position.y+2.45*m.root.scale.y+.12*Math.sin(now/180),m.root.position.z);m.arrow.rotation.y=now/600}}
+      /* 동작 전환 블렌딩: 상태가 바뀌면 직전 자세에서 0.22초 동안 부드럽게 넘어감 */
+      {const lab=(mcN||'')+'|'+(mvS?s.mv:'')+'|'+(act||'')+'|'+(typeof pose==='string'?pose:'');const BL=m.bl||(m.bl=Object.values(m.bones));
+       if(m.lab!==undefined&&lab!==m.lab&&m.prevQ)m.xb={q:m.prevQ.map(q=>q.clone()),t:0};m.lab=lab;
+       if(m.xb){m.xb.t+=dt;const u=Math.min(1,m.xb.t/.22),w=1-u*u*(3-2*u);if(w<=.001)m.xb=null;else BL.forEach((bn,i)=>bn.quaternion.slerp(m.xb.q[i],w))}
+       if(!m.prevQ)m.prevQ=BL.map(bn=>bn.quaternion.clone());else BL.forEach((bn,i)=>m.prevQ[i].copy(bn.quaternion))}
+      m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.ik(dt,sp,((m.yoff||0)+jump+ry)>.05||(act&&act!=='pass'&&act!=='cele'));m.blob.position.set(wp.x,.01,wp.z);m.blob.scale.setScalar(1-jump*.35);if(m.ring)m.ring.position.set(wp.x,.015,wp.z);if(m.arrow){m.arrow.position.set(m.root.position.x,m.root.position.y+2.45*m.root.scale.y+.12*Math.sin(now/180),m.root.position.z);m.arrow.rotation.y=now/600}}
     /* ball */
     let bp;
     if(B.thru!=null){bp=HOOP(cfg.dir());bp.y=3.05-B.thru*2.9}
-    else if(B.fl&&B.from&&B.dest){if(!flPrev||!flS||B.fid!==flId){/* 연달아 이어지는 패스·리바운드도 새 비행은 지금 공 위치에서 시작 */flS=lastBp?lastBp.clone():null;flId=B.fid}const k=B.k||0,a=flS&&B.hy0==null?flS.clone().setY(0):W3(B.from[0],B.from[1]);const rcv=B.toP?pl.find(o=>o.src===B.toP):null;/* 패스는 받는 선수의 실제 화면 위치로 */const b=rcv?rcv.m.root.position.clone().setY(0):W3(B.dest[0],B.dest[1]);const toHoop=Math.hypot(B.dest[0]-(cfg.dir()>0?88.75:5.25),B.dest[1]-25)<1.5;
+    else if(B.fl&&B.from&&B.dest){if(!flPrev||!flS||B.fid!==flId){/* 연달아 이어지는 패스·리바운드도 새 비행은 지금 공 위치에서 시작 */flS=lastBp?lastBp.clone():null;flId=B.fid;flT0=now}/* 공 비행은 3D 자체 시계로 진행 */const k=Math.min(1,(now-flT0)/Math.max(60,(B.T||.5)*1000)),a=flS&&B.hy0==null?flS.clone().setY(0):W3(B.from[0],B.from[1]);const rcv=B.toP?pl.find(o=>o.src===B.toP):null;/* 패스는 받는 선수의 실제 화면 위치로 */const b=rcv?rcv.m.root.position.clone().setY(0):W3(B.dest[0],B.dest[1]);const toHoop=Math.hypot(B.dest[0]-(cfg.dir()>0?88.75:5.25),B.dest[1]-25)<1.5;
       const h0=B.hy0!=null?B.hy0:flS?flS.y:toHoop?2.5:1.3,h1=toHoop?3.12:(B.hy0!=null?.12:1.25),T=B.T||.5,arc=toHoop?(B.arc||6)*.32:Math.min(3.5,9.8*T*T/8);/* 패스·리바운드도 중력 포물선 */bp=a.lerp(b,k);bp.y=h0+(h1-h0)*k+Math.sin(k*Math.PI)*arc}
     else if(hold&&pl.find(o=>o.src===hold).m.mcR&&pl.find(o=>o.src===hold).m.mcw>.5){const q=pl.find(o=>o.src===hold).m;q.root.updateMatrixWorld(true);
       /* 실제 우리 선수 손뼈 위치에서 공을 튀김: 아래쪽 손이 드리블 손 */const R_=new THREE.Vector3().setFromMatrixPosition(q.bones.RightHand.matrixWorld),L_=new THREE.Vector3().setFromMatrixPosition(q.bones.LeftHand.matrixWorld);
@@ -237,7 +256,10 @@ export async function create(el,cfg){
       const pa=N.m.geometry.attributes.position,o=N.o,by=act?(.21-thru*.5):9;for(let i=0;i<pa.count;i++){const x=o[i*3],y=o[i*3+1],z=o[i*3+2],d=.21-y,depth=Math.max(0,d/.42);
         const bulge=act?Math.exp(-Math.pow((y-(by)) / .1,2))*.45:0,sw=Math.sin(N.t*16+y*8)*.05*decay*depth;const r=1+bulge+Math.sin(N.t*22)*.06*decay*depth;
         pa.array[i*3]=x*r+sw;pa.array[i*3+2]=z*r+sw*.6;pa.array[i*3+1]=y-(act?.04*bulge:0)+Math.sin(N.t*18)*.03*decay*depth}pa.needsUpdate=true}}
+    /* 안전장치: 비행·그물 통과가 아닐 때 공이 한 프레임에 크게 점프하면 빠르게 따라가게 (순간이동 방지) */
+    if(lastBp&&B.thru==null){const d=bp.distanceTo(lastBp),mx=Math.max(.6,24*dt);if(d>mx&&d<15)bp=lastBp.clone().lerp(bp,Math.max(mx/d,Math.min(1,dt*16)))}
     flPrev=!!B.fl;if(!B.fl)flS=null;lastBp=bp.clone();
+    if(globalThis.__b3log)globalThis.__b3log.push([now,bp.x,bp.y,bp.z,!!B.fl,...pl.map(o=>[o.m.root.position.x,o.m.root.position.z])]);
     ballM.position.copy(bp);ballM.rotation.x+=dt*6;ballS.position.set(bp.x,.012,bp.z);ballS.scale.setScalar(Math.max(.3,1-bp.y*.15));
     /* 2K low broadcast camera: sideline, slightly elevated, follows the ball */
     let mx=0;for(const q of pl)mx+=q.m.root.position.x;mx/=pl.length;const tx=Math.max(-11,Math.min(11,bp.x*.4+mx*.6+cfg.dir()*1.8));if(!camX.init){camX.v=tx;camX.init=1}camX.v+=(tx-camX.v)*Math.min(1,dt*3);

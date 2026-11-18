@@ -6,6 +6,7 @@
     { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }] },
     { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }] },
     { "source": "/3d/(bc3d|body).js", "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }] },
+    { "source": "/3d/(.*).bin", "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }] },
     { "source": "/3d/(.*).json", "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }] }
   ]
 }
