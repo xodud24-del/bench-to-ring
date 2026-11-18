@@ -238,7 +238,7 @@ export async function create(el,cfg){
     let bp;
     if(B.thru!=null){bp=HOOP(cfg.dir());bp.y=3.05-B.thru*2.9}
     else if(B.fl&&B.from&&B.dest){if(!flPrev||!flS||B.fid!==flId){/* 연달아 이어지는 패스·리바운드도 새 비행은 지금 공 위치에서 시작 */flS=lastBp?lastBp.clone():null;flId=B.fid;flT0=now}/* 공 비행은 3D 자체 시계로 진행 */const k=Math.min(1,(now-flT0)/Math.max(60,(B.T||.5)*1000)),a=flS&&B.hy0==null?flS.clone().setY(0):W3(B.from[0],B.from[1]);const rcv=B.toP?pl.find(o=>o.src===B.toP):null;/* 패스는 받는 선수의 실제 화면 위치로 */const b=rcv?rcv.m.root.position.clone().setY(0):W3(B.dest[0],B.dest[1]);const toHoop=Math.hypot(B.dest[0]-(cfg.dir()>0?88.75:5.25),B.dest[1]-25)<1.5;
-      const h0=B.hy0!=null?B.hy0:flS?flS.y:toHoop?2.5:1.3,h1=toHoop?3.12:(B.hy0!=null?.12:1.25),T=B.T||.5,arc=toHoop?(B.arc||6)*.32:Math.min(3.5,9.8*T*T/8);/* 패스·리바운드도 중력 포물선 */bp=a.lerp(b,k);bp.y=h0+(h1-h0)*k+Math.sin(k*Math.PI)*arc}
+      const h0=B.hy0!=null?B.hy0:flS?flS.y:toHoop?2.5:1.3,h1=toHoop?3.12:(B.hy0!=null?.12:1.25),T=B.T||.5,arc=toHoop?Math.min((B.arc||6)*.32,Math.max(.18,.1+a.distanceTo(b)*.22)):Math.min(3.5,9.8*T*T/8);/* 슛 포물선 높이는 거리에 비례: 레이업은 살짝, 3점은 높게 *//* 패스·리바운드도 중력 포물선 */bp=a.lerp(b,k);bp.y=h0+(h1-h0)*k+Math.sin(k*Math.PI)*arc}
     else if(hold&&pl.find(o=>o.src===hold).m.mcR&&pl.find(o=>o.src===hold).m.mcw>.5){const q=pl.find(o=>o.src===hold).m;q.root.updateMatrixWorld(true);
       /* 실제 우리 선수 손뼈 위치에서 공을 튀김: 아래쪽 손이 드리블 손 */const R_=new THREE.Vector3().setFromMatrixPosition(q.bones.RightHand.matrixWorld),L_=new THREE.Vector3().setFromMatrixPosition(q.bones.LeftHand.matrixWorld);
       const H=R_.y<L_.y?R_:L_,key=H===R_?'r':'l';q.hr=q.hr||{r:[9,0],l:[9,0]};const rg=q.hr[key];rg[0]=Math.min(rg[0]+dt*.15,H.y);rg[1]=Math.max(rg[1]-dt*.15,H.y);if(rg[1]-rg[0]<.08)rg[1]=rg[0]+.08;
