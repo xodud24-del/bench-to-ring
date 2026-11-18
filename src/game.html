@@ -1788,7 +1788,7 @@ function liveGame(cfg){
       if(zone&&o.i<5){let z=zone[o.i];if(dk==='box1'&&o.i===0)return null;if(s<0)z=[94-z[0],50-z[1]];const b=ball.hold||ball;return[z[0]+(b.y-25)*.0+(b.x-z[0])*.12,z[1]+(b.y-z[1])*.22]}
       const t=dk==='drop'&&o.i===4?.55:.2;return[o.tx+(h[0]-o.tx)*t+(s>0?1:-1)*.8,o.ty+(h[1]-o.ty)*t]};
     const withDef=(tg,off,s,dk)=>{const D=P[1-off[0].team];off.forEach((o,i)=>{const t=tg.get(o)||[o.x,o.y];const ds=defSpot({i,tx:t[0],ty:t[1]},s,dk);tg.set(D[i],ds||[t[0]+(HOOPF(s)[0]-t[0])*.2,t[1]+(HOOPF(s)[1]-t[1])*.2])});return tg};
-    const MVT={jab:[800,1],pump:[900,1],jshot:[700,.7],jfade:[1050,.66],spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1150,.87],fade:[1400,.55],turn:[2000,.65],lay:[950,.62],clutch:[1250,.78],dunk:[950,.6],dunk2:[950,.6],toma:[1100,.68]};
+    const MVT={jab:[800,1],pump:[900,1],jshot:[700,.7],jfade:[1050,.66],spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1150,.87],fade:[1400,.55],turn:[2000,.65],lay:[950,.62],clutch:[1250,.78],dunk:[1500,.48],dunk2:[1500,.48],toma:[1650,.5]};
     const rt=ms=>ms*speed;/* 실제 시간(ms) → tween 시간: 동작·공은 배속과 상관없이 실제 속도 */
     const MVSET=(o,n,d,scaled)=>{o.mv=n;o.mvT=performance.now();o.mvD=scaled?(d/speed):(d||MVT[n][0])};
     const pickMove=sh=>sh==='3'?pick(['jshot','jshot','jshot','stepback']):sh==='mid'?pick(['jshot','jshot','jfade','turn','stepback']):sh==='post'?pick(['lay','lay','clutch']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
