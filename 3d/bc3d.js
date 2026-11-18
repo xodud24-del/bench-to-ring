@@ -173,7 +173,7 @@ export async function create(el,cfg){
   const pl=[];cfg.P.forEach((tm,ti)=>tm.forEach((p,i)=>{const cols=ti===0?cfg.homeCols:cfg.awayCols,wh=ti===0;const AJ=awayJersey(cfg.awayCols);const L=p.look||{};pl.push({src:p,m:makePlayer(sc,base,{skin:p.skin||'#8d5a3b',hairc:p.hair||'#151515',hair:L.hair??0,beard:L.beard||0,band:L.band||0,bandc:wh?cols[0]:'#ffffff',num:L.num??(i*7+3),abbr:ti===0?cfg.homeAbbr:cfg.awayAbbr,jersey:wh?'#f4f4f4':AJ[0],shorts:wh?'#f4f4f4':AJ[0],trim:wh?homeTrim(cols):AJ[1],numc:wh?homeTrim(cols):'#ffffff',socks:L.socks,shoe:L.shoe,bulk:L.bulk||1,leg:L.leg||1.1,blob,me:p.me,scale:L.scale||1,yaw:ti===0?Math.PI/2:-Math.PI/2})})}));
   const ballM=new THREE.Mesh(new THREE.SphereGeometry(.12,18,14),M('#e8742a',{roughness:.55}));sc.add(ballM);const ballS=new THREE.Mesh(new THREE.PlaneGeometry(.45,.45),new THREE.MeshBasicMaterial({map:blob,transparent:true,depthWrite:false}));ballS.rotation.x=-Math.PI/2;ballS.position.y=.012;sc.add(ballS);
   const HOOP=s=>W3(s>0?88.75:5.25,25,3.05);
-  const camX={v:0,init:0};let flPrev=false,flS=null,lastBp=null;let focus=0,fz=0;let alive=true,last=performance.now(),acc=0;
+  const camX={v:0,init:0};let flPrev=false,flS=null,lastBp=null;let focus=0,fz=0,fSrc=null,fp=0;const fpPos=new THREE.Vector3();let alive=true,last=performance.now(),acc=0;
   const ang=(a,b)=>{let d=b-a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d};
   function frame(now){if(!alive)return;const dt=Math.min(.05,(now-last)/1000);last=now;
     const B=cfg.ball,hold=B.hold&&!B.fl?B.hold:null;
@@ -225,10 +225,14 @@ export async function create(el,cfg){
     ballM.position.copy(bp);ballM.rotation.x+=dt*6;ballS.position.set(bp.x,.012,bp.z);ballS.scale.setScalar(Math.max(.3,1-bp.y*.15));
     /* 2K low broadcast camera: sideline, slightly elevated, follows the ball */
     let mx=0;for(const q of pl)mx+=q.m.root.position.x;mx/=pl.length;const tx=Math.max(-11,Math.min(11,bp.x*.4+mx*.6+cfg.dir()*1.8));if(!camX.init){camX.v=tx;camX.init=1}camX.v+=(tx-camX.v)*Math.min(1,dt*3);
-    fz+=(focus-fz)*Math.min(1,dt*2);cam.fov=24-fz*7;cam.updateProjectionMatrix();cam.position.set(camX.v*.82+fz*camX.v*.12,6.4-fz*1.6,16.8-fz*2);cam.lookAt(camX.v+fz*cfg.dir()*1.2,.2+fz*.9,-1.2);
+    fz+=(focus-fz)*Math.min(1,dt*2);const fpT=fSrc?pl.find(o=>o.src===fSrc):null;fp+=((fpT?1:0)-fp)*Math.min(1,dt*3.2);if(fpT)fpPos.lerp(fpT.m.root.position,Math.min(1,dt*6));
+      cam.fov=24-fz*7-fp*6;cam.updateProjectionMatrix();
+      const nx=camX.v*.82+fz*camX.v*.12,ny=6.4-fz*1.6,nz=16.8-fz*2,lx=camX.v+fz*cfg.dir()*1.2,ly=.2+fz*.9,lz=-1.2;
+      const zx=fpPos.x-cfg.dir()*2.2,zy=2.4,zz=fpPos.z+8.5;
+      cam.position.set(nx+(zx-nx)*fp,ny+(zy-ny)*fp,nz+(zz-nz)*fp);cam.lookAt(lx+(fpPos.x+cfg.dir()*.6-lx)*fp,ly+(1.5-ly)*fp,lz+(fpPos.z-lz)*fp);
     {const v=cfg.shot?cfg.shot():null;const txt=v==null?'':v<5?Math.max(0,v).toFixed(1):String(Math.ceil(v));for(const S of SCK){if(S.last===txt)continue;S.last=txt;const x=S.cv.getContext('2d');x.fillStyle='#0a0a0a';x.fillRect(0,0,256,128);x.font='900 104px "Courier New",monospace';x.textAlign='center';x.textBaseline='middle';x.fillStyle=v!=null&&v<5?'#ff2b2b':'#ffb020';x.shadowColor=x.fillStyle;x.shadowBlur=18;x.fillText(txt,128,68);S.tx.needsUpdate=true}}
     if(CROWD){const C=CROWD,t=now/1000,exc=cfg.hype?cfg.hype():0;for(let k=0;k<40;k++){const i=(Math.random()*C.n)|0,[x,y,z,h,ph]=C.crowdY[i];const b=Math.max(0,Math.sin(t*(3+exc*4)+ph))*(.03+exc*.18);C.m.compose(new THREE.Vector3(x,y+.25*h+b,z),new THREE.Quaternion(),new THREE.Vector3(1,h,1));C.body.setMatrixAt(i,C.m);C.m.makeTranslation(x,y+.6*h+b,z);C.head.setMatrixAt(i,C.m)}C.body.instanceMatrix.needsUpdate=C.head.instanceMatrix.needsUpdate=true}
     ren.render(sc,cam);requestAnimationFrame(frame)}
   requestAnimationFrame(frame);
-  return {focus(v){focus=v?1:0},dispose(){alive=false;ren.dispose();ren.domElement.remove();sc.traverse(o=>{if(o.geometry)o.geometry.dispose()})},resize(){const w=el.clientWidth,h=el.clientHeight;ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}};
+  return {focus(v){focus=v?1:0},zoom(src){fSrc=src||null},dispose(){alive=false;ren.dispose();ren.domElement.remove();sc.traverse(o=>{if(o.geometry)o.geometry.dispose()})},resize(){const w=el.clientWidth,h=el.clientHeight;ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}};
 }
