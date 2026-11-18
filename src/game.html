@@ -1818,7 +1818,7 @@ function liveGame(cfg){
       let sp;if(e.shot==='3'){const c3=[[2.5,3],[47.5,3],[6,19],[44,19],[25,28.5]];const cur=[s>0?A.y:50-A.y,s>0?94-A.x:A.x];sp=fc(c3.sort((a,b)=>dist(a,cur)-dist(b,cur))[0],s)}
       else if(e.shot==='mid'){sp=fc([25+(R()<.5?-9:9),14],s)}else if(e.shot==='post'){sp=fc([27,5],s)}else if(e.shot==='ft'){sp=fc([25,15],s)}else sp=fc([25+(R()<.5?-2:2),4.5],s);
       if(e.ast!=null&&e.team===0&&off[e.ast]!==holder&&off[e.ast]!==A){await step(240,[],{to:off[e.ast]})}
-      const hd2=ball.hold||holder;if(hd2!==A)await step(300,[[A,sp]],{to:A});else{if(R3&&R()<.45){const dm=pick(['mcross','mcross','mlegs','behind','spin','spin']);const dd=MVT[dm]?MVT[dm][0]:900;MVSET(A,dm,dd);await step(dd,[[A,sp]])}else await step(280,[[A,sp]])}
+      const hd2=ball.hold||holder;if(hd2!==A)await step(300,[[A,sp]],{to:A});else{if(R3&&R()<.45){const dm=pick(['mcross','mcross','mlegs','behind']);const dd=MVT[dm]?MVT[dm][0]:900;MVSET(A,dm,dd);await step(dd,[[A,sp]])}else await step(280,[[A,sp]])}
       if(skip)return;
       if(e.blk!=null){const d=D[e.blk];ACT(A,'shoot',700);ACT(d,'block',700);await step(220,[[d,[A.x-.8*s,A.y]]]);pops.push({s:'BLOCK',x:A.x,y:A.y,t:45,c:'#ff8a8a'});await move(260,new Map(),{pt:[A.x-5*s,A.y+ri(-6,6)]});return}
       if(R3){const mvn=e.shot==='ft'?'shot':pickMove(e.shot);if(mvn==='stepback'){const back=[A.x-4*s,A.y];MVSET(A,'stepback');await move(MVT.stepback[0]*MVT.stepback[1]*.62,new Map([[A,back]]));await tween(MVT.stepback[0]*MVT.stepback[1]*.38,()=>{})}else{MVSET(A,mvn);await tween(MVT[mvn][0]*MVT[mvn][1],()=>{})}}
