@@ -2542,7 +2542,7 @@ function ownerSeasonGo(){
   ow.log.push({y:`${G.year}–${String(G.year+1).slice(2)}`,w,l:g-w,rank,po:poTxt,profit:Math.round(profit),val:ow.val,fans:ow.fans});
   const cats=[won_?'ownerChamp':top?'ownerGood':bot?'ownerBad':'ownerMid',won_?'ownerChamp':top?'ownerGood':bot?'ownerBad':'ownerMid'];
   if(ow.bud===2)cats.push('ownerSpend');if(ow.bud===0)cats.push('ownerCheap');if(ow.tix===2)cats.push('ownerTicket');if(profit<0)cats.push('ownerLoss');
-  const q=[{type:'cut',cut:{kind:'oseason',lg,team:ow.team,scene:9,title:w>g/2?'엄지 척':'코트사이드',desc:w>g/2?'구단주석에서 엄지를 치켜들었어요. 시즌이 잘 풀리고 있어요.':'구단주석에서 팀을 지켜보고 있어요.'}},{type:'ores',d:{team:ow.team,lg,w,l:g-w,rank,pre,po:poTxt,profit,val:ow.val,dval:ow.val-old,fans:ow.fans,share:ow.share},feed:makeFeed(cats,{n:p.name,t:ow.team},[NAT_LANG[p.nat]||'en'])}];
+  const q=[{type:'cut',cut:{kind:'oseason',lg,team:ow.team,scene:9,title:w>g/2?'엄지 척':'코트사이드',desc:w>g/2?'구단주석에서 엄지를 치켜들었어요. 시즌이 잘 풀리고 있어요.':'구단주석에서 팀을 지켜보고 있어요.'}},{type:'ores',d:{feat:(()=>{const opp=T[lg].filter(t=>t!==ow.team).sort((x,y)=>teamStr(lg,y)-teamStr(lg,x))[ri(0,2)],base=Math.round(L[lg].pro?104:78),win=R()<w/g+.08,mg=ri(1,14);return {opp,a:win?base+mg:base-ri(0,6),b:win?base:base-ri(0,6)+mg,win}})(),team:ow.team,lg,w,l:g-w,rank,pre,po:poTxt,profit,val:ow.val,dval:ow.val-old,fans:ow.fans,share:ow.share},feed:makeFeed(cats,{n:p.name,t:ow.team},[NAT_LANG[p.nat]||'en'])}];
   if(won_)q.push({type:'cut',cut:{kind:'ochamp',lg,team:ow.team}});
   {const ag=ow.age,pr=.05+Math.max(0,ag-50)*.013;
    if(R()<pr){const sev=R()<.12+Math.max(0,ag-62)*.02;const H=sev?pick([['심장 수술','구단주가 심장 수술을 받아 한동안 구단 운영에서 손을 뗐어요.'],['뇌졸중 증세','갑작스러운 뇌졸중 증세로 입원했어요. 프런트가 흔들렸어요.']]):pick([['건강 검진 이상','정밀 검진에서 이상 소견이 나와 치료를 시작했어요.'],['스트레스성 질환','적자와 성적 압박에 몸이 먼저 반응했어요.'],['무릎 수술','오래 미뤄 둔 무릎 수술을 받았어요.']]);
@@ -2602,7 +2602,7 @@ function bindOwner(){
 }
 function renderORes(e){
   const d=e.d;
-  return head(`${d.team} · ${lgName(d.lg)}`,`${d.w}승 ${d.l}패,\n리그 ${d.rank}위`,`시즌 전 예상 ${d.pre}위`)+`<div class="card">${rows([['플레이오프',d.po],['구단 수익',`${d.profit>=0?'+':''}${won(d.profit)}`,d.profit>=0?'blue':''],['내 몫',`${d.profit>=0?'+':''}${won(d.profit*d.share)}`],['구단 가치',`${won(d.val)} (${d.dval>=0?'+':''}${won(d.dval)})`],['팬 지지도',`${d.fans} / 100`]])}</div>`+(e.feed?`<div class="card"><div class="ch"><h2>반응</h2></div>${feedHTML(e.feed)}</div>`:'')+`<div class="ctaw"><button class="btn" id="ok">확인</button></div>`;
+  return head(`${d.team} · ${lgName(d.lg)}`,`${d.w}승 ${d.l}패,\n리그 ${d.rank}위`,`시즌 전 예상 ${d.pre}위`)+`<div class="card">${rows([['플레이오프',d.po],['구단 수익',`${d.profit>=0?'+':''}${won(d.profit)}`,d.profit>=0?'blue':''],['내 몫',`${d.profit>=0?'+':''}${won(d.profit*d.share)}`],['구단 가치',`${won(d.val)} (${d.dval>=0?'+':''}${won(d.dval)})`],['팬 지지도',`${d.fans} / 100`]])}</div>`+(e.feed?`<div class="card"><div class="ch"><h2>반응</h2></div>${feedHTML(e.feed)}</div>`:'')+`${d.feat?`<div class="card"><div class="ch"><h2>시즌 빅매치</h2></div><div class="r"><span>vs ${esc(d.feat.opp)}</span><b>${d.feat.a} : ${d.feat.b} ${d.feat.win?'승':'패'}</b></div><button class="btn sec" id="owatch" style="margin-top:10px">구단주석에서 경기 보기</button></div>`:''}<div class="ctaw"><button class="btn" id="ok">확인</button></div>`;
 }
 Object.assign(KO,{
  ownerNew:[['{n} 구단주 취임 실화냐','극찬'],['선수 출신 구단주라니 기대된다','기대'],['돈은 좀 쓰려나','분석'],['{t} 드디어 제대로 된 주인 만났다','훈훈'],['선수 때처럼 이기는 문화 만들어 주세요','기대']],
@@ -4501,6 +4501,7 @@ function bindEvent(e){
   if(e.type==='draftnight')runDraftNight(e);
   if(e.type==='result')bindResult(e.res);
   if(e.type==='cres'&&e.d.feat){const b=$('#cwatch');if(b)b.onclick=()=>watchCoachGame(e.d)}
+  if(e.type==='ores'&&e.d.feat){const b=$('#owatch');if(b)b.onclick=()=>watchOwnerGame(e.d)}
 }
 /* season record recap: this season vs. career, with personal records flagged */
 function seasonRecap(e){
@@ -4547,6 +4548,9 @@ function renderCRes(e){
   (d.feat?`<div class="card"><div class="ch"><h2>시즌 빅매치</h2></div><div class="r"><span>vs ${esc(d.feat.opp)}</span><b>${d.feat.a} : ${d.feat.b} ${d.feat.win?'승':'패'}</b></div><button class="btn sec" id="cwatch" style="margin-top:10px">전술판 그대로 경기 보기</button></div>`:'')+
   (e.feed?`<div class="card"><div class="ch"><h2>반응</h2></div>${feedHTML(e.feed)}</div>`:'')+`<div class="ctaw"><button class="btn" id="ok">확인</button></div>`;
 }
+function watchOwnerGame(d){const f=d.feat,lg=d.lg,tp=teamPlan(lg,d.team),op=teamPlan(lg,f.opp);
+  return liveGame({eye:'BIG MATCH · 구단주석',title:`vs ${f.opp}`,home:{abbr:ABBR(d.team),cols:teamColors(d.team),names:rosterNames(lg,d.team),logo:logoOf(d.team)},away:{abbr:ABBR(f.opp),cols:teamColors(f.opp),names:rosterNames(lg,f.opp)},
+    final:[f.a,f.b],me:null,myMix:tp.mix,oppMix:op.mix,myDef:tp.def,oppDef:op.def,top:`<p class="lvsub">구단주석에서 지켜보는 시즌 빅매치</p>`})}
 function watchCoachGame(d){
   const f=d.feat,lg=d.lg,tot=Object.values(f.mix).reduce((a,b)=>a+b,0)||1,mix={};for(const k in f.mix)mix[k]=f.mix[k]/tot;
   return liveGame({eye:'BIG MATCH · 전술판',title:`vs ${f.opp}`,home:{abbr:ABBR(d.team),cols:teamColors(d.team),names:rosterNames(lg,d.team),logo:logoOf(d.team)},away:{abbr:ABBR(f.opp),cols:teamColors(f.opp),names:rosterNames(lg,f.opp)},
