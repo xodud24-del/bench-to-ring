@@ -55,6 +55,9 @@ P_.JAIR={RightArm:[0,1.25,-.8],RightForeArm:[0,0,-1.55],RightHand:[0,0,-.5],Left
 P_.JREL={RightArm:[0,1.12,-1.28],RightForeArm:[0,0,-.04],RightHand:[0,0,.6],LeftArm:[0,-1.0,.9],LeftForeArm:[0,0,.6],Spine:[-.06,0,0],Spine1:[0,0,0],...LEGS(.05,.15,.55,.03)};
 P_.JFOL={RightArm:[0,1.1,-1.15],RightForeArm:[0,0,-.1],RightHand:[0,0,1.25],LeftArm:[0,-.45,-.95],LeftForeArm:[0,-.4,0],Spine:[-.04,0,0],Spine1:[0,0,0],...LEGS(-.15,.35,.3,.05)};
 P_.JLAND={RightArm:[0,1.1,-1.1],RightForeArm:[0,0,-.1],RightHand:[0,0,1.25],LeftArm:[0,-.5,-1.0],LeftForeArm:[0,-.4,0],Spine:[.12,0,0],Spine1:[0,0,0],...LEGS(-.55,.9,-.25,.08),_y:-.12};
+P_.TRIP={RightArm:[0,.75,1.0],RightForeArm:[0,1.15,0],LeftArm:[0,-.75,-1.0],LeftForeArm:[0,-1.15,0],Spine:[.3,0,0],Spine1:[.05,0,0],...LEGS(-.6,.95,-.3,.12),_y:-.15};
+P_.JAB={...P_.TRIP,Spine:[.42,0,0],RightUpLeg:[-1.1,0,.28],RightLeg:[1.0,0,0],LeftUpLeg:[.1,0,-.12],LeftLeg:[.75,0,0],_y:-.2};
+P_.PUMP={...P_.JSET,...LEGS(-.45,.75,-.3,.1),_y:-.1};
 P_.STAND={RightArm:[0,0,1.25],LeftArm:[0,0,-1.25],RightForeArm:[0,.25,0],LeftForeArm:[0,-.25,0],Spine:[0,0,0],Spine1:[0,0,0],...LEGS(0,0,0,0)};
 const DB=(t,amp=1)=>.12+Math.abs(Math.cos(t*Math.PI*2.6))*.7*amp;/* dribble bounce height */
 /* key: [t, pose, ball[f,l,u] | 'dr'|'dl' (dribble), root[f,l,u], yawDeg] */
@@ -63,6 +66,8 @@ const MV={
  legs:{k:[[0,'DR','dr',[0,0,0],0],[.3,'LUNGE',[.25,-.22,.4],[0,0,0],-8],[.5,'LUNGE',[.12,0,.22],[0,0,0],-8],[.7,'LUNGE',[.1,.22,.38],[0,0,0],-5],[1,'DL','dl',[0,0,0],0]]},
  spin:{k:[[0,'DR','dr',[0,0,0],0],[.18,'LOW',[.35,-.25,.3],[.05,0,0],-20],[.38,'SPIN',[.05,-.32,.95],[.15,-.1,.05],-150],[.6,'SPINL',[-.05,.3,.95],[.15,-.15,.05],-270],[.8,'LOW',[.3,.25,.4],[.08,-.08,0],-345],[1,'DL','dl',[0,0,0],-360]]},
  behind:{k:[[0,'DR','dr',[0,0,0],0],[.4,'LOW',[-.25,-.2,.45],[0,0,0],8],[.55,'LOW',[-.28,.1,.45],[0,0,0],8],[1,'DL','dl',[0,0,0],0]]},
+ jab:{k:[[0,'TRIP',[.26,-.2,.9],[0,0,0],0],[.3,'JAB',[.32,-.22,.85],[.35,-.15,0],-10],[.55,'JAB',[.32,-.22,.85],[.3,-.12,0],-8],[.85,'TRIP',[.26,-.2,.9],[0,0,0],0],[1,'TRIP',[.26,-.2,.9],[0,0,0],0]]},
+ pump:{k:[[0,'TRIP',[.26,-.2,.9],[0,0,0],0],[.32,'PUMP',[.2,-.05,1.95],[0,0,0],0],[.55,'PUMP',[.2,-.05,1.95],[0,0,0],0],[.85,'TRIP',[.26,-.2,.9],[0,0,0],0],[1,'TRIP',[.26,-.2,.9],[0,0,0],0]]},
  jshot:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.16,'JDIP',[.32,0,.72],[0,0,0],0],[.3,'JCHEST',[.3,0,1.25],[0,0,0],0],[.44,'JSET',[.2,-.05,2.0],[0,0,.08],0],[.56,'JAIR',[.16,-.08,2.4],[0,0,.36],0],[.7,'JREL',[.22,-.1,2.8],[0,0,.46],0],[.8,'JFOL',null,[0,0,.3],0],[.91,'JLAND',null,[0,0,0],0],[1,'JLAND',null,[0,0,0],0]]},
  jfade:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.17,'JDIP',[.32,0,.72],[0,0,0],0],[.31,'JCHEST',[.3,0,1.25],[0,0,0],0],[.45,'JSET',[.2,-.05,2.0],[-.05,0,.08],0],[.57,'FADE',[.05,-.08,2.45],[-.3,0,.4],0],[.66,'FADE',[.05,-.1,2.7],[-.45,0,.45],0],[.8,'FADE',null,[-.6,0,.22],0],[.92,'JLAND',null,[-.65,0,0],0],[1,'JLAND',null,[-.65,0,0],0]]},
  shot:{k:[[0,'GATH',[.28,0,1.05],[0,0,0],0],[.28,'SET',[.14,-.06,2.02],[0,0,0],0],[.5,'REL',[.12,-.12,2.6],[0,0,.42],0],[.85,'REL',null,[0,0,.12],0],[1,'STAND',null,[0,0,0],0]]},
@@ -177,7 +182,9 @@ export async function create(el,cfg){
   const ang=(a,b)=>{let d=b-a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d};
   function frame(now){if(!alive)return;const dt=Math.min(.05,(now-last)/1000);last=now;
     const B=cfg.ball,hold=B.hold&&!B.fl?B.hold:null;
-    for(const q of pl){const s=q.src,m=q.m;const wp=W3(s.x,s.y);const prev=m.prev||wp;const vel=wp.clone().sub(prev).divideScalar(Math.max(dt,1e-3));m.prev=wp.clone();const sp=Math.hypot(vel.x,vel.z);
+    for(const q of pl){const s=q.src,m=q.m;const tgt=W3(s.x,s.y);if(!m.sp){m.sp=tgt.clone();m.sv=new THREE.Vector3()}
+      /* 가속·감속이 자연스럽게: 목표 위치를 스프링으로 따라감 */const om=7.5;const acc=tgt.clone().sub(m.sp).multiplyScalar(om*om).sub(m.sv.clone().multiplyScalar(2*om));m.sv.addScaledVector(acc,dt);if(m.sv.length()>9)m.sv.setLength(9);m.sp.addScaledVector(m.sv,dt);if(m.sp.distanceTo(tgt)>6){m.sp.copy(tgt);m.sv.set(0,0,0)}
+      const wp=m.sp.clone();const vel=m.sv;const sp=Math.hypot(vel.x,vel.z);
       let want=m.yaw;if(sp>.4)want=Math.atan2(vel.x,vel.z);else{const tgt=hold?W3(hold.x,hold.y):W3(B.x,B.y);const off=s.team===cfg.offTeam();const aim=off?(hold===s?HOOP(cfg.dir()):tgt):tgt;if(!(hold===s&&!off))want=Math.atan2(aim.x-wp.x,aim.z-wp.z)}
       m.yaw+=ang(m.yaw,want)*Math.min(1,dt*9);m.root.rotation.y=m.yaw;
       const mvS=s.mv&&now-s.mvT<s.mvD?sampleMove(s.mv,(now-s.mvT)/s.mvD,now/1000):null;m.mvS=mvS;
