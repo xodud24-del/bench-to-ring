@@ -1829,6 +1829,19 @@ function liveGame(cfg){
       if(skip)return;
       const holder=ball.hold||bh;
       if(e.to){const d=e.stl!=null?D[e.stl]:pick(D);await step(320,[[d,[holder.x+(A.x-holder.x)*.5,holder.y+(A.y-holder.y)*.5]]],{to:d});pops.push({s:'STEAL',x:d.x,y:d.y,t:45,c:'#7fd3ff'});return}
+      if(e.shot==='ft'&&R3){/* 자유투: 파울 장면 → 자유투 라인 정렬 → 2구 */
+        if((ball.hold||A)!==A)await step(300,[[A,fc([25,21],s)]],{to:A});
+        const fd=D.reduce((a,d)=>Math.hypot(d.x-A.x,d.y-A.y)<Math.hypot(a.x-A.x,a.y-A.y)?d:a,D[0]);R3.zoom(A,'rim');
+        await step(rt(560),[[A,fc([25+(R()<.5?-3:3),8],s)],[fd,fc([25,6],s)]]);ACT(fd,'block',500);ACT(A,'reb',450);pops.push({s:'파울!',x:A.x,y:A.y,t:60,c:'#ff6b6b'});await tween(rt(800),()=>{});R3.zoom(null);
+        const lane=[[18.5,7],[31.5,7],[18.5,10.5],[31.5,10.5],[18.5,14],[31.5,14]],tgL=new Map([[A,fc([25,15],s)]]),oth=off.filter(o=>o!==A),dd=D.slice();
+        dd.slice(0,4).forEach((d,i)=>tgL.set(d,fc(lane[i],s)));tgL.set(dd[4],fc([25,30],s));tgL.set(oth[0],fc(lane[4],s));tgL.set(oth[1],fc(lane[5],s));oth.slice(2).forEach((o,i)=>tgL.set(o,fc([10+i*30,24],s)));
+        ball.hold=A;await move(rt(1400),tgL);const mk=Math.min(2,e.v||0),order=mk===1?(R()<.5?[1,0]:[0,1]):[mk>0?1:0,mk>1?1:0];
+        for(let t=0;t<2;t++){if(skip||closed)return;pops.push({s:`자유투 ${t+1}/2`,x:A.x,y:A.y,t:40,c:'#fff'});ball.hold=A;await tween(rt(500),()=>{});
+          MVSET(A,'jshot',MVT.jshot[0]);await move(MVT.jshot[0]*MVT.jshot[1],new Map());R3.zoom(A,'hoop');await move(rt(950),new Map(),{pt:[h[0],h[1]],arc:4,miss:!order[t]});
+          if(order[t]){ball.thru=0;await tween(rt(420),k=>{ball.thru=k});ball.thru=null;ball.hold=null;ball.x=h[0];ball.y=h[1];pops.push({s:'+1',x:h[0]-6*s,y:h[1]-4,t:36,c:e.team===0?'#ffd34d':'#ff9b9b'})}
+          if(t===0){await tween(rt(400),()=>{});R3.zoom(null);/* 심판이 공을 다시 줌 */ball.hold=null;await move(rt(500),new Map(),{to:A})}
+          else if(!order[t]){const rb=D[ri(0,3)];ACT(rb,'reb',700);await step(rt(900),[],{to:rb});R3.zoom(null)}else R3.zoom(null)}
+        return}
       /* finisher spot */
       let sp;if(e.shot==='3'){const c3=[[2.5,3],[47.5,3],[6,19],[44,19],[25,28.5]];const cur=[s>0?A.y:50-A.y,s>0?94-A.x:A.x];sp=fc(c3.sort((a,b)=>dist(a,cur)-dist(b,cur))[0],s)}
       else if(e.shot==='mid'){sp=fc([25+(R()<.5?-9:9),14],s)}else if(e.shot==='post'){sp=fc([27,5],s)}else if(e.shot==='ft'){sp=fc([25,15],s)}else sp=fc([25+(R()<.5?-2:2),4.5],s);
