@@ -1751,11 +1751,11 @@ function liveGame(cfg){
     P.flat().forEach(p=>{p.fx=p.tx=p.x;p.fy=p.ty=p.y});
     const ball={x:47,y:25,z:0,hold:P[0][0],fl:null};
     /* 3D 중계 (지원 기기에서만, 실패하면 기존 2D) */
-    let R3=null,curOff=0,curDir=1,shotT=24,shotAt=performance.now(),shotRate=2.4,shotOn=true;
+    let hype=0;let R3=null,curOff=0,curDir=1,shotT=24,shotAt=performance.now(),shotRate=2.4,shotOn=true;
     const shotNow=()=>shotOn?Math.max(0,shotT-(performance.now()-shotAt)/1000*shotRate*speed):null;
     if(!window.NO3D&&window.WebGLRenderingContext&&location.protocol.startsWith('http')){wrap.style.height=H+'px';const ld=document.createElement('div');ld.className='d3l';ld.textContent='3D 중계 불러오는 중…';wrap.appendChild(ld);
       import('./3d/bc3d.js').then(m=>{const AJ=m.awayJersey(cfg.away.cols),HT=m.homeTrim(cfg.home.cols);const lg=document.createElement('div');lg.className='d3t';lg.innerHTML=`<span><i style="background:#f4f4f4;border-color:${HT}"></i>${esc(cfg.home.abbr)}${me?' (내 팀)':''}</span><span><i style="background:${AJ[0]};border-color:${AJ[1]}"></i>${esc(cfg.away.abbr)}</span>`;wrap.appendChild(lg)}).catch(()=>{});
-      import('./3d/bc3d.js').then(m=>m.create(wrap,{model:'./3d/anim.json',P,ball,homeCols:cfg.home.cols,awayCols:cfg.away.cols,homeLogo:cfg.home.logo,homeAbbr:cfg.home.abbr,awayAbbr:cfg.away.abbr,offTeam:()=>curOff,dir:()=>curDir,shot:shotNow})).then(r=>{ld.remove();if(closed){r.dispose();return}R3=r;wrap.classList.add('d3');wrap.insertBefore(r.el||wrap.lastChild,cv)}).catch(err=>{ld.remove();console.warn('3D off',err)})}
+      import('./3d/bc3d.js').then(m=>m.create(wrap,{model:'./3d/anim.json',P,ball,homeCols:cfg.home.cols,awayCols:cfg.away.cols,homeLogo:cfg.home.logo,homeAbbr:cfg.home.abbr,awayAbbr:cfg.away.abbr,offTeam:()=>curOff,dir:()=>curDir,shot:shotNow,hype:()=>hype})).then(r=>{ld.remove();if(closed){r.dispose();return}R3=r;wrap.classList.add('d3');wrap.insertBefore(r.el||wrap.lastChild,cv)}).catch(err=>{ld.remove();console.warn('3D off',err)})}
     let speed=2,closed=false,skip=false,frame=0,pops=[];
     const sc=[0,0],bx=[0,0,0,0,0],per={};
     const close=()=>{if(closed)return;closed=true;if(R3){R3.dispose();R3=null}ov.classList.remove('on');ov.innerHTML='';done()};
@@ -1785,13 +1785,18 @@ function liveGame(cfg){
       if(zone&&o.i<5){let z=zone[o.i];if(dk==='box1'&&o.i===0)return null;if(s<0)z=[94-z[0],50-z[1]];const b=ball.hold||ball;return[z[0]+(b.y-25)*.0+(b.x-z[0])*.12,z[1]+(b.y-z[1])*.22]}
       const t=dk==='drop'&&o.i===4?.55:.2;return[o.tx+(h[0]-o.tx)*t+(s>0?1:-1)*.8,o.ty+(h[1]-o.ty)*t]};
     const withDef=(tg,off,s,dk)=>{const D=P[1-off[0].team];off.forEach((o,i)=>{const t=tg.get(o)||[o.x,o.y];const ds=defSpot({i,tx:t[0],ty:t[1]},s,dk);tg.set(D[i],ds||[t[0]+(HOOPF(s)[0]-t[0])*.2,t[1]+(HOOPF(s)[1]-t[1])*.2])});return tg};
-    const MVT={spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1600,.87],fade:[1400,.55],turn:[2000,.65],lay:[1200,.62],clutch:[1700,.78],dunk:[1300,.6],dunk2:[1300,.6],toma:[1500,.68]};
+    const MVT={jshot:[1800,.71],jfade:[1800,.66],spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1600,.87],fade:[1400,.55],turn:[2000,.65],lay:[1200,.62],clutch:[1700,.78],dunk:[1300,.6],dunk2:[1300,.6],toma:[1500,.68]};
     const MVSET=(o,n,d)=>{o.mv=n;o.mvT=performance.now();o.mvD=(d||MVT[n][0])/speed};
-    const pickMove=sh=>sh==='3'?pick(['mshot','mpull','mshot3','mpull','stepback']):sh==='mid'?pick(['mpull','mshot','fade','turn','stepback']):sh==='post'?pick(['lay','lay','clutch']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
+    const pickMove=sh=>sh==='3'?pick(['jshot','jshot','jshot','stepback','mpull']):sh==='mid'?pick(['jshot','jshot','jfade','turn','stepback']):sh==='post'?pick(['lay','lay','clutch']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
+    let lastTeam=-1;
     const anim=async e=>{
       const s=e.team===0?1:-1,off=P[e.team],D=P[1-e.team],dk=e.team===0?cfg.oppDef:cfg.myDef,h=HOOPF(s);curOff=e.team;curDir=s;const ACT=(o,a,d)=>{o.act=a;o.actT=performance.now();o.actD=d/speed};shotT=e.play==='trans'?ri(16,22):ri(10,19);shotAt=performance.now();shotRate=2.4;
       const form=(e.team===0&&cfg.spots)?POS.map(k=>cfg.spots[k]):offOf(e.play).f.map(n=>SPOT[n]);
       let tg=new Map();
+      /* 공격권이 바뀌면 백코트에서 공을 받아 하프라인을 넘어오는 장면부터 */
+      if(lastTeam!==e.team&&e.play!=='trans'&&!skip){const pg=off[0],bring=[[25,40],[6,37],[44,37],[16,29],[34,29]];off.forEach((o,i)=>tg.set(o,fc(bring[i],s)));D.forEach((d,i)=>{const t=fc(bring[i],s);tg.set(d,[t[0]+(h[0]-t[0])*.22,t[1]+(h[1]-t[1])*.22])});
+        await move(1600,tg,ball.hold===pg?null:{to:pg});tg=new Map()}
+      lastTeam=e.team;
       if(e.play==='trans'){off.forEach((o,i)=>tg.set(o,fc([[25,40],[8,30],[42,30],[20,20],[30,36]][i],s)));}
       else off.forEach((o,i)=>tg.set(o,fc(form[i],s)));
       withDef(tg,off,s,dk);await move(e.play==='trans'?520:620,tg,ball.hold===off[0]?null:{to:off[0]});
@@ -1821,7 +1826,7 @@ function liveGame(cfg){
       const hd2=ball.hold||holder;if(hd2!==A)await step(300,[[A,sp]],{to:A});else{if(R3&&R()<.45){const dm=pick(['mcross','mcross','mlegs','behind']);const dd=MVT[dm]?MVT[dm][0]:900;MVSET(A,dm,dd);await step(dd,[[A,sp]])}else await step(280,[[A,sp]])}
       if(skip)return;
       if(e.blk!=null){const d=D[e.blk];ACT(A,'shoot',700);ACT(d,'block',700);await step(220,[[d,[A.x-.8*s,A.y]]]);pops.push({s:'BLOCK',x:A.x,y:A.y,t:45,c:'#ff8a8a'});await move(260,new Map(),{pt:[A.x-5*s,A.y+ri(-6,6)]});return}
-      if(R3){const mvn=e.shot==='ft'?'shot':pickMove(e.shot);if(mvn==='stepback'){const back=[A.x-4*s,A.y];MVSET(A,'stepback');await move(MVT.stepback[0]*MVT.stepback[1]*.62,new Map([[A,back]]));await tween(MVT.stepback[0]*MVT.stepback[1]*.38,()=>{})}else{MVSET(A,mvn);await tween(MVT[mvn][0]*MVT[mvn][1],()=>{})}}
+      if(R3){const mvn=e.shot==='ft'?'jshot':pickMove(e.shot);if(mvn==='stepback'){const back=[A.x-4*s,A.y];MVSET(A,'stepback');await move(MVT.stepback[0]*MVT.stepback[1]*.62,new Map([[A,back]]));await tween(MVT.stepback[0]*MVT.stepback[1]*.38,()=>{})}else{MVSET(A,mvn);const wu=MVT[mvn][0]*MVT[mvn][1];/* 가장 가까운 수비가 클로즈아웃해서 슛 견제(블록 시도) */const cd=D.reduce((a,d)=>Math.hypot(d.x-A.x,d.y-A.y)<Math.hypot(a.x-A.x,a.y-A.y)?d:a,D[0]);const far=Math.hypot(cd.x-A.x,cd.y-A.y);if(far<14&&e.blk==null){const t0=performance.now();const tm=setTimeout(()=>{if(!closed)ACT(cd,'block',650*2/Math.max(1,speed))},wu*.72/speed);await move(wu,new Map([[cd,[A.x-(e.shot==='3'?2.2:1.6)*s,A.y+(cd.y>A.y?.8:-.8)]]]))}else await tween(wu,()=>{})}}
       if(e.shot==='ft'){pops.push({s:`자유투 ${e.v}/${Math.max(2,e.v)}`,x:A.x,y:A.y,t:50,c:'#fff'});await move(260,new Map(),{pt:h,arc:4})}
       else await move(e.shot==='3'?560:e.shot==='dunk'?240:420,new Map(),{pt:[h[0],h[1]],arc:e.shot==='dunk'?1.5:e.shot==='3'?9:6});
       if(e.make&&A.me)ACT(A,'cele',1200);
@@ -1853,7 +1858,7 @@ function liveGame(cfg){
     /* 승부처: 경기 막판 3가지 선택 → 실제 장면으로 보여 줌 */
     let clDone=false,clMode=false;
     async function runClutch(){
-      clDone=true;clMode=true;if(closed)return;const C=cfg.clutch,sc0=C.sc,K=sc0.o[0].k,defn=['def','help','foul'].includes(K);
+      clDone=true;clMode=true;hype=.6;if(closed)return;const C=cfg.clutch,sc0=C.sc,K=sc0.o[0].k,defn=['def','help','foul'].includes(K);
       const pre=C.pre(sc0);sc[0]=pre[0];sc[1]=pre[1];upd({q:4,clock:defn?5:K==='shot'&&sc0.t.includes('2.4')?2.4:8});
       const hk=$('#hskip');if(hk)hk.style.visibility='hidden';const sp0=speed;speed=1;const clk=defn?5:sc0.id===1?2.4:8;shotT=clk;shotAt=performance.now();shotRate=0;if(R3&&R3.focus)R3.focus(1);
       const off=P[defn?1:0],D=P[defn?0:1],s=defn?-1:1,h=HOOPF(s),A=defn?off[0]:P[0][mi>=0?mi:0],ME=P[0][mi>=0?mi:0];
@@ -1861,7 +1866,7 @@ function liveGame(cfg){
       /* set the stage */
       let tg=new Map();const spots=defn?[[44,19],[47.5,3],[2.5,3],[29.5,7],[20.5,7]]:[[44,19],[47.5,3],[2.5,3],[29.5,7],[15,26]];
       const order=defn?off:[A,...off.filter(o=>o!==A)];order.forEach((o,i)=>tg.set(o,fc(spots[i],s)));
-      const guard=(o,k=.25)=>{const t=tg.get(o);return[t[0]+(h[0]-t[0])*k,t[1]+(h[1]-t[1])*k]};
+      const guard=(o,k=.12)=>{const t=tg.get(o);return[t[0]+(h[0]-t[0])*k,t[1]+(h[1]-t[1])*k]};
       if(defn){D.forEach((d,i)=>tg.set(d,guard(off[i])));tg.set(ME,guard(off[0],.18))}else{const dd=[...D];order.forEach((o,i)=>tg.set(dd[i],guard(o)))}
       await move(700,tg,ball.hold===order[0]?null:{to:order[0]});
       /* ask */
@@ -1870,7 +1875,10 @@ function liveGame(cfg){
       lv.after(box);
       const pickI=await new Promise(r=>box.querySelectorAll('[data-ci]').forEach(b=>b.onclick=()=>r(+b.dataset.ci)));shotAt=performance.now();shotRate=clk/2.6;const gcl=setInterval(()=>{const v=shotNow();const q=$('#sq');if(q&&v!=null)q.textContent=`4Q 0:${v<10?'0':''}${v.toFixed(1)}`;if(!v)clearInterval(gcl)},100);
       const o=sc0.o[pickI],win=R()<o.p;box.innerHTML=`<p class="eye">${esc(o.l)}</p>`;
-      const shoot=async(S,make,three)=>{const mvn=three?'mpull':'mshot';S.mv=mvn;S.mvT=performance.now();S.mvD=MVT[mvn][0]/speed;await tween(MVT[mvn][0]*MVT[mvn][1],()=>{});await move(1100,new Map(),{pt:[h[0],h[1]],arc:three?9:6});
+      const shoot=async(S,make,three)=>{const mvn='jshot';S.mv=mvn;S.mvT=performance.now();S.mvD=MVT[mvn][0]/speed;const wu=MVT[mvn][0]*MVT[mvn][1];hype=1;
+        /* 수비가 끝까지 붙어서 손을 뻗음 */const opp=P[S.team===0?1:0];const cd=opp.reduce((a,d)=>Math.hypot(d.x-S.x,d.y-S.y)<Math.hypot(a.x-S.x,a.y-S.y)?d:a,opp[0]);const hs=HOOPF(S.team===0?1:-1),dx=hs[0]-S.x,dy=hs[1]-S.y,dl=Math.hypot(dx,dy)||1;
+        setTimeout(()=>{if(!closed)ACT(cd,'block',900)},wu*.62);const help=opp.filter(d=>d!==cd).sort((a,b)=>Math.hypot(a.x-S.x,a.y-S.y)-Math.hypot(b.x-S.x,b.y-S.y))[0];
+        const tgm=new Map([[cd,[S.x+dx/dl*1.4,S.y+dy/dl*1.4]]]);if(help)tgm.set(help,[S.x+dx/dl*3+(help.y>S.y?2:-2),S.y+dy/dl*3]);await move(wu,tgm);await move(1100,new Map(),{pt:[h[0],h[1]],arc:three?9:6});
         if(make){ball.thru=0;await tween(500,k=>{ball.thru=k});ball.thru=null;pops.push({s:three?'+3':'+2',x:h[0],y:h[1],t:60,c:'#ffd34d'})}
         else{ball.hy0=3.05;await move(520,new Map(),{pt:[h[0]-5*s,h[1]+ri(-8,8)],arc:2});ball.hy0=null}};
       const ft=async(S,n,make)=>{tg=new Map();tg.set(S,fc([25,15],s));await move(500,tg);for(let i=0;i<n;i++){ball.hold=S;await tween(300,()=>{});await shoot(S,make[i],false);ball.x=S.x;ball.y=S.y}};

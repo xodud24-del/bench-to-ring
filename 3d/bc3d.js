@@ -14,16 +14,16 @@ const _qa=new THREE.Quaternion(),_qb=new THREE.Quaternion();
 const ARMS={RightArm:[0,0,1.25],LeftArm:[0,0,-1.25],RightForeArm:[0,.25,0],LeftForeArm:[0,-.25,0]};
 const POSE={
  dribble:t=>({RightArm:[0,.35,1.0],RightForeArm:[0,.5+.4*Math.max(0,Math.sin(t*11)),0],LeftArm:[0,-.7,-.95],LeftForeArm:[0,-.9,0],Spine:[.28,0,0]}),
- defend:t=>({RightArm:[0,.35,.45+.1*Math.sin(t*6)],LeftArm:[0,-.35,-.45-.1*Math.sin(t*6)],RightForeArm:[0,.5,0],LeftForeArm:[0,-.5,0],Spine:[.35,0,0],RightUpLeg:[-.7,0,.12],LeftUpLeg:[-.7,0,-.12],RightLeg:[1.05,0,0],LeftLeg:[1.05,0,0],RightFoot:[-.35,0,0],LeftFoot:[-.35,0,0],_y:-.16}),
+ defend:t=>{const sh=DEFSH;return {RightArm:[0,.25,.25+.08*Math.sin(t*5)],LeftArm:[0,-.25,-.25-.08*Math.sin(t*5)],RightForeArm:[0,.35,-.25],LeftForeArm:[0,-.35,.25],RightHand:[0,0,-.3],LeftHand:[0,0,.3],Spine:[.5,0,0],Spine1:[.12,0,0],Neck:[-.45,0,0],RightUpLeg:[-.85,0,.38+sh*.18],LeftUpLeg:[-.85,0,-.38+sh*.18],RightLeg:[1.25,0,0],LeftLeg:[1.25,0,0],RightFoot:[-.4,0,-.25],LeftFoot:[-.4,0,.25],_y:-.3}},
  hold:{RightArm:[0,1.0,.9],RightForeArm:[0,.9,0],LeftArm:[0,-1.0,-.9],LeftForeArm:[0,-.9,0],Spine:[.2,0,0]},
  shootSet:{RightArm:[0,1.35,-.45],RightForeArm:[0,0,-1.7],RightHand:[0,0,-.6],LeftArm:[0,-1.25,.45],LeftForeArm:[0,0,1.5],RightUpLeg:[-.5,0,0],LeftUpLeg:[-.5,0,0],RightLeg:[.9,0,0],LeftLeg:[.9,0,0],RightFoot:[-.35,0,0],LeftFoot:[-.35,0,0],_y:-.12},
  shootRel:{RightArm:[0,1.1,-1.2],RightForeArm:[0,0,-.15],RightHand:[0,0,.7],LeftArm:[0,-1.1,.9],LeftForeArm:[0,0,.5],Spine:[-.1,0,0],RightLeg:[.15,0,0],LeftLeg:[.15,0,0],RightFoot:[.5,0,0],LeftFoot:[.5,0,0]},
  dunk:{RightArm:[0,.9,-1.35],RightForeArm:[0,0,-.1],LeftArm:[0,-.3,-.7],LeftForeArm:[0,-.4,0],Spine:[-.15,0,0],RightUpLeg:[-.9,0,0],LeftUpLeg:[.2,0,0],RightLeg:[1.4,0,0],LeftLeg:[.5,0,0],RightFoot:[.3,0,0],LeftFoot:[.4,0,0]},
  reb:{RightArm:[0,.6,-1.2],LeftArm:[0,-.6,1.2],RightForeArm:[0,.2,0],LeftForeArm:[0,-.2,0],RightUpLeg:[-.3,0,.1],LeftUpLeg:[-.3,0,-.1],RightLeg:[.6,0,0],LeftLeg:[.6,0,0]},
- block:{RightArm:[0,.5,-1.4],LeftArm:[0,-.5,1.4],RightUpLeg:[-.25,0,0],LeftUpLeg:[-.25,0,0],RightLeg:[.4,0,0],LeftLeg:[.4,0,0]},
+ block:{RightArm:[0,.55,-1.45],RightForeArm:[0,0,-.1],LeftArm:[0,-.3,-.4],LeftForeArm:[0,-.4,0],Spine:[-.05,0,0],RightUpLeg:[-.3,0,0],LeftUpLeg:[-.1,0,0],RightLeg:[.5,0,0],LeftLeg:[.3,0,0],RightFoot:[.4,0,0],LeftFoot:[.4,0,0]},
  pass:{RightArm:[0,1.45,.3],LeftArm:[0,-1.45,-.3],RightForeArm:[0,.1,0],LeftForeArm:[0,-.1,0],Spine:[.15,0,0]},
  cele:t=>({RightArm:[0,.3,-1.3+.25*Math.sin(t*10)],LeftArm:[0,-.3,1.3-.25*Math.sin(t*10)],RightForeArm:[0,.4,0],LeftForeArm:[0,-.4,0]})};
-const _e=new THREE.Euler(),_q=new THREE.Quaternion();
+let DEFSH=0;const _e=new THREE.Euler(),_q=new THREE.Quaternion();
 const lum=h=>{const c=new THREE.Color(h);return .299*c.r+.587*c.g+.114*c.b};
 export const awayJersey=cols=>{const a=cols[0],b=cols[1];if(lum(a)<.55)return[a,b&&lum(b)>.5?b:'#ffffff'];if(b&&lum(b)<.55)return[b,a];return['#1b2a5c','#ffffff']};
 export const homeTrim=cols=>lum(cols[0])<.75?cols[0]:(cols[1]&&lum(cols[1])<.75?cols[1]:'#1b2a5c');
@@ -47,6 +47,14 @@ P_.DNK2={RightArm:[0,1.0,-1.25],LeftArm:[0,-1.0,1.25],RightForeArm:[0,0,-.2],Lef
 P_.TOMA={RightArm:[0,.3,-1.5],RightForeArm:[0,0,-1.4],LeftArm:[0,-.5,-.6],LeftForeArm:[0,-.5,0],Spine:[-.25,0,0],Spine1:[-.1,0,0],...LEGS(-1.0,1.5,.3)};
 P_.SPIN={RightArm:[0,.55,.85],RightForeArm:[0,1.1,0],LeftArm:[0,-1.0,-.55],LeftForeArm:[0,-.6,0],Spine:[.35,0,0],Spine1:[.1,0,0],...LEGS(-.6,.95,-.25,.14),_y:-.13};
 P_.SPINL=mir(P_.SPIN);
+/* 점프슛: 게임 픽셀 슛 GIF를 따라 만든 단계별 자세 */
+P_.JDIP={RightArm:[0,.9,.95],RightForeArm:[0,1.0,0],LeftArm:[0,-.9,-.95],LeftForeArm:[0,-1.0,0],Spine:[.35,0,0],Spine1:[.08,0,0],...LEGS(-.95,1.45,-.45,.1),_y:-.24};
+P_.JCHEST={RightArm:[0,1.15,.55],RightForeArm:[0,1.55,0],LeftArm:[0,-1.15,-.55],LeftForeArm:[0,-1.55,0],Spine:[.2,0,0],Spine1:[.05,0,0],...LEGS(-.75,1.15,-.35,.1),_y:-.18};
+P_.JSET={RightArm:[0,1.35,-.55],RightForeArm:[0,0,-1.75],RightHand:[0,0,-.5],LeftArm:[0,-1.2,.35],LeftForeArm:[0,0,1.6],Spine:[-.02,0,0],Spine1:[0,0,0],...LEGS(-.3,.45,-.1,.06),_y:-.04};
+P_.JAIR={RightArm:[0,1.25,-.8],RightForeArm:[0,0,-1.55],RightHand:[0,0,-.5],LeftArm:[0,-1.15,.55],LeftForeArm:[0,0,1.45],Spine:[-.05,0,0],Spine1:[0,0,0],...LEGS(.05,.18,.55,.03)};
+P_.JREL={RightArm:[0,1.12,-1.28],RightForeArm:[0,0,-.04],RightHand:[0,0,.6],LeftArm:[0,-1.0,.9],LeftForeArm:[0,0,.6],Spine:[-.06,0,0],Spine1:[0,0,0],...LEGS(.05,.15,.55,.03)};
+P_.JFOL={RightArm:[0,1.1,-1.15],RightForeArm:[0,0,-.1],RightHand:[0,0,1.25],LeftArm:[0,-.45,-.95],LeftForeArm:[0,-.4,0],Spine:[-.04,0,0],Spine1:[0,0,0],...LEGS(-.15,.35,.3,.05)};
+P_.JLAND={RightArm:[0,1.1,-1.1],RightForeArm:[0,0,-.1],RightHand:[0,0,1.25],LeftArm:[0,-.5,-1.0],LeftForeArm:[0,-.4,0],Spine:[.12,0,0],Spine1:[0,0,0],...LEGS(-.55,.9,-.25,.08),_y:-.12};
 P_.STAND={RightArm:[0,0,1.25],LeftArm:[0,0,-1.25],RightForeArm:[0,.25,0],LeftForeArm:[0,-.25,0],Spine:[0,0,0],Spine1:[0,0,0],...LEGS(0,0,0,0)};
 const DB=(t,amp=1)=>.12+Math.abs(Math.cos(t*Math.PI*2.6))*.7*amp;/* dribble bounce height */
 /* key: [t, pose, ball[f,l,u] | 'dr'|'dl' (dribble), root[f,l,u], yawDeg] */
@@ -55,6 +63,8 @@ const MV={
  legs:{k:[[0,'DR','dr',[0,0,0],0],[.3,'LUNGE',[.25,-.22,.4],[0,0,0],-8],[.5,'LUNGE',[.12,0,.22],[0,0,0],-8],[.7,'LUNGE',[.1,.22,.38],[0,0,0],-5],[1,'DL','dl',[0,0,0],0]]},
  spin:{k:[[0,'DR','dr',[0,0,0],0],[.18,'LOW',[.35,-.25,.3],[.05,0,0],-20],[.38,'SPIN',[.05,-.32,.95],[.15,-.1,.05],-150],[.6,'SPINL',[-.05,.3,.95],[.15,-.15,.05],-270],[.8,'LOW',[.3,.25,.4],[.08,-.08,0],-345],[1,'DL','dl',[0,0,0],-360]]},
  behind:{k:[[0,'DR','dr',[0,0,0],0],[.4,'LOW',[-.25,-.2,.45],[0,0,0],8],[.55,'LOW',[-.28,.1,.45],[0,0,0],8],[1,'DL','dl',[0,0,0],0]]},
+ jshot:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.16,'JDIP',[.32,0,.72],[0,0,0],0],[.3,'JCHEST',[.3,0,1.25],[0,0,0],0],[.44,'JSET',[.2,-.05,2.0],[0,0,.08],0],[.56,'JAIR',[.16,-.08,2.4],[0,0,.36],0],[.7,'JREL',[.22,-.1,2.8],[0,0,.46],0],[.8,'JFOL',null,[0,0,.3],0],[.91,'JLAND',null,[0,0,0],0],[1,'JLAND',null,[0,0,0],0]]},
+ jfade:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.17,'JDIP',[.32,0,.72],[0,0,0],0],[.31,'JCHEST',[.3,0,1.25],[0,0,0],0],[.45,'JSET',[.2,-.05,2.0],[-.05,0,.08],0],[.57,'FADE',[.05,-.08,2.45],[-.3,0,.4],0],[.66,'FADE',[.05,-.1,2.7],[-.45,0,.45],0],[.8,'FADE',null,[-.6,0,.22],0],[.92,'JLAND',null,[-.65,0,0],0],[1,'JLAND',null,[-.65,0,0],0]]},
  shot:{k:[[0,'GATH',[.28,0,1.05],[0,0,0],0],[.28,'SET',[.14,-.06,2.02],[0,0,0],0],[.5,'REL',[.12,-.12,2.6],[0,0,.42],0],[.85,'REL',null,[0,0,.12],0],[1,'STAND',null,[0,0,0],0]]},
  pull:{k:[[0,'DR','dr',[0,0,0],0],[.22,'GATH',[.28,0,1.0],[0,0,0],0],[.4,'SET',[.14,-.06,2.02],[0,0,.1],0],[.55,'REL',[.12,-.12,2.65],[0,0,.5],0],[.85,'REL',null,[0,0,.15],0],[1,'STAND',null,[0,0,0],0]]},
  stepback:{k:[[0,'DR','dr',[0,0,0],0],[.25,'LOW',[.35,-.15,.35],[0,0,0],0],[.5,'GATH',[.28,0,1.0],[0,0,.18],0],[.62,'GATH',[.28,0,1.0],[0,0,0],0],[.75,'SET',[.14,-.06,2.02],[0,0,.05],0],[.87,'REL',[.12,-.12,2.6],[0,0,.4],0],[1,'REL',null,[0,0,.2],0]]},
@@ -97,8 +107,9 @@ function makePlayer(sc,base,o){
   acts.idle.time=Math.random()*2;
   const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.1,1.1),new THREE.MeshBasicMaterial({map:o.blob,transparent:true,depthWrite:false}));blob.rotation.x=-Math.PI/2;blob.position.y=.01;sc.add(blob);
   let ring=null;if(o.me){ring=new THREE.Mesh(new THREE.RingGeometry(.48,.6,32),new THREE.MeshBasicMaterial({color:'#ffd34d',transparent:true,opacity:.9}));ring.rotation.x=-Math.PI/2;ring.position.y=.015;sc.add(ring)}
+  let arrow=null;if(o.me){arrow=new THREE.Mesh(new THREE.ConeGeometry(.2,.38,4),new THREE.MeshBasicMaterial({color:'#ffd34d',toneMapped:false}));arrow.rotation.x=Math.PI;sc.add(arrow)}
   sc.add(root);
-  return {root,bones,bind,mixer,acts,blob,ring,t:0,pw:0,pose:null,last:null,loco:'idle',yaw:o.yaw||0,
+  return {root,bones,bind,mixer,acts,blob,ring,arrow,t:0,pw:0,pose:null,last:null,loco:'idle',yaw:o.yaw||0,
     loc(n,sp){if(n!==this.loco){this.loco=n;for(const k in acts)acts[k].setEffectiveWeight(k===n?1:0)}if(acts[n])acts[n].timeScale=sp||1},
     mcPlay(name,t,w){const C=base.mc&&base.mc[name];if(!C)return null;const loop=!/shot/.test(name);let f=t*C.fps;if(loop){f=((f%C.n)+C.n)%C.n}else f=Math.min(C.n-1.001,Math.max(0,f));const i=Math.floor(f),j=loop?(i+1)%C.n:Math.min(C.n-1,i+1),a=f-i;
       for(const k in C.qa){const bn=bones[k];if(!bn)continue;const q=C.qa[k];_qa.fromArray(q,i*4);_qb.fromArray(q,j*4);_qa.slerp(_qb,a);bn.quaternion.slerp(_qa,w)}
@@ -177,7 +188,7 @@ export async function create(el,cfg){
       else if(act==='reb'||act==='block'){const k=(now-s.actT)/(s.actD||700);pose=act;jump=Math.sin(Math.min(1,k)*Math.PI)*.6}
       else if(act==='pass')pose='pass';else if(act==='cele')pose='cele';
       else if(hold===s)pose='dribble';
-      else if(s.team!==cfg.offTeam()&&sp<1.2)pose='defend';
+      else if(s.team!==cfg.offTeam()&&sp<4.5){pose='defend';/* 수비 슬라이드: 공 쪽을 보며 옆으로 */const tgt=hold?W3(hold.x,hold.y):W3(B.x,B.y);m.yaw+=ang(m.yaw,Math.atan2(tgt.x-wp.x,tgt.z-wp.z))*Math.min(1,dt*10);m.root.rotation.y=m.yaw;m.sh=(m.sh||0)+dt*sp*2.2;DEFSH=sp>.5?Math.sin(m.sh*3):0}
       if(mvS){pose=mvS.pose;jump=0}
       /* 모션캡처 선택 */
       let mcN=null,mcT=0;const MCv=base.mc;
@@ -190,13 +201,15 @@ export async function create(el,cfg){
       m.mcR=null;if(m.mcw>.01&&m.mcLast){m.mcR=m.mcPlay(m.mcLast,mcN?mcT:m.mcLastT,m.mcw);if(m.mcR){const sc_=m.root.scale.x;jump=jump*(1-m.mcw)+(m.mcR.y-1.04)*sc_*m.mcw;if(MCMAP[s.mv]&&mcN&&/shot/.test(mcN)){m.mcD=m.mcR.d}else m.mcD=null}}
       let rx=0,rz=0,ry=0;if(m.mcD&&m.mcR){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=(fw.x*m.mcD[1]+lf.x*m.mcD[0])*m.mcw;rz=(fw.z*m.mcD[1]+lf.z*m.mcD[0])*m.mcw}
       if(mvS){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=fw.x*mvS.root[0]+lf.x*mvS.root[1];rz=fw.z*mvS.root[0]+lf.z*mvS.root[1];ry=mvS.root[2];m.root.rotation.y=m.yaw+mvS.yaw}
-      m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.blob.position.set(wp.x,.01,wp.z);m.blob.scale.setScalar(1-jump*.35);if(m.ring)m.ring.position.set(wp.x,.015,wp.z)}
+      m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.blob.position.set(wp.x,.01,wp.z);m.blob.scale.setScalar(1-jump*.35);if(m.ring)m.ring.position.set(wp.x,.015,wp.z);if(m.arrow){m.arrow.position.set(m.root.position.x,m.root.position.y+2.45*m.root.scale.y+.12*Math.sin(now/180),m.root.position.z);m.arrow.rotation.y=now/600}}
     /* ball */
     let bp;
     if(B.thru!=null){bp=HOOP(cfg.dir());bp.y=3.05-B.thru*2.9}
     else if(B.fl&&B.from&&B.dest){if(!flPrev||!flS)flS=lastBp?lastBp.clone():null;const k=B.k||0,a=flS&&B.hy0==null?flS.clone().setY(0):W3(B.from[0],B.from[1]),b=W3(B.dest[0],B.dest[1]);const toHoop=Math.hypot(B.dest[0]-(cfg.dir()>0?88.75:5.25),B.dest[1]-25)<1.5;
       const h0=B.hy0!=null?B.hy0:flS?flS.y:toHoop?2.5:1.3,h1=toHoop?3.12:1.3,arc=toHoop?(B.arc||6)*.32:.35;bp=a.lerp(b,k);bp.y=h0+(h1-h0)*k+Math.sin(k*Math.PI)*arc}
     else if(hold&&pl.find(o=>o.src===hold).m.mcR&&pl.find(o=>o.src===hold).m.mcw>.5){const q=pl.find(o=>o.src===hold).m,Bl=q.mcR.ball,sc_=q.root.scale.x,fw=new THREE.Vector3(Math.sin(q.yaw),0,Math.cos(q.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);bp=q.root.position.clone().setY(0).add(fw.multiplyScalar(Bl[2]*sc_)).add(lf.multiplyScalar(Bl[0]*sc_));bp.y=Bl[1]*sc_}
+    else if(hold&&pl.find(o=>o.src===hold).m.mvS&&pl.find(o=>o.src===hold).m.mvS.ball&&pl.find(o=>o.src===hold).m.mvS.ball[2]>.95&&!/^(cross|legs|behind|spin)$/.test(hold.mv)){/* 공은 실제 손뼈 위치에 붙음 → 팔을 다 뻗을 때까지 손에 있음 */const q=pl.find(o=>o.src===hold).m;q.root.updateMatrixWorld(true);const R=new THREE.Vector3().setFromMatrixPosition(q.bones.RightHand.matrixWorld),L=new THREE.Vector3().setFromMatrixPosition(q.bones.LeftHand.matrixWorld),fw=new THREE.Vector3(Math.sin(q.yaw+(q.mvS.yaw||0)),0,Math.cos(q.yaw+(q.mvS.yaw||0)));
+      if(R.distanceTo(L)<.42)bp=R.clone().add(L).multiplyScalar(.5).add(fw.multiplyScalar(.1)).add(new THREE.Vector3(0,.04,0));else bp=R.clone().add(new THREE.Vector3(0,.13,0)).add(fw.multiplyScalar(.03))}
     else if(hold&&pl.find(o=>o.src===hold).m.mvS&&pl.find(o=>o.src===hold).m.mvS.ball){const q=pl.find(o=>o.src===hold).m,S=q.mvS,ya=q.yaw+S.yaw,fw=new THREE.Vector3(Math.sin(ya),0,Math.cos(ya)),lf=new THREE.Vector3(fw.z,0,-fw.x);bp=q.root.position.clone().setY(0).add(fw.multiplyScalar(S.ball[0]*(q.root.scale.x))).add(lf.multiplyScalar(S.ball[1]));bp.y=S.ball[2]*q.root.scale.y}
     else if(hold){const q=pl.find(o=>o.src===hold).m;const r=new THREE.Vector3(Math.sin(q.yaw),0,Math.cos(q.yaw)),side=new THREE.Vector3(-r.z,0,r.x);const ph=(now/1000*5.5)%1,b=Math.abs(Math.cos(ph*Math.PI));
       const act=hold.act&&now-hold.actT<(hold.actD||700)?hold.act:null;
