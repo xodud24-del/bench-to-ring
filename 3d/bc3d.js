@@ -45,12 +45,15 @@ P_.LAY={RightArm:[0,.7,-1.4],RightForeArm:[0,0,-.1],LeftArm:[0,-.4,-.7],LeftFore
 P_.DNK1={...P_.LAY,RightArm:[0,.9,-1.45]};
 P_.DNK2={RightArm:[0,1.0,-1.25],LeftArm:[0,-1.0,1.25],RightForeArm:[0,0,-.2],LeftForeArm:[0,0,.2],Spine:[-.1,0,0],Spine1:[0,0,0],...LEGS(-.9,1.4,.3)};
 P_.TOMA={RightArm:[0,.3,-1.5],RightForeArm:[0,0,-1.4],LeftArm:[0,-.5,-.6],LeftForeArm:[0,-.5,0],Spine:[-.25,0,0],Spine1:[-.1,0,0],...LEGS(-1.0,1.5,.3)};
+P_.SPIN={RightArm:[0,.55,.85],RightForeArm:[0,1.1,0],LeftArm:[0,-1.0,-.55],LeftForeArm:[0,-.6,0],Spine:[.35,0,0],Spine1:[.1,0,0],...LEGS(-.6,.95,-.25,.14),_y:-.13};
+P_.SPINL=mir(P_.SPIN);
 P_.STAND={RightArm:[0,0,1.25],LeftArm:[0,0,-1.25],RightForeArm:[0,.25,0],LeftForeArm:[0,-.25,0],Spine:[0,0,0],Spine1:[0,0,0],...LEGS(0,0,0,0)};
 const DB=(t,amp=1)=>.12+Math.abs(Math.cos(t*Math.PI*2.6))*.7*amp;/* dribble bounce height */
 /* key: [t, pose, ball[f,l,u] | 'dr'|'dl' (dribble), root[f,l,u], yawDeg] */
 const MV={
  cross:{k:[[0,'DR','dr',[0,0,0],0],[.38,'LOW',[.5,-.06,.2],[0,-.12,0],-12],[.55,'LOW',[.5,.1,.22],[0,0,0],0],[1,'DL','dl',[0,.12,0],12]]},
  legs:{k:[[0,'DR','dr',[0,0,0],0],[.3,'LUNGE',[.25,-.22,.4],[0,0,0],-8],[.5,'LUNGE',[.12,0,.22],[0,0,0],-8],[.7,'LUNGE',[.1,.22,.38],[0,0,0],-5],[1,'DL','dl',[0,0,0],0]]},
+ spin:{k:[[0,'DR','dr',[0,0,0],0],[.18,'LOW',[.35,-.25,.3],[.05,0,0],-20],[.38,'SPIN',[.05,-.32,.95],[.15,-.1,.05],-150],[.6,'SPINL',[-.05,.3,.95],[.15,-.15,.05],-270],[.8,'LOW',[.3,.25,.4],[.08,-.08,0],-345],[1,'DL','dl',[0,0,0],-360]]},
  behind:{k:[[0,'DR','dr',[0,0,0],0],[.4,'LOW',[-.25,-.2,.45],[0,0,0],8],[.55,'LOW',[-.28,.1,.45],[0,0,0],8],[1,'DL','dl',[0,0,0],0]]},
  shot:{k:[[0,'GATH',[.28,0,1.05],[0,0,0],0],[.28,'SET',[.14,-.06,2.02],[0,0,0],0],[.5,'REL',[.12,-.12,2.6],[0,0,.42],0],[.85,'REL',null,[0,0,.12],0],[1,'STAND',null,[0,0,0],0]]},
  pull:{k:[[0,'DR','dr',[0,0,0],0],[.22,'GATH',[.28,0,1.0],[0,0,0],0],[.4,'SET',[.14,-.06,2.02],[0,0,.1],0],[.55,'REL',[.12,-.12,2.65],[0,0,.5],0],[.85,'REL',null,[0,0,.15],0],[1,'STAND',null,[0,0,0],0]]},
@@ -108,6 +111,7 @@ function makePlayer(sc,base,o){
       this.pw+=((tg0?1:0)-this.pw)*Math.min(1,dt*12);if(tg0)this.last=tg0;const tg=this.last;this.yoff=0;if(!tg||this.pw<.01)return;
       for(const k in tg){if(k[0]==='_'||!bones[k])continue;const v=tg[k];_e.set(v[0],v[1],v[2]);_q.setFromEuler(_e).premultiply(bind[k]);bones[k].quaternion.slerp(_q,this.pw)}
       this.yoff=(tg._y||0)*this.pw}}}
+export const _test={sampleMove,P_};
 export async function create(el,cfg){
   SCK=[];NETS=[];
   const base=await loadBase(cfg.model);
