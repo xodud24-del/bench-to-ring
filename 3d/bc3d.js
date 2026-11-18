@@ -83,12 +83,16 @@ const MV={
  dunk2:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'GATH',[.3,0,1.05],[.15,0,.08],0],[.48,'DNK2',[.32,0,3.15],[.7,0,.95],0],[.6,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
  toma:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'TOMA',[-.15,-.1,2.4],[.2,0,.4],0],[.4,'TOMA',[-.2,-.1,2.9],[.55,0,.95],0],[.5,'DNK1',[.35,-.1,3.1],[.72,0,.95],0],[.62,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
 };
-function sampleMove(name,k,t){const M=MV[name];if(!M)return null;const K=M.k;let i=0;while(i<K.length-2&&k>K[i+1][0])i++;const a=K[i],b=K[i+1],u=Math.min(1,Math.max(0,(k-a[0])/(b[0]-a[0]))),e=u*u*(3-2*u);
-  const pa=P_[a[1]],pb=P_[b[1]],pose={};const keys=new Set([...Object.keys(pa),...Object.keys(pb)]);for(const n of keys){if(n[0]==='_'){pose[n]=(pa[n]||0)*(1-e)+(pb[n]||0)*e;continue}const x=pa[n]||[0,0,0],y=pb[n]||[0,0,0];pose[n]=[x[0]+(y[0]-x[0])*e,x[1]+(y[1]-x[1])*e,x[2]+(y[2]-x[2])*e]}
-  const bl=s=>s==='dr'?[.34,-.27,DB(t)]:s==='dl'?[.34,.27,DB(t)]:s;let ball=null;const ba=bl(a[2]),bb=bl(b[2]);if(ba&&bb)ball=[ba[0]+(bb[0]-ba[0])*e,ba[1]+(bb[1]-ba[1])*e,ba[2]+(bb[2]-ba[2])*e];else if(ba&&!bb)ball=u<.5?ba:null;
-  const ra=a[3],rb=b[3],root=[ra[0]+(rb[0]-ra[0])*e,ra[1]+(rb[1]-ra[1])*e,ra[2]+(rb[2]-ra[2])*e];const yaw=(a[4]+(b[4]-a[4])*e)*Math.PI/180;
+function sampleMove(name,k,t){const M=MV[name];if(!M)return null;const K=M.k;let i=0;while(i<K.length-2&&k>K[i+1][0])i++;
+  /* 키프레임 사이를 Catmull-Rom 곡선으로 이어서 속도가 끊기지 않게 (공중에서 멈칫하는 느낌 제거) */
+  const a=K[i],b=K[i+1],a0=K[Math.max(0,i-1)],b1=K[Math.min(K.length-1,i+2)],u=Math.min(1,Math.max(0,(k-a[0])/(b[0]-a[0])));
+  const cr=(p0,p1,p2,p3)=>.5*(2*p1+(-p0+p2)*u+(2*p0-5*p1+4*p2-p3)*u*u+(-p0+3*p1-3*p2+p3)*u*u*u);
+  const P0=P_[a0[1]],P1=P_[a[1]],P2=P_[b[1]],P3=P_[b1[1]],pose={};const keys=new Set([...Object.keys(P1),...Object.keys(P2)]);
+  for(const n of keys){if(n[0]==='_'){const g=q=>(q[n]||0);pose[n]=cr(g(P0),g(P1),g(P2),g(P3));continue}const g=q=>q[n]||[0,0,0];const x0=g(P0),x1=g(P1),x2=g(P2),x3=g(P3);pose[n]=[0,1,2].map(c=>cr(x0[c],x1[c],x2[c],x3[c]))}
+  const bl=s=>s==='dr'?[.34,-.27,DB(t)]:s==='dl'?[.34,.27,DB(t)]:s;let ball=null;const ba=bl(a[2]),bb=bl(b[2]);
+  if(ba&&bb){const b0=bl(a0[2])||ba,b3=bl(b1[2])||bb;ball=[0,1,2].map(c=>cr(b0[c],ba[c],bb[c],b3[c]))}else if(ba&&!bb)ball=u<.5?ba:null;
+  const root=[0,1,2].map(c=>cr(a0[3][c],a[3][c],b[3][c],b1[3][c]));root[2]=Math.max(0,root[2]);const yaw=cr(a0[4],a[4],b[4],b1[4])*Math.PI/180;
   return {pose,ball,root,yaw}}
-
 function courtTex(cols,logo){const c=document.createElement('canvas');c.width=2048;c.height=1090;const x=c.getContext('2d'),s=c.width/94;
  for(let i=0;i<64;i++){x.fillStyle=['#cf9c64','#c8945b','#d4a46d','#cb985f'][i%4];x.fillRect(0,i*c.height/64,c.width,c.height/64+1)}
  x.globalAlpha=.06;for(let i=0;i<500;i++){x.fillStyle=Math.random()<.5?'#000':'#fff';x.fillRect(Math.random()*c.width,Math.random()*c.height,30+Math.random()*220,2)}x.globalAlpha=1;
