@@ -1,7 +1,16 @@
 /* 3D 중계: liveGame의 선수·공 상태(P, ball)를 읽어서 2K 로우 카메라 느낌으로 그림 */
 import * as THREE from 'three';import {buildSkeleton,buildBody,jerseyTex} from './body.js';
 const FT=.3048,W3=(x,y,z=0)=>new THREE.Vector3((x-47)*FT,z,(y-25)*FT);
-let BASE=null,CROWD=null,SCK=[],NETS=[];const loadBase=url=>BASE||(BASE=fetch(url).then(r=>r.json()).then(A=>({skel:A.skel,animations:Object.values(A.clips).map(c=>THREE.AnimationClip.parse(c))})));
+let BASE=null,CROWD=null,SCK=[],NETS=[];
+/* CMU 모션캡처(무료 공개 데이터)를 우리 뼈대에 옮긴 클립 */
+function prepMC(MC){for(const k in MC){const C=MC[k];C.dur=C.n/C.fps;C.qa={};for(const b in C.q)C.qa[b]=Float32Array.from(C.q[b]);C.ball=[];
+   const H=C.hand,ys=[[],[]];for(let i=0;i<C.n;i++){ys[0].push(H[i*6+1]);ys[1].push(H[i*6+4])}const rng=ys.map(a=>[Math.min(...a),Math.max(...a)]);
+   for(let i=0;i<C.n;i++){const L=[H[i*6],H[i*6+1],H[i*6+2]],R=[H[i*6+3],H[i*6+4],H[i*6+5]];
+     if(/shot/.test(k)){C.ball.push([(L[0]+R[0])/2,(L[1]+R[1])/2+.06,(L[2]+R[2])/2+.12]);continue}
+     const h=L[1]<R[1]?0:1,P=h?R:L,[mn,mx]=rng[h],u=Math.min(1,Math.max(0,(P[1]-mn)/Math.max(.05,mx-mn)));C.ball.push([P[0],Math.max(.12,P[1]-.1-(1-u)*(P[1]-.25)),P[2]+.06])}}return MC}
+const loadBase=url=>BASE||(BASE=Promise.all([fetch(url).then(r=>r.json()),fetch(url.replace('anim.json','mocap.json')).then(r=>r.json()).catch(()=>null)]).then(([A,MC])=>({skel:A.skel,animations:Object.values(A.clips).map(c=>THREE.AnimationClip.parse(c)),mc:MC?prepMC(MC):null})));
+const MCMAP={mshot:'shot',mpull:'shot2',mshot3:'shot3',mcross:'cross',mlegs:'legs'};
+const _qa=new THREE.Quaternion(),_qb=new THREE.Quaternion();
 const ARMS={RightArm:[0,0,1.25],LeftArm:[0,0,-1.25],RightForeArm:[0,.25,0],LeftForeArm:[0,-.25,0]};
 const POSE={
  dribble:t=>({RightArm:[0,.35,1.0],RightForeArm:[0,.5+.4*Math.max(0,Math.sin(t*11)),0],LeftArm:[0,-.7,-.95],LeftForeArm:[0,-.9,0],Spine:[.28,0,0]}),
@@ -88,6 +97,9 @@ function makePlayer(sc,base,o){
   sc.add(root);
   return {root,bones,bind,mixer,acts,blob,ring,t:0,pw:0,pose:null,last:null,loco:'idle',yaw:o.yaw||0,
     loc(n,sp){if(n!==this.loco){this.loco=n;for(const k in acts)acts[k].setEffectiveWeight(k===n?1:0)}if(acts[n])acts[n].timeScale=sp||1},
+    mcPlay(name,t,w){const C=base.mc&&base.mc[name];if(!C)return null;const loop=!/shot/.test(name);let f=t*C.fps;if(loop){f=((f%C.n)+C.n)%C.n}else f=Math.min(C.n-1.001,Math.max(0,f));const i=Math.floor(f),j=loop?(i+1)%C.n:Math.min(C.n-1,i+1),a=f-i;
+      for(const k in C.qa){const bn=bones[k];if(!bn)continue;const q=C.qa[k];_qa.fromArray(q,i*4);_qb.fromArray(q,j*4);_qa.slerp(_qb,a);bn.quaternion.slerp(_qa,w)}
+      const lerp=(arr,s)=>[0,1,2].slice(0,s).map(c=>arr[i*s+c]+(arr[j*s+c]-arr[i*s+c])*a);return {y:lerp(C.y,1)[0],d:C.d.length?lerp(C.d,2):[0,0],ball:C.ball[i],dur:C.dur}},
     step(dt){this.t+=dt;mixer.update(dt);
       /* 뛸 때 상체를 앞으로 숙이고 팔을 크게 흔듦 */
       {const tl=this.loco==='run'?.38:this.loco==='walk'?.12:0;this.lean=(this.lean||0)+(tl-(this.lean||0))*Math.min(1,dt*6);const L=this.lean*(1-this.pw);
@@ -163,14 +175,24 @@ export async function create(el,cfg){
       else if(hold===s)pose='dribble';
       else if(s.team!==cfg.offTeam()&&sp<1.2)pose='defend';
       if(mvS){pose=mvS.pose;jump=0}
+      /* 모션캡처 선택 */
+      let mcN=null,mcT=0;const MCv=base.mc;
+      if(MCv){if(s.mv&&MCMAP[s.mv]&&now-s.mvT<s.mvD){mcN=MCMAP[s.mv];mcT=(now-s.mvT)/s.mvD*MCv[mcN].dur}
+        else if(!act&&!mvS&&hold===s){mcN=sp>.9?'drun':'didle';m.mcClock=(m.mcClock||0)+dt*(mcN==='drun'?Math.min(1.6,Math.max(.6,sp/1.5)):1);mcT=m.mcClock}
+        else if(!act&&!mvS&&!pose&&sp>2.6){mcN='run';m.mcClock=(m.mcClock||0)+dt*Math.min(1.5,Math.max(.7,sp/3.3));mcT=m.mcClock}}
+      if(mcN&&(mcN==='didle'||mcN==='drun'))pose=null;
+      m.mcw=(m.mcw||0)+((mcN?1:0)-(m.mcw||0))*Math.min(1,dt*10);if(mcN)m.mcLast=mcN,m.mcLastT=mcT;
       m.pose=pose;m.loc(sp>3.2?'run':sp>.5?'walk':'idle',sp>3.2?Math.min(1.5,sp/5):1);m.step(dt);
-      let rx=0,rz=0,ry=0;if(mvS){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=fw.x*mvS.root[0]+lf.x*mvS.root[1];rz=fw.z*mvS.root[0]+lf.z*mvS.root[1];ry=mvS.root[2];m.root.rotation.y=m.yaw+mvS.yaw}
+      m.mcR=null;if(m.mcw>.01&&m.mcLast){m.mcR=m.mcPlay(m.mcLast,mcN?mcT:m.mcLastT,m.mcw);if(m.mcR){const sc_=m.root.scale.x;jump=jump*(1-m.mcw)+(m.mcR.y-1.04)*sc_*m.mcw;if(MCMAP[s.mv]&&mcN&&/shot/.test(mcN)){m.mcD=m.mcR.d}else m.mcD=null}}
+      let rx=0,rz=0,ry=0;if(m.mcD&&m.mcR){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=(fw.x*m.mcD[1]+lf.x*m.mcD[0])*m.mcw;rz=(fw.z*m.mcD[1]+lf.z*m.mcD[0])*m.mcw}
+      if(mvS){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=fw.x*mvS.root[0]+lf.x*mvS.root[1];rz=fw.z*mvS.root[0]+lf.z*mvS.root[1];ry=mvS.root[2];m.root.rotation.y=m.yaw+mvS.yaw}
       m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.blob.position.set(wp.x,.01,wp.z);m.blob.scale.setScalar(1-jump*.35);if(m.ring)m.ring.position.set(wp.x,.015,wp.z)}
     /* ball */
     let bp;
     if(B.thru!=null){bp=HOOP(cfg.dir());bp.y=3.05-B.thru*2.9}
     else if(B.fl&&B.from&&B.dest){const k=B.k||0,a=W3(B.from[0],B.from[1]),b=W3(B.dest[0],B.dest[1]);const toHoop=Math.hypot(B.dest[0]-(cfg.dir()>0?88.75:5.25),B.dest[1]-25)<1.5;
       const h0=B.hy0!=null?B.hy0:toHoop?2.5:1.3,h1=toHoop?3.12:1.3,arc=toHoop?(B.arc||6)*.32:.35;bp=a.lerp(b,k);bp.y=h0+(h1-h0)*k+Math.sin(k*Math.PI)*arc}
+    else if(hold&&pl.find(o=>o.src===hold).m.mcR&&pl.find(o=>o.src===hold).m.mcw>.5){const q=pl.find(o=>o.src===hold).m,Bl=q.mcR.ball,sc_=q.root.scale.x,fw=new THREE.Vector3(Math.sin(q.yaw),0,Math.cos(q.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);bp=q.root.position.clone().setY(0).add(fw.multiplyScalar(Bl[2]*sc_)).add(lf.multiplyScalar(Bl[0]*sc_));bp.y=Bl[1]*sc_}
     else if(hold&&pl.find(o=>o.src===hold).m.mvS&&pl.find(o=>o.src===hold).m.mvS.ball){const q=pl.find(o=>o.src===hold).m,S=q.mvS,ya=q.yaw+S.yaw,fw=new THREE.Vector3(Math.sin(ya),0,Math.cos(ya)),lf=new THREE.Vector3(fw.z,0,-fw.x);bp=q.root.position.clone().setY(0).add(fw.multiplyScalar(S.ball[0]*(q.root.scale.x))).add(lf.multiplyScalar(S.ball[1]));bp.y=S.ball[2]*q.root.scale.y}
     else if(hold){const q=pl.find(o=>o.src===hold).m;const r=new THREE.Vector3(Math.sin(q.yaw),0,Math.cos(q.yaw)),side=new THREE.Vector3(-r.z,0,r.x);const ph=(now/1000*5.5)%1,b=Math.abs(Math.cos(ph*Math.PI));
       const act=hold.act&&now-hold.actT<(hold.actD||700)?hold.act:null;
