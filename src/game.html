@@ -1833,7 +1833,8 @@ function liveGame(cfg){
       if(e.ast!=null&&e.team===0&&off[e.ast]!==holder&&off[e.ast]!==A){await step(240,[],{to:off[e.ast]})}
       const drive=R3&&['lay','dunk','float','post'].includes(e.shot)&&e.blk==null;let drDone=false;
       const hd2=ball.hold||holder;if(hd2!==A)await step(300,drive?[]:[[A,sp]],{to:A});
-      if(drive&&(ball.hold===A)){if(R3&&(e.make||A.me))R3.zoom(A);/* 림으로 달려가면서 바로 레이업/덩크 동작 시작 */const mvn=pickMove(e.shot);MVSET(A,mvn);const wu=rt(MVT[mvn][0]*MVT[mvn][1]);const st=[A.x,A.y];await move(wu,new Map([[A,[sp[0]-(sp[0]-st[0])*.05,sp[1]-(sp[1]-st[1])*.05]]]));drDone=true}
+      if(drive&&(ball.hold===A)){if(R3&&(e.make||A.me))R3.zoom(A);/* 드리블로 림 근처까지 달려간 뒤(점프 지점 약 2m 앞), 거기서 뛰어서 마무리 */const mvn=pickMove(e.shot);const st=[A.x,A.y],ddx=sp[0]-st[0],ddy=sp[1]-st[1],dl=Math.hypot(ddx,ddy)||1,take=Math.max(0,dl-6.5),tk=[st[0]+ddx/dl*take,st[1]+ddy/dl*take];
+        if(take>1)await step(rt(take*.3048/7*1000),[[A,tk]]);MVSET(A,mvn);const wu=rt(MVT[mvn][0]*MVT[mvn][1]);await move(wu,new Map([[A,[sp[0]-ddx/dl*.6,sp[1]-ddy/dl*.6]]]));drDone=true}
       else if(hd2!==A){}else{if(R3&&R()<.45){const dm=pick(['mcross','mcross','mlegs','behind']);const dd=MVT[dm]?MVT[dm][0]:900;MVSET(A,dm,dd,true);await step(dd,[[A,sp]])}else await step(280,[[A,sp]])}
       if(skip)return;
       if(e.blk!=null){const d=D[e.blk];ACT(A,'shoot',700);ACT(d,'block',700);await step(220,[[d,[A.x-.8*s,A.y]]]);pops.push({s:'BLOCK',x:A.x,y:A.y,t:45,c:'#ff8a8a'});await move(260,new Map(),{pt:[A.x-5*s,A.y+ri(-6,6)]});return}
