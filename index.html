@@ -920,15 +920,16 @@ function simSeason(){
   let miss=0,inj=null;
   if(sus){miss=gTot;inj='태업 징계로 시즌 전체 결장'}
   else{
-    const inj0=p.buff&&p.buff.rehab?.5:1;const acl=(.026+Math.max(0,p.age-27)*.006)*inj0;
+    const inj0=(p.buff&&p.buff.rehab?.5:1)*luxMul(p,'inj'),injL=luxMul(p,'injLen');const acl=(.026+Math.max(0,p.age-27)*.006)*inj0;
     if(R()<acl){miss=Math.round(gTot*rf(.7,1));inj='전방십자인대 파열, 시즌 아웃';p.x.spd-=ri(3,6);p.x.jmp-=ri(3,6);p.acl=(p.acl||0)+1}
-    else if(R()<.38*inj0){miss=Math.max(1,Math.round(gTot*rf(.04,.22)));inj=pick(['발목 염좌','햄스트링 부상','손가락 골절','허리 통증','무릎 건염','종아리 근육 부상'])+` (${miss}경기 결장)`}
+    else if(R()<(.38+Math.max(0,p.age-28)*.03)*inj0){miss=Math.max(1,Math.round(gTot*rf(.04,.22)*(1+Math.max(0,p.age-28)*.07)*injL));inj=pick(['발목 염좌','햄스트링 부상','손가락 골절','허리 통증','무릎 건염','종아리 근육 부상'])+` (${miss}경기 결장)`}
+    if(!miss&&LG.pro&&p.age>=31&&R()<Math.min(.9,(p.age-30)*.12)){miss=Math.max(1,Math.round(gTot*rf(.05,.12)*(1+(p.age-31)*.12)));inj=`체력 관리 휴식 (${miss}경기 결장)`}
   }
   if(p.buff)delete p.buff.rehab;
   const injStart=miss?ri(0,gTot-miss):-1;
   const x=p.x, ls=LG.str, th=Math.tanh;
   const sc=(x.three*1.1+x.mid+x.drive+x.inside)/4.1;
-  const pts36=clamp(11+17.5*th((sc-ls)/14)+5*th((o-ts)/9)+(['슈터','슬래셔','포스트 스코어러'].includes(p.style)?1.5:0),3,36);
+  const pts36=clamp((11+17.5*th((sc-ls)/14)+5*th((o-ts)/9)+(['슈터','슬래셔','포스트 스코어러'].includes(p.style)?1.5:0))*(LG.pro?PTSK:1),3,36*(LG.pro?PTSK:1));
   const reb36=clamp(5+6*th((x.reb-ls)/18)+(p.pos==='C'?2.5:p.pos==='PF'?1.5:0),1,16);
   const ast36=clamp(2.8+5*th(((x.pass*.6+x.handle*.4)-ls)/18)+(p.pos==='PG'?2.5:0),.3,12);
   const stl36=clamp(1+.9*th((x.stl-ls)/18),.1,2.8), blk36=clamp(.6+1.6*th((x.blk-ls)/18),0,3.8);
@@ -1075,6 +1076,7 @@ function attrCap(p,k){const b=BODY_IDEAL[p.pos]||[200,100],dh=clamp(((+p.h||b[0]
   if((p.focus||[]).some(f=>FOCUS[f].includes(k)))c+=4;if(((W[p.pos]||{})[k]||0)>=1.1)c+=2;
   c+=(hash(String(p.name||'')+k)%7)-3;
   return Math.round(clamp(c,40,99))}
+var PTSK=.85;
 function progress(){
   const gap=gearStrip(G.p);
   const p=G.p,x=p.x,last=p.log[p.log.length-1]||{min:0},mb=last.min/36*2,age=p.age;
@@ -1087,7 +1089,7 @@ function progress(){
     else if(age<=25)g=room(k)*rf(.05,.09)+mb*rf(.18,.6);
     else if(age<=27)g=room(k)*rf(.01,.04)+mb*rf(0,.3);
     else g=rf(-.7,.3);
-    if(fk.has(k))g+=(age<=25?rf(1.4,2.9):age<=28?rf(.7,1.8):rf(.2,1))*(p.buff&&p.buff.train?1.5:1);
+    if(fk.has(k))g+=(age<=25?rf(1.4,2.9):age<=28?rf(.7,1.8):rf(.2,1))*(p.buff&&p.buff.train?1.5:1)*luxMul(p,'grow');
     if(k==='iq')g+=age<34?rf(.5,1.8):0;
     const DECL=Math.min(p.decl,p.iron?33:32)-1+ageDelay(p),DR=p.drate*1.6*ageMul(p);
     if(age>=DECL){
@@ -1096,8 +1098,8 @@ function progress(){
       else if(k==='str')g-=age>=DECL+2?rf(.8,2)*DR*.7:0;
       else if(k!=='iq'&&age>=DECL+1)g-=rf(.5,1.8)*DR+d*.15;
     }
-    /* 36세부터는 관리·아이템과 상관없이 몸이 버티지 못함 */
-    if(age>=36){const e=age-35;if(["spd","jmp","sta","str"].includes(k))g-=Math.pow(e,1.6)*rf(.5,.8);else g-=e*rf(.4,.7)*(k==='iq'?.4:1)}
+    /* 34세부터는 관리·아이템과 상관없이 몸이 버티지 못함 */
+    if(age>=34){const e=age-33;if(["spd","jmp","sta","str"].includes(k))g-=Math.pow(e,1.6)*rf(.5,.8);else g-=e*rf(.4,.7)*(k==='iq'?.4:1)}
     x[k]=Math.round(clamp(x[k]+g,15,Math.max(x[k],attrCap(p,k))));
   }
   if(p.buff)delete p.buff.train;
@@ -4177,7 +4179,7 @@ function bindLogo(){
       toast(ok?'로고를 넣었어요':'저장 공간이 부족해요. 다른 이미지를 지워 주세요');reLogo()};im.src=rd.result};rd.readAsDataURL(file)};
 }
 /* ---------- shop / retire / national-team retire / new career ---------- */
-function upX(p,o){for(const k in o)p.x[k]=Math.round(clamp(p.x[k]+o[k],15,Math.max(p.x[k],attrCap(p,k))))}
+function upX(p,o){for(const k in o)p.x[k]=Math.round(clamp(p.x[k]+o[k]*(p.age>=31?(['spd','jmp','str','sta'].includes(k)?.25:.6):1),15,Math.max(p.x[k],attrCap(p,k))))}
 /* ---------- gear ---------- */
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const GSLOT=[['shoe','농구화','👟'],['sleeve','암슬리브','🦾'],['band','손목밴드','⌚'],['knee','무릎 보호대','🦵']];
@@ -4186,12 +4188,12 @@ const GPH=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHB
 const gImg=it=>it&&it[6]!=null?`<img class="gimg" src="${GPH[it[6]]}" alt="">`:'';
 /* anti-aging: very expensive, permanent, stack up to a cap; they slow decline but never stop it */
 const AGE_ITEMS=[
- ['cryo','냉동 치료 챔버','회복 속도를 높여 노화로 능력치가 떨어지는 속도를 조금 늦춰요',200,.9,0],
- ['pod','재생 치료 포드','근육·관절 회복을 도와 노화 속도를 꽤 늦춰요',450,.84,0],
- ['gene','유전자 분석 연구실','몸에 맞춘 관리로 노화 속도를 늦추고, 하락 시작을 1년 미뤄요',900,.8,1],
- ['clinic','개인 장수 클리닉','전담 의료진이 24시간 관리해요. 노화 속도를 크게 늦추고 하락 시작을 1년 미뤄요',1800,.72,1]];
-function ageMul(p){const o=(p.anti||[]);let m=1;AGE_ITEMS.forEach(a=>{if(o.includes(a[0]))m*=a[4]});return Math.max(.45,m)}
-function ageDelay(p){const o=(p.anti||[]);return Math.min(2,AGE_ITEMS.reduce((s,a)=>s+(o.includes(a[0])?a[5]:0),0))}
+ ['cryo','냉동 치료 챔버','회복 속도를 높여 노화로 능력치가 떨어지는 속도를 조금 늦춰요',600,.95,0],
+ ['pod','재생 치료 포드','근육·관절 회복을 도와 노화 속도를 꽤 늦춰요',1300,.9,0],
+ ['gene','유전자 분석 연구실','몸에 맞춘 관리로 노화 속도를 늦추고, 하락 시작을 1년 미뤄요',2600,.88,1],
+ ['clinic','개인 장수 클리닉','전담 의료진이 24시간 관리해요. 노화 속도를 크게 늦춰요',5200,.82,0]];
+function ageMul(p){const o=(p.anti||[]);let m=1;AGE_ITEMS.forEach(a=>{if(o.includes(a[0]))m*=a[4]});return Math.max(.65,m)}
+function ageDelay(p){const o=(p.anti||[]);return Math.min(1,AGE_ITEMS.reduce((s,a)=>s+(o.includes(a[0])?a[5]:0),0))}
 const GEAR=[
  ['g1','shoe',0,'스트릿 러너',{spd:1},.1,3],['g2','shoe',1,'에어 스텝백 1',{three:2},.4,4],['g3','shoe',1,'클라우드 컷 로우',{handle:2},.4,5],
  ['g4','shoe',2,'블레이즈 드라이브 3',{drive:2,spd:1},1.1,6],['g5','shoe',2,'그래비티 하이',{jmp:2,blk:1},1.1,7],['g6','shoe',2,'아이언 포스트 미드',{str:2,inside:1},1.1,8],
@@ -4232,16 +4234,41 @@ const SHOP=[
  ['charity','유소년 농구 교실 기부','평판 +8',1.5,p=>{p.rep=clamp(p.rep+8,0,100)}]
 ];
 const won=v=>{v=v||0;const a=Math.abs(v);return a>=10000?`${(v/10000).toFixed(a>=100000?0:1)}조 원`:a>=100?`${Math.round(v).toLocaleString()}억 원`:`${v.toFixed(1)}억 원`};
+function ageStock(p){/* 노화 방지 상품은 가끔만 들어옴 (시즌마다 약 15%) */
+  const r=mulberry(hash(String(p.name||'')+G.year+'anti')),left=AGE_ITEMS.filter(a=>!(p.anti||[]).includes(a[0]));
+  if(!left.length||r()>=.15)return [];const w=left.map(a=>a[0]==='clinic'?1:a[0]==='gene'?2:3),t=w.reduce((x,y)=>x+y,0);let v=r()*t,i=0;for(;i<left.length;i++){v-=w[i];if(v<=0)break}return [left[Math.min(i,left.length-1)]]}
+const LUX=[
+ ['watch','명품 시계 컬렉션','평판 +3',30,{rep:3}],
+ ['car','한정판 슈퍼카','평판 +4',90,{rep:4}],
+ ['pent','한강뷰 펜트하우스','평판 +4 · 체력 +1',300,{rep:4,x:{sta:1}}],
+ ['gift','고향 농구장 기부','평판 +8',250,{rep:8}],
+ ['art','미술품 경매 낙찰','평판 +5',450,{rep:5}],
+ ['mansion','개인 체육관 딸린 저택','체력 +2 · 힘 +1',700,{x:{sta:2,str:1}}],
+ ['sleep','수면 과학 연구소','체력 +2 · 부상 확률 조금 감소',900,{x:{sta:2},inj:.95}],
+ ['yacht','슈퍼 요트','평판 +6',1100,{rep:6}],
+ ['med','전담 의료팀','부상 결장 기간 30% 감소',1600,{injLen:.7}],
+ ['lab','개인 스포츠 과학 랩','집중 육성 성장 1.2배 (계속)',2200,{grow:1.2}],
+ ['academy','내 이름 건 유소년 아카데미','평판 +8',2600,{rep:8}],
+ ['jet','전용기','원정 이동 피로가 줄어 부상 확률 15% 감소',3200,{inj:.85}],
+ ['space','민간 우주여행 티켓','평판 +6',4000,{rep:6}],
+ ['island','개인 섬','평판 +10',8000,{rep:10}]];
+const luxHas=(p,k)=>(p.lux||[]).includes(k);
+function luxMul(p,f){return LUX.reduce((m,l)=>m*(luxHas(p,l[0])&&l[4][f]?l[4][f]:1),1)}
+function luxBuy(p,it){p.lux=p.lux||[];p.lux.push(it[0]);const e=it[4];if(e.rep)p.rep=clamp(p.rep+e.rep,0,100);if(e.x)for(const k in e.x)p.x[k]=Math.min(99,p.x[k]+e.x[k])}
 function shopSheet(){
   const p=G.p;if(p.cash==null)p.cash=p.earn||0;p.shop=p.shop||{};
-  return `<b class="big">상점</b><p class="sub" style="margin:6px 0 4px">연봉과 광고 수입으로 살 수 있어요. 장비는 시즌마다 3개씩 새로 들어와요.</p>
+  return `<b class="big">상점</b><p class="sub" style="margin:6px 0 4px">연봉과 광고 수입으로 살 수 있어요. 장비는 시즌마다 3개씩, 노화 방지 상품은 가끔 들어와요.</p>
    ${rows([['보유 자금',won(p.cash),'blue']])}
    <div class="ch" style="margin-top:14px"><h2>이번 시즌 장비</h2><span class="sub">시즌마다 바뀌어요</span></div>
    ${buyAllCost('gear')?`<button class="btn sec" id="ballg" style="margin:4px 0 6px"${p.cash>=Math.min(...gearStock(p).map(i=>i[5]))?'':' disabled'}>장비 모두 구매 · ${won(buyAllCost('gear'))}</button>`:''}
    ${gearStock(p).map(it=>{const can=p.cash>=it[5];return `<div class="slot"><div class="gt" style="--tc:${GTIER[it[2]][1]}">${GTIER[it[2]][0]}</div><div class="gpreview">${gImg(it)}</div><div class="f1"><b>${GSLOT.find(x=>x[0]===it[1])[2]} ${esc(it[3])}</b><span>${esc(gearTxt(it[4]))}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-gbuy="${it[0]}"${can?'':' disabled'}>${won(it[5])}</button></div></div>`}).join('')||'<p class="sub">이번 시즌 장비를 모두 샀어요.</p>'}
    <div class="ch" style="margin-top:18px"><h2>노화 방지</h2><span class="sub">한 번 사면 계속 효과</span></div>
-   <p class="sub" style="margin:0 0 6px">여러 개를 사면 효과가 쌓이지만 한도가 있어요. 노화를 완전히 멈추지는 못해요.</p>
-   ${AGE_ITEMS.map(([k,n,d,c])=>{const own=(p.anti||[]).includes(k),can=!own&&p.cash>=c;return `<div class="slot"><div class="f1"><b>${n}</b><span>${d}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-abuy="${k}"${can?'':' disabled'}>${own?'보유 중':won(c)}</button></div></div>`}).join('')}
+   <p class="sub" style="margin:0 0 6px">아주 가끔만 들어와요. 놓치면 다음 기회를 기다려야 해요.</p>
+   ${(p.anti||[]).length?`<p class="sub" style="margin:0 0 6px">보유: ${AGE_ITEMS.filter(a=>(p.anti||[]).includes(a[0])).map(a=>a[1]).join(', ')}</p>`:''}
+   ${ageStock(p).length?'':'<p class="sub" style="margin:0 0 6px">이번 시즌엔 들어온 상품이 없어요.</p>'}
+   ${ageStock(p).map(([k,n,d,c])=>{const own=(p.anti||[]).includes(k),can=!own&&p.cash>=c;return `<div class="slot"><div class="f1"><b>${n}</b><span>${d}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-abuy="${k}"${can?'':' disabled'}>${own?'보유 중':won(c)}</button></div></div>`}).join('')}
+   <div class="ch" style="margin-top:18px"><h2>사치품</h2><span class="sub">한 번 사면 계속</span></div>
+   ${LUX.map(it=>{const own=luxHas(p,it[0]),can=!own&&p.cash>=it[3];return `<div class="slot"><div class="f1"><b>${it[1]}</b><span>${it[2]}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-lbuy="${it[0]}"${can?'':' disabled'}>${own?'보유 중':won(it[3])}</button></div></div>`}).join('')}
    <p class="sub" style="margin-top:10px">훈련·관리는 홈의 "훈련" 메뉴로 옮겼어요.</p>
    <button class="btn sec" id="shclose" style="margin-top:12px">닫기</button>`;
 }
@@ -4264,7 +4291,9 @@ function bindShop(){
     p.cash-=it[5];g.inv.push(it[0]);if(!g.eq[it[1]]){g.eq[it[1]]=it[0];gearApply(p)}save();toast(`${it[3]} 구매${g.eq[it[1]]===it[0]?' · 바로 착용':''}`);const sh=$('#sheet .sh'),st=sh?sh.scrollTop:0;openSheet(shopSheet(),bindShop);$('#sheet .sh').scrollTop=st});
   $$('[data-buy]').forEach(b=>b.onclick=()=>{const p=G.p,it=SHOP.find(s=>s[0]===b.dataset.buy);if(!it||p.cash<it[3]||p.shop[it[0]]===G.year)return;
     p.cash-=it[3];p.shop[it[0]]=G.year;it[4](p);save();toast(`${it[1]} 완료`);const sh=$('#sheet .sh'),st=sh?sh.scrollTop:0;openSheet(shopSheet(),bindShop);$('#sheet .sh').scrollTop=st});
-  $$('[data-abuy]').forEach(b=>b.onclick=()=>{const p=G.p,it=AGE_ITEMS.find(a=>a[0]===b.dataset.abuy);if(!it||p.cash<it[3]||(p.anti||[]).includes(it[0]))return;
+  $$('[data-lbuy]').forEach(b=>b.onclick=()=>{const p=G.p,it=LUX.find(a=>a[0]===b.dataset.lbuy);if(!it||p.cash<it[3]||luxHas(p,it[0]))return;
+    p.cash-=it[3];luxBuy(p,it);save();toast(`${it[1]} 구매`);const sh=$('#sheet .sh'),st=sh?sh.scrollTop:0;openSheet(shopSheet(),bindShop);$('#sheet .sh').scrollTop=st});
+  $$('[data-abuy]').forEach(b=>b.onclick=()=>{const p=G.p,it=ageStock(p).find(a=>a[0]===b.dataset.abuy);if(!it||p.cash<it[3]||(p.anti||[]).includes(it[0]))return;
     confirmSheet(`${it[1]}을(를) 살까요?`,`${won(it[3])} · 보유 ${won(p.cash)}<br>다음 시즌부터 효과가 적용돼요.`,'구매하기',()=>{p.cash-=it[3];p.anti=(p.anti||[]).concat(it[0]);save();toast(`${it[1]} 구매 완료`);openSheet(shopSheet(),bindShop)})});
   const bg=$('#ballg');if(bg)bg.onclick=()=>buyAll('gear');
   $('#shclose').onclick=()=>{closeSheet();render()};
