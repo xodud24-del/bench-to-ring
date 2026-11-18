@@ -103,7 +103,7 @@ export function parseHuman(buf){const dv=new DataView(buf),hl=dv.getUint32(0,tru
   H.hc=[(mn[0]+mx[0])/2,(mn[1]+mx[1])/2,(mn[2]+mx[2])/2];H.hr=[(mx[0]-mn[0])/2,(mx[1]-mn[1])/2,(mx[2]-mn[2])/2];return H}
 export function buildBodyMH(S,o,H){
   const I=S.idx,nV=H.nV,cSk=C(o.skin),cJ=C(o.jersey),cSh=C(o.shorts),cT=C(o.trim),cW=C('#f3f3f3'),cShoe=C(o.shoe||'#f3f3f3'),cHr=C(o.hairc);
-  const bulk=o.bulk||1,mus=Math.min(1,Math.max(0,.6+(bulk-1)*2.4)),fat=Math.min(.45,Math.max(0,(bulk-1.12)*2));
+  const bulk=o.bulk||1,mus=Math.min(1.15,Math.max(.4,.95+(bulk-1)*2)),fat=Math.min(.45,Math.max(0,(bulk-1.12)*2));
   const P=new Float32Array(nV*3);for(let i=0;i<nV*3;i++)P[i]=H.P[i]+(H.dm[i]*mus+H.df[i]*fat)/1000;
   const map=H.names.map(n=>I[n]);const si=new Uint16Array(nV*4),sw=new Float32Array(nV*4);for(let i=0;i<nV*4;i++){si[i]=map[H.si[i]]||0;sw[i]=H.sw[i]/255}
   const ey=H.eyes[0][1],col=new Float32Array(nV*3);
@@ -113,9 +113,21 @@ export function buildBodyMH(S,o,H){
     if(o.sleeve&&H.wA[v]>.5&&ax>.38&&ax<.46)c=C(o.sleeve);
     if(H.wH[v]>.8&&o.beard>=2&&y<ey-.045&&z>H.hc[2]-.01&&!(o.beard===3&&y<ey-.085))c=cHr;
     col[v*3]=c.r;col[v*3+1]=c.g;col[v*3+2]=c.b}
+  /* 남자 농구선수 체형으로: 골반은 좁게, 어깨·등은 넓게(역삼각형), 가슴 앞 볼록함은 납작하게 */
+  for(let v=0;v<nV;v++){const i=v*3,y=P[i+1],t=H.wT[v]+H.wS[v]*.6;if(t<.05)continue;
+    const hipK=sm(.78,.9,y)*(1-sm(1.08,1.18,y)),shK=sm(1.2,1.36,y)*(1-sm(1.47,1.52,y));P[i]*=1-.09*hipK*Math.min(1,H.wT[v]+H.wL[v])+.14*shK*Math.min(1,t);
+    const wK=sm(.98,1.04,y)*(1-sm(1.12,1.2,y));P[i]*=1+.06*wK*Math.min(1,H.wT[v]);/* 허리를 일자로 */
+    const chK=sm(1.08,1.18,y)*(1-sm(1.4,1.46,y))*Math.min(1,H.wT[v]+H.wS[v]);if(P[i+2]>.03&&chK>0){const zc=.072*(1-Math.min(1,Math.pow(P[i]/.2,2)))+.03;if(P[i+2]>zc)P[i+2]=zc+(P[i+2]-zc)*(1-.8*chK)}}/* 가슴은 납작하게 (남자 가슴) */
+  for(let v=0;v<nV;v++){const i=v*3,y=P[i+1];if(H.wL[v]<.5||y<.5||y>.98)continue;const k=sm(.5,.6,y)*(1-sm(.9,.98,y)),x0=Math.sign(P[i])*.095,z0=.0;P[i]=x0+(P[i]-x0)*(1-.12*k);P[i+2]=z0+(P[i+2]-z0)*(1-.08*k)}/* 허벅지는 덜 굵게 */
+  /* 옷 입은 부분(반바지·몸통)은 표면을 부드럽게 (Taubin 스무딩: 엉덩이 골·복근·가슴 굴곡을 옷처럼 매끈하게, 부피는 유지) */
+  {const nb=Array.from({length:nV},()=>new Set());for(let t=0;t<H.ix.length;t+=3){const a=H.ix[t],c=H.ix[t+1],d=H.ix[t+2];nb[a].add(c).add(d);nb[c].add(a).add(d);nb[d].add(a).add(c)}
+   const wgt=new Float32Array(nV);for(let v=0;v<nV;v++){const y=P[v*3+1];if(H.wA[v]>.35||H.wH[v]>.3)continue;wgt[v]=y>.66&&y<1.03?1:(y>=1.03&&y<1.42&&H.wT[v]+H.wS[v]>.5?.6:0)}
+   const tmp=new Float32Array(nV*3);for(let it=0;it<56;it++){const lam=it%2?-.53:.5;for(let v=0;v<nV;v++){const i=v*3;const crotch=Math.abs(P[i])<.11&&P[i+1]>.7&&P[i+1]<.99;if(!wgt[v]||(it>=16&&!crotch)){tmp[i]=P[i];tmp[i+1]=P[i+1];tmp[i+2]=P[i+2];continue}let sx=0,sy=0,sz=0,n=0;for(const u of nb[v]){sx+=P[u*3];sy+=P[u*3+1];sz+=P[u*3+2];n++}const l=lam*wgt[v];tmp[i]=P[i]+(sx/n-P[i])*l;tmp[i+1]=P[i+1]+(sy/n-P[i+1])*l;tmp[i+2]=P[i+2]+(sz/n-P[i+2])*l}P.set(tmp)}}
   const g0=new THREE.BufferGeometry();g0.setAttribute('position',new THREE.BufferAttribute(P,3));g0.setIndex(new THREE.BufferAttribute(H.ix,1));g0.computeVertexNormals();const Nn=g0.attributes.normal.array;
+  /* 팔·어깨 근육: 팔뚝·삼각근을 굵게 (남자 운동선수) */
+  for(let v=0;v<nV;v++){const i=v*3,a=Math.min(1,H.wA[v]+H.wS[v]*.8)*(1-Math.min(1,H.wH[v]*2));if(a<.2)continue;const hand=Math.abs(P[i])>.66?Math.max(0,1-(Math.abs(P[i])-.66)/.06):1,o=.011*a*hand;P[i]+=Nn[i]*o;P[i+1]+=Nn[i+1]*o;P[i+2]+=Nn[i+2]*o}
   /* 반바지: 허벅지·엉덩이를 바깥으로 부풀려 헐렁한 농구 반바지처럼 (아래로 갈수록 더 넓게) */
-  for(let v=0;v<nV;v++){const y=P[v*3+1];if(y<.65||y>1.02||H.wA[v]>.2||(H.wL[v]<.3&&H.wT[v]<.3))continue;const k=Math.min(1,Math.max(0,(1.02-y)/.38)),e=sm(.65,.69,y),off=(.009+.024*k*k)*e*(1+(bulk-1));
+  for(let v=0;v<nV;v++){const y=P[v*3+1];if(y<.65||y>1.02||H.wA[v]>.2||(H.wL[v]<.3&&H.wT[v]<.3))continue;const k=Math.min(1,Math.max(0,(1.02-y)/.38)),e=sm(.65,.69,y),off=(.011+.012*k)*e*(1+(bulk-1));
     P[v*3]+=Nn[v*3]*off;P[v*3+1]+=Nn[v*3+1]*off*.3;P[v*3+2]+=Nn[v*3+2]*off;if(Math.abs(P[v*3])<.075&&y>.74&&y<.95&&P[v*3+2]>.0)P[v*3+2]-=.012*(1-Math.abs(P[v*3])/.075)}
   /* 머리카락·눈: 기존 머리 기준(중심·반지름)으로 만든 뒤 이 몸의 실제 머리에 맞게 옮김 */
   const g=new G(),cHc=[0,1.655,.012],cHrad=[.088,.112,.1];addHair(g,o,I,cHr,cSk);
@@ -126,10 +138,10 @@ export function buildBodyMH(S,o,H){
   pos.set(P);pos.set(g.p,nV*3);cc.set(col);cc.set(g.c,nV*3);SI.set(si);SI.set(g.si,nV*4);SW.set(sw);SW.set(g.sw,nV*4);
   const ix=new Uint32Array(H.ix.length+g.ix.length);ix.set(H.ix);for(let i=0;i<g.ix.length;i++)ix[H.ix.length+i]=g.ix[i]+nV;
   /* 저지 (등번호 텍스처): 몸통 면을 살짝 바깥으로 띄워 복제 */
-  const isJ=v=>{const y=P[v*3+1],ax=Math.abs(P[v*3]);return y>.9&&y<1.47&&H.wT[v]+H.wS[v]>.55&&H.wA[v]<.25&&!(ax>.16&&y>1.3)};
+  const isJ=v=>{const y=P[v*3+1],ax=Math.abs(P[v*3]);return y>.985&&y<1.47&&H.wT[v]+H.wS[v]>.55&&H.wA[v]<.25&&!(ax>.16&&y>1.3)};
   const jm=new Int32Array(nV).fill(-1),jp=[],ju=[],js=[],jw=[],jx=[];
   for(let t=0;t<H.ix.length;t+=3){const a=H.ix[t],b=H.ix[t+1],c=H.ix[t+2];if(!(isJ(a)&&isJ(b)&&isJ(c)))continue;
-    for(const v of [a,b,c])if(jm[v]<0){jm[v]=jp.length/3;const off=.009;jp.push(P[v*3]+Nn[v*3]*off,P[v*3+1]+Nn[v*3+1]*off,P[v*3+2]+Nn[v*3+2]*off);
+    for(const v of [a,b,c])if(jm[v]<0){jm[v]=jp.length/3;const off=.014;let jx_=P[v*3]+Nn[v*3]*off,jy_=P[v*3+1]+Nn[v*3+1]*off,jz_=P[v*3+2]+Nn[v*3+2]*off;{/* 저지는 가슴·등에서 아래로 곧게 늘어짐 */const f_=Math.max(0,1-Math.pow(jx_/.2,2)),dk=1-sm(1.25,1.35,jy_),ck=sm(1.12,1.2,jy_)*(1-sm(1.4,1.45,jy_));if(jz_>0)jz_=Math.max(jz_,(.1*f_+.01)*Math.max(dk,ck));else jz_=Math.min(jz_,-(.1*f_+.01)*dk)}jp.push(jx_,jy_,jz_);
       let u=Math.atan2(P[v*3+2],P[v*3])/(Math.PI*2);if(u<0)u+=1;ju.push(u,Math.min(1,Math.max(0,(P[v*3+1]-.9)/(1.44-.9))));for(let k=0;k<4;k++){js.push(si[v*4+k]);jw.push(sw[v*4+k])}}
     jx.push(jm[a],jm[b],jm[c])}
   /* 이음새(u=0/1) 넘어가는 삼각형은 u를 맞춰서 복제 */
