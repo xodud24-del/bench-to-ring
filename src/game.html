@@ -1785,7 +1785,7 @@ function liveGame(cfg){
       if(zone&&o.i<5){let z=zone[o.i];if(dk==='box1'&&o.i===0)return null;if(s<0)z=[94-z[0],50-z[1]];const b=ball.hold||ball;return[z[0]+(b.y-25)*.0+(b.x-z[0])*.12,z[1]+(b.y-z[1])*.22]}
       const t=dk==='drop'&&o.i===4?.55:.2;return[o.tx+(h[0]-o.tx)*t+(s>0?1:-1)*.8,o.ty+(h[1]-o.ty)*t]};
     const withDef=(tg,off,s,dk)=>{const D=P[1-off[0].team];off.forEach((o,i)=>{const t=tg.get(o)||[o.x,o.y];const ds=defSpot({i,tx:t[0],ty:t[1]},s,dk);tg.set(D[i],ds||[t[0]+(HOOPF(s)[0]-t[0])*.2,t[1]+(HOOPF(s)[1]-t[1])*.2])});return tg};
-    const MVT={spin:[1300,1],behind:[900,1],mshot:[3000,.516],mpull:[3260,.571],mshot3:[3450,.378],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.45],pull:[1250,.5],stepback:[1600,.82],fade:[1400,.5],turn:[2000,.6],lay:[1200,.58],clutch:[1700,.74],dunk:[1300,.55],dunk2:[1300,.55],toma:[1500,.6]};
+    const MVT={spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[1700,1],mlegs:[2100,1],shot:[1200,.5],pull:[1250,.55],stepback:[1600,.87],fade:[1400,.55],turn:[2000,.65],lay:[1200,.62],clutch:[1700,.78],dunk:[1300,.6],dunk2:[1300,.6],toma:[1500,.68]};
     const MVSET=(o,n,d)=>{o.mv=n;o.mvT=performance.now();o.mvD=(d||MVT[n][0])/speed};
     const pickMove=sh=>sh==='3'?pick(['mshot','mpull','mshot3','mpull','stepback']):sh==='mid'?pick(['mpull','mshot','fade','turn','stepback']):sh==='post'?pick(['turn','turn','fade']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
     const anim=async e=>{
@@ -1870,7 +1870,7 @@ function liveGame(cfg){
       lv.after(box);
       const pickI=await new Promise(r=>box.querySelectorAll('[data-ci]').forEach(b=>b.onclick=()=>r(+b.dataset.ci)));shotAt=performance.now();shotRate=clk/2.6;const gcl=setInterval(()=>{const v=shotNow();const q=$('#sq');if(q&&v!=null)q.textContent=`4Q 0:${v<10?'0':''}${v.toFixed(1)}`;if(!v)clearInterval(gcl)},100);
       const o=sc0.o[pickI],win=R()<o.p;box.innerHTML=`<p class="eye">${esc(o.l)}</p>`;
-      const shoot=async(S,make,three)=>{ACT(S,'shoot',1100);await tween(420,()=>{});await move(1100,new Map(),{pt:[h[0],h[1]],arc:three?9:6});
+      const shoot=async(S,make,three)=>{const mvn=three?'mpull':'mshot';S.mv=mvn;S.mvT=performance.now();S.mvD=MVT[mvn][0]/speed;await tween(MVT[mvn][0]*MVT[mvn][1],()=>{});await move(1100,new Map(),{pt:[h[0],h[1]],arc:three?9:6});
         if(make){ball.thru=0;await tween(500,k=>{ball.thru=k});ball.thru=null;pops.push({s:three?'+3':'+2',x:h[0],y:h[1],t:60,c:'#ffd34d'})}
         else{ball.hy0=3.05;await move(520,new Map(),{pt:[h[0]-5*s,h[1]+ri(-8,8)],arc:2});ball.hy0=null}};
       const ft=async(S,n,make)=>{tg=new Map();tg.set(S,fc([25,15],s));await move(500,tg);for(let i=0;i<n;i++){ball.hold=S;await tween(300,()=>{});await shoot(S,make[i],false);ball.x=S.x;ball.y=S.y}};
