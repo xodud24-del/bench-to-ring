@@ -831,7 +831,9 @@ function baseAttrs(d,style){
 }
 function ovr(x,pos){const w=W[pos];let s=0,t=0;for(const k in w){s+=x[k]*w[k];t+=w[k]}return Math.round(s/t)}
 const grp=(x,keys)=>Math.round(keys.reduce((a,k)=>a+x[k],0)/keys.length);
-const potText=p=>p>=90?'세계적 재능':p>=84?'최상급 유망주':p>=78?'상급 유망주':p>=72?'유망주':'노력형';
+const potText=p=>p>=95?'세계적 재능':p>=88?'최상급 유망주':p>=80?'상급 유망주':p>=72?'유망주':'노력형';
+/* 스카우트 평가는 추정치일 뿐: 실제 한계는 숨겨져 있고, 어릴 때는 계속 바뀜 */
+const scoutEst=(pot,seed)=>clamp(pot+(hash(String(seed)+"sc")%13)-6,55,99);
 
 /* ---------- league helpers ---------- */
 function teamStr(lg,name){G.ts=G.ts||{};const k=lg+'|'+name;if(G.ts[k]==null)G.ts[k]=L[lg].str+((hash(k)%13)-6);return G.ts[k]}
@@ -864,7 +866,7 @@ function startCareer(){
   const {x,pot}=baseAttrs(d);
   const ylg='Y_'+d.start;
   const team=d.school&&T[ylg].includes(d.school)?d.school:pick(T[ylg]);
-  G={v:2,year:2027,p:{...d,age:16,x,pot,lg:ylg,team,yrs:3,rep:5,...(R()<.12?{iron:1,decl:ri(31,33),drate:rf(.5,.8)}:{decl:ri(28,31),drate:rf(1,1.8)}),
+  G={v:2,year:2027,p:{...d,age:16,x,pot,scout:scoutEst(pot,d.seed),lg:ylg,team,yrs:3,rep:5,...(R()<.12?{iron:1,decl:ri(31,33),drate:rf(.5,.8)}:{decl:ri(28,31),drate:rf(1,1.8)}),
      focus:d.focus.length?d.focus:['슈팅','피지컬'],mil:null,milDone:false,exempt:false,half:false,sus:false,loan:null,
      log:[],tot:{gp:0,pts:0,reb:0,ast:0,stl:0,blk:0},hi:{pts:0},g40:0,td:0,titles:[],awards:[],nt:{caps:0,medals:[]},teams:[team],earn:0,sal:0,proY:0,colY:0},
      q:[],coach:null,done:false,ts:{},feed:[],used:{}};
@@ -1084,6 +1086,7 @@ function progress(){
   const gap=gearStrip(G.p);
   const p=G.p,x=p.x,last=p.log[p.log.length-1]||{min:0},mb=last.min/36*2,age=p.age;
   const top=Math.max(0,(p.pot-72)*.8),room=k=>Math.max(0,Math.min(p.pot+top+(['spd','jmp','str','sta'].includes(k)?3:0),attrCap(p,k)+6)-x[k]);
+  if(age<=24){p.pot=Math.round(clamp(p.pot+gauss()*2.8+(mb>=1.4?.5:0)-.2,55,99));p.scout=Math.round(clamp(.6*(p.scout??p.pot)+.4*(p.pot+gauss()*3),55,99))}
   const fk=new Set(p.focus.flatMap(f=>FOCUS[f]));
   const before={...x};
   for(const [k] of A){
@@ -1147,7 +1150,7 @@ function buildDraft(lg){
   const resume=(aw.some(a=>/정규리그 MVP|파이널 MVP/.test(a))?4.5:0)+(aw.some(a=>/퍼스트|베스트5|올-아메리칸/.test(a))?2.5:0)+(aw.some(a=>/득점왕/.test(a))?1.5:0)+(rec.some(e=>e.po==='우승')?2:0)+((last.ppg||0)>=20?2:(last.ppg||0)>=15?1:0);
   const rw=last.lg&&L[last.lg]?clamp((L[last.lg].str-42)/15,.3,1.1):1;
   const base=lg==='NBA'?60:L[lg].str-19;
-  const v=(o-base-((p.log||[]).some(e=>L[e.lg]&&L[e.lg].col)?2:1))+(p.pot-80)*.12+(20-p.age)*.4+resume*.25*rw+(p.stock||0);
+  const v=(o-base-((p.log||[]).some(e=>L[e.lg]&&L[e.lg].col)?2:1))+((p.scout??p.pot)-80)*.12+(20-p.age)*.4+resume*.25*rw+(p.stock||0);
   let pk=Math.max(1,Math.round(1+(13.5-v)*(lg==='NBA'?3.8:n/12.5)+gauss()*1.5));
   const prep=!(p.log||[]).some(e=>L[e.lg]&&L[e.lg].col),need=prep?73:75;if(o>=need&&pk>1&&R()<.85)pk=1;else if(o<need&&pk===1)pk=2;
   pk=clamp(pk,1,n*2+3);
@@ -1245,7 +1248,7 @@ function graduation(){
   const prep=o>=72||(o>=70&&p.pot>=88);
   if(prep)opts.unshift({act:'draft',lg:'NBA',label:'NBA 드래프트 직행',sub:`고졸 프로 · OVR ${o} · 로터리 지명 유력`});
   if(prep)return{type:'choice',eye:'졸업',t:'고교 무대는\n이미 좁아요',x:`유스 3년 동안 OVR ${o}까지 올라왔어요. NBA 스카우트들이 대학을 건너뛰고 바로 드래프트에 나오라고 해요.`,opts};
-  return{type:'choice',eye:'졸업',t:'졸업 이후,\n어디로 갈까요?',x:`유스 3년 동안 OVR ${o}까지 올라왔어요. 스카우트 평가는 "${potText(p.pot)}"이에요.`,opts};
+  return{type:'choice',eye:'졸업',t:'졸업 이후,\n어디로 갈까요?',x:`유스 3년 동안 OVR ${o}까지 올라왔어요. 스카우트 평가는 "${potText(p.scout??p.pot)}"이에요.`,opts};
 }
 function collegeExit(){
   const p=G.p,o=curOvr(),opts=[],nbaOk=o>=66&&p.age>=19;
@@ -4066,7 +4069,7 @@ function bindWizard(){
 function summarySheet(){
   const d=D,{x,pot}=baseAttrs(d);
   return `<div class="shh"><b class="big">${esc(d.name)}</b><span class="pill">${POSN[d.pos]}</span></div><p class="sub">${d.style} · 등번호 ${d.num} · 16세</p>
-   <div style="margin:14px 0">${rows([['소속',esc(d.school||T['Y_'+d.start][0])],['국적',`${flag(d.nat)} ${C[d.nat].n}`],['키 · 윙스팬',`${d.h}cm · ${d.ws}cm`],['OVR',ovr(x,d.pos)],['스카우트 평가',potText(pot)],['집중 육성',d.focus.join(', ')]])}</div>
+   <div style="margin:14px 0">${rows([['소속',esc(d.school||T['Y_'+d.start][0])],['국적',`${flag(d.nat)} ${C[d.nat].n}`],['키 · 윙스팬',`${d.h}cm · ${d.ws}cm`],['OVR',ovr(x,d.pos)],['스카우트 평가',potText(scoutEst(pot,d.seed))],['집중 육성',d.focus.join(', ')]])}</div>
    <div class="two"><button class="btn sec" id="shback">다시 보기</button><button class="btn" id="shgo">고1 시즌 시작</button></div>`;
 }
 function bindSummary(){$('#shback').onclick=closeSheet;$('#shgo').onclick=()=>{closeSheet();startCareer();ui.wiz=0;ui.tab='home';render();window.scrollTo(0,0)}}
@@ -4151,7 +4154,7 @@ function tabSeason(){
 function tabPlayer(){
   const p=G.p,x=p.x;
   let h=`<div class="card center"><div class="bigav">${avatarBox(p,200,{full:1,pose:'dunk',maxH:'340px'})}</div><b class="big">${esc(p.name)}</b><p class="sub">${POSN[p.pos]} · ${p.style} · ${flag(p.nat)} ${C[p.nat].n}</p></div>
-  <div class="card">${rows([['키',p.h+'cm'],['윙스팬',`${p.ws}cm (${p.ws-p.h>=0?'+':''}${p.ws-p.h})`],['몸무게',p.wt+'kg'],['OVR',curOvr()],['스카우트 평가',potText(p.pot)]])}</div>
+  <div class="card">${rows([['키',p.h+'cm'],['윙스팬',`${p.ws}cm (${p.ws-p.h>=0?'+':''}${p.ws-p.h})`],['몸무게',p.wt+'kg'],['OVR',curOvr()],['스카우트 평가',potText(p.scout??p.pot)]])}</div>
   <div class="card"><div class="ch"><h2>능력치</h2></div>${bars(x,GROUP.map(([n,k])=>[n,grp(x,k)]))}<div class="hr"></div>${bars(x,A.map(([k,n])=>[n,x[k]]))}</div>`;
   {const sp=p.spons||[];h+=`<div class="card"><div class="ch"><h2>스폰서</h2><span class="sub">${sp.length?`연 ${sponsorPay(p).toFixed(1)}억 원`:'평판이 오르면 제안이 와요'}</span></div>${sp.length?sp.map(x=>`<div class="r"><span>${esc(x.b)} <em class="sub">${BCAT[x.cat]}${x.sig?' · 시그니처':''}</em></span><b>연 ${x.pay.toFixed(1)}억 · ${x.yrs}년 남음</b></div>`).join(''):'<p class="sub">아직 스폰서가 없어요. 프로에서 평판 22 이상이면 시즌이 끝날 때 광고 제안이 들어와요.</p>'}</div>`}
   h+=`<div class="card list"><button class="li" id="logobtn"><div class="f1"><b>팀 로고 넣기</b><span>리그별로 팀 로고 이미지를 넣어요</span></div>${ICON.chev}</button></div>`;
