@@ -1076,7 +1076,7 @@ function attrCap(p,k){const b=BODY_IDEAL[p.pos]||[200,100],dh=clamp(((+p.h||b[0]
   if((p.focus||[]).some(f=>FOCUS[f].includes(k)))c+=4;if(((W[p.pos]||{})[k]||0)>=1.1)c+=2;
   c+=(hash(String(p.name||'')+k)%7)-3;
   return Math.round(clamp(c,40,99))}
-var PTSK=.85;
+var PTSK=1.05;
 /* 레거시 점수 가중치: 약한 리그·대회 성과는 덜 쳐줌 */
 function recW(rec){let best=null;for(const k in L){const n=lgName(k);if(n&&String(rec).includes(n)&&(!best||n.length>best[0].length))best=[n,L[k].str]}return best?clamp((best[1]-40)/30,.25,1.4):1}
 function medW(m){m=String(m);return /올림픽/.test(m)?1.5:/월드컵/.test(m)?1.2:/유로바스켓|아메리컵/.test(m)?.8:/아시아컵|아시안게임/.test(m)?.45:.6}
