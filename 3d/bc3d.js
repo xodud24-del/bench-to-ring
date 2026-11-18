@@ -45,7 +45,7 @@ P_.DL=mir(P_.DR);
 P_.LOW={RightArm:[0,.55,1.15],LeftArm:[0,-.55,-1.15],RightForeArm:[0,.6,0],LeftForeArm:[0,-.6,0],Spine:[.45,0,0],Spine1:[.1,0,0],...LEGS(-.7,1.0,-.3,.16),_y:-.16};
 P_.LUNGE={RightArm:[0,.3,1.2],LeftArm:[0,-.3,-1.2],RightForeArm:[0,.5,0],LeftForeArm:[0,-.5,0],Spine:[.45,0,0],Spine1:[.1,0,0],RightUpLeg:[-1.0,0,.18],LeftUpLeg:[.35,0,-.18],RightLeg:[1.1,0,0],LeftLeg:[.7,0,0],RightFoot:[-.1,0,0],LeftFoot:[-.3,0,0],_y:-.2};
 P_.GATH={RightArm:[0,1.0,.85],RightForeArm:[0,.95,0],LeftArm:[0,-1.0,-.85],LeftForeArm:[0,-.95,0],Spine:[.22,0,0],Spine1:[0,0,0],...LEGS(-.6,.95,-.3),_y:-.12};
-P_.SET={RightArm:[0,1.35,-.45],RightForeArm:[0,0,-1.7],LeftArm:[0,-1.25,.45],LeftForeArm:[0,0,1.5],Spine:[-.02,0,0],Spine1:[0,0,0],...LEGS(-.45,.8,-.3),_y:-.08};
+P_.SET={RightArm:[0,1.25,-.62],RightForeArm:[0,0,-1.3],LeftArm:[0,-1.15,.58],LeftForeArm:[0,0,1.5],Spine:[-.02,0,0],Spine1:[0,0,0],...LEGS(-.45,.8,-.3),_y:-.08};
 P_.REL={RightArm:[0,1.1,-1.2],RightForeArm:[0,0,-.15],LeftArm:[0,-1.1,.9],LeftForeArm:[0,0,.5],Spine:[-.08,0,0],Spine1:[0,0,0],...LEGS(.02,.12,.5,.04)};
 P_.FADE={...P_.REL,Spine:[-.38,0,0],Spine1:[-.12,0,0],RightUpLeg:[-.7,0,.05],RightLeg:[.5,0,0],LeftUpLeg:[.1,0,-.05],LeftLeg:[.3,0,0]};
 P_.CDOWN={RightArm:[0,.85,.95],RightForeArm:[0,.95,0],LeftArm:[0,-.85,-.95],LeftForeArm:[0,-.95,0],Spine:[.25,0,0],Spine1:[0,0,0],...LEGS(-.9,1.2,.2)};
@@ -58,8 +58,8 @@ P_.SPINL=mir(P_.SPIN);
 /* 점프슛: 게임 픽셀 슛 GIF를 따라 만든 단계별 자세 */
 P_.JDIP={RightArm:[0,.9,.95],RightForeArm:[0,1.0,0],LeftArm:[0,-.9,-.95],LeftForeArm:[0,-1.0,0],Spine:[.35,0,0],Spine1:[.08,0,0],...LEGS(-.95,1.45,-.45,.1),_y:-.24};
 P_.JCHEST={RightArm:[0,1.15,.55],RightForeArm:[0,1.55,0],LeftArm:[0,-1.15,-.55],LeftForeArm:[0,-1.55,0],Spine:[.2,0,0],Spine1:[.05,0,0],...LEGS(-.75,1.15,-.35,.1),_y:-.18};
-P_.JSET={RightArm:[0,1.35,-.55],RightForeArm:[0,0,-1.75],RightHand:[0,0,-.5],LeftArm:[0,-1.2,.35],LeftForeArm:[0,0,1.6],Spine:[-.02,0,0],Spine1:[0,0,0],...LEGS(-.3,.45,-.1,.06),_y:-.04};
-P_.JAIR={RightArm:[0,1.25,-.8],RightForeArm:[0,0,-1.55],RightHand:[0,0,-.5],LeftArm:[0,-1.15,.55],LeftForeArm:[0,0,1.45],Spine:[-.05,0,0],Spine1:[0,0,0],...LEGS(.05,.18,.55,.03)};
+P_.JSET={RightArm:[0,1.25,-.66],RightForeArm:[0,0,-1.3],RightHand:[0,0,-.5],LeftArm:[0,-1.12,.6],LeftForeArm:[0,0,1.6],Spine:[-.02,0,0],Spine1:[0,0,0],...LEGS(-.3,.45,-.1,.06),_y:-.04};
+P_.JAIR={RightArm:[0,1.15,-.9],RightForeArm:[0,0,-1.15],RightHand:[0,0,-.5],LeftArm:[0,-1.08,.72],LeftForeArm:[0,0,1.45],Spine:[-.05,0,0],Spine1:[0,0,0],...LEGS(.05,.18,.55,.03)};
 P_.JREL={RightArm:[0,1.12,-1.28],RightForeArm:[0,0,-.04],RightHand:[0,0,.6],LeftArm:[0,-1.0,.9],LeftForeArm:[0,0,.6],Spine:[-.06,0,0],Spine1:[0,0,0],...LEGS(.05,.15,.55,.03)};
 P_.JFOL={RightArm:[0,1.1,-1.15],RightForeArm:[0,0,-.1],RightHand:[0,0,1.25],LeftArm:[0,-.45,-.95],LeftForeArm:[0,-.4,0],Spine:[-.04,0,0],Spine1:[0,0,0],...LEGS(-.15,.35,.3,.05)};
 P_.JLAND={RightArm:[0,1.1,-1.1],RightForeArm:[0,0,-.1],RightHand:[0,0,1.25],LeftArm:[0,-.5,-1.0],LeftForeArm:[0,-.4,0],Spine:[.12,0,0],Spine1:[0,0,0],...LEGS(-.55,.9,-.25,.08),_y:-.12};
@@ -263,6 +263,9 @@ export async function create(el,cfg){
       if(act==='shoot'||act==='dunk'){bp=q.root.position.clone().add(r.clone().multiplyScalar(.15));bp.y+=act==='dunk'?2.45:2.2}
       else{bp=q.root.position.clone().add(r.multiplyScalar(.32)).add(side.multiplyScalar(-.26));bp.y=.12+b*.78}}
     else bp=W3(B.x,B.y,.12+(B.z||0)*.1);
+    /* 공이 얼굴·머리를 뚫지 않게: 머리 중심에서 최소 거리 밖으로, 앞·위쪽으로 밀어냄 (슛 셋포인트는 이마 앞 위) */
+    if(hold&&B.thru==null){const q=pl.find(o=>o.src===hold).m;q.root.updateMatrixWorld(true);const sc_=q.root.scale.y,hc=new THREE.Vector3().setFromMatrixPosition(q.bones.Head.matrixWorld).add(new THREE.Vector3(0,.09*sc_,0)),fw=new THREE.Vector3(Math.sin(q.yaw),0,Math.cos(q.yaw)),d=bp.clone().sub(hc),mn=.12+.13*sc_;
+      if(d.length()<mn){d.addScaledVector(fw,.06).y+=.03;if(d.lengthSq()<1e-6)d.copy(fw);bp=hc.clone().add(d.normalize().multiplyScalar(mn))}}
     /* 그물 흔들림 */
     {const thru=B.thru;for(const N of NETS){const act=thru!=null&&N.sd===cfg.dir();if(act&&!N.on){N.t=0;N.amp=1}N.on=act;N.t+=dt;const decay=Math.exp(-N.t*2.6)*N.amp;if(decay<.003&&!act)continue;
       const pa=N.m.geometry.attributes.position,o=N.o,by=act?(.21-thru*.5):9;for(let i=0;i<pa.count;i++){const x=o[i*3],y=o[i*3+1],z=o[i*3+2],d=.21-y,depth=Math.max(0,d/.42);
