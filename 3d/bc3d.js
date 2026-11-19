@@ -53,6 +53,8 @@ P_.LAY={RightArm:[0,.7,-1.4],RightForeArm:[0,0,-.1],LeftArm:[0,-.4,-.7],LeftFore
 P_.DNK1={...P_.LAY,RightArm:[0,.9,-1.45]};
 P_.DNK2={RightArm:[0,1.0,-1.25],LeftArm:[0,-1.0,1.25],RightForeArm:[0,0,-.2],LeftForeArm:[0,0,.2],Spine:[-.1,0,0],Spine1:[0,0,0],...LEGS(-.9,1.4,.3)};
 P_.TOMA={RightArm:[0,.3,-1.5],RightForeArm:[0,0,-1.4],LeftArm:[0,-.5,-.6],LeftForeArm:[0,-.5,0],Spine:[-.25,0,0],Spine1:[-.1,0,0],...LEGS(-1.0,1.5,.3)};
+P_.WIND1={RightArm:[0,-.5,1.0],RightForeArm:[0,0,-.1],LeftArm:[0,-.6,-.4],LeftForeArm:[0,-.4,0],Spine:[.05,0,0],...LEGS(-.9,1.3,.3)};
+P_.WIND2={RightArm:[0,-.6,-.6],RightForeArm:[0,0,-.1],LeftArm:[0,-.7,-.7],LeftForeArm:[0,-.3,0],Spine:[-.2,0,0],...LEGS(-1.05,1.55,.35)};
 P_.SPIN={RightArm:[0,.55,.85],RightForeArm:[0,1.1,0],LeftArm:[0,-1.0,-.55],LeftForeArm:[0,-.6,0],Spine:[.35,0,0],Spine1:[.1,0,0],...LEGS(-.6,.95,-.25,.14),_y:-.13};
 P_.SPINL=mir(P_.SPIN);
 /* 점프슛: 게임 픽셀 슛 GIF를 따라 만든 단계별 자세 */
@@ -91,9 +93,10 @@ const MV={
  lay:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.35,'GATH',[.3,0,1.1],[0,0,.25],0],[.62,'LAY',[.25,-.15,2.7],[.2,0,.7],0],[.9,'LAY',null,[.3,0,.3],0],[1,'STAND',null,[.3,0,0],0]]},
  hook:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'GATH',[.28,.05,1.1],[0,0,.04],45],[.48,'HOOKA',[.08,-.38,1.85],[0,0,.22],88],[.66,'HOOKB',[.02,-.3,2.8],[0,0,.36],90],[.84,'HOOKB',null,[0,0,.16],90],[1,'STAND',null,[0,0,0],50]]},
  clutch:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.25,'SET',[.15,0,2.1],[.1,0,.45],0],[.48,'CDOWN',[.35,0,1.2],[.2,0,.58],15],[.74,'LAY',[.25,-.15,2.7],[.3,0,.45],0],[.9,'LAY',null,[.35,0,.15],0],[1,'STAND',null,[.35,0,0],0]]},
- dunk:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'GATH',[.3,0,1.05],[.15,0,.08],0],[.48,'DNK1',[.32,-.1,3.1],[.7,0,.95],0],[.6,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
- dunk2:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'GATH',[.3,0,1.05],[.15,0,.08],0],[.48,'DNK2',[.32,0,3.15],[.7,0,.95],0],[.6,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
- toma:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'TOMA',[-.15,-.1,2.4],[.2,0,.4],0],[.4,'TOMA',[-.2,-.1,2.9],[.55,0,.95],0],[.5,'DNK1',[.35,-.1,3.1],[.72,0,.95],0],[.62,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
+ dunk:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'GATH',[.3,0,1.05],[.15,0,.08],0],[.48,'DNK1',[.32,-.1,3.15],[.7,0,1.15],0],[.6,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
+ dunk2:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'GATH',[.3,0,1.05],[.15,0,.08],0],[.48,'DNK2',[.32,0,3.2],[.7,0,1.15],0],[.6,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
+ wind:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.18,'GATH',[.3,0,1.05],[.12,0,.08],0],[.3,'WIND1',[.05,-.42,.95],[.3,0,.6],0],[.4,'WIND2',[-.35,-.45,1.9],[.5,0,1.05],0],[.47,'TOMA',[-.15,-.3,3.2],[.62,0,1.18],0],[.53,'DNK1',[.35,-.1,3.15],[.72,0,1.15],0],[.64,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
+ toma:{k:[[0,'GATH',[.3,0,1.0],[0,0,0],0],[.22,'TOMA',[-.15,-.1,2.4],[.2,0,.4],0],[.4,'TOMA',[-.2,-.1,3.1],[.55,0,1.12],0],[.5,'DNK1',[.35,-.1,3.15],[.72,0,1.15],0],[.62,'HANG',null,[.95,0,.55],0],[.86,'HANG',null,[.95,0,.5],0],[1,'STAND',null,[.7,0,0],0]]},
 };
 function sampleMove(name,k,t){const M=MV[name];if(!M)return null;const K=M.k;let i=0;while(i<K.length-2&&k>K[i+1][0])i++;
   /* 키프레임 사이를 Catmull-Rom 곡선으로 이어서 속도가 끊기지 않게 (공중에서 멈칫하는 느낌 제거) */
@@ -167,7 +170,7 @@ export async function create(el,cfg){
     const bb=new THREE.Mesh(new THREE.BoxGeometry(.05,1.07,1.83),M('#ffffff',{transparent:true,opacity:.55}));bb.position.copy(W3(hx+d*1.25,25,3.4));sc.add(bb);
     const fr=new THREE.Mesh(new THREE.BoxGeometry(.06,1.07,1.83),new THREE.MeshBasicMaterial({color:'#ffffff',wireframe:true}));fr.position.copy(bb.position);sc.add(fr);
     const rim=new THREE.Mesh(new THREE.TorusGeometry(.23,.02,8,28),M('#ff5a1f',{roughness:.4}));rim.rotation.x=Math.PI/2;rim.position.copy(W3(hx,25,3.05));sc.add(rim);
-    const net=new THREE.Mesh(new THREE.CylinderGeometry(.23,.13,.42,14,5,true),new THREE.MeshBasicMaterial({color:'#ffffff',wireframe:true,transparent:true,opacity:.85}));net.position.copy(W3(hx,25,2.83));sc.add(net);NETS.push({m:net,o:net.geometry.attributes.position.array.slice(),t:9,sd:sd?1:-1,amp:0});
+    const net=new THREE.Mesh(new THREE.CylinderGeometry(.23,.13,.42,14,5,true),new THREE.MeshBasicMaterial({color:'#ffffff',wireframe:true,transparent:true,opacity:.85}));net.position.copy(W3(hx,25,2.83));sc.add(net);NETS.push({m:net,o:net.geometry.attributes.position.array.slice(),t:9,sd:sd?1:-1,amp:0,rim,bb,fr,ry:rim.position.y,bx:bb.position.x,shk:0});
     const arm=new THREE.Mesh(new THREE.BoxGeometry(1.5,.14,.14),M('#2b2b2b'));arm.position.copy(W3(hx+d*3.4,25,3.4));sc.add(arm);
     const pole=new THREE.Mesh(new THREE.BoxGeometry(.35,3.4,.35),M('#2b2b2b'));pole.position.copy(W3(hx+d*5.8,25,1.7));sc.add(pole);
     const pad=new THREE.Mesh(new THREE.BoxGeometry(.7,1.4,1.3),M(cfg.homeCols[0]));pad.position.copy(W3(hx+d*6.2,25,.7));sc.add(pad);
@@ -200,7 +203,7 @@ export async function create(el,cfg){
   const pl=[];cfg.P.forEach((tm,ti)=>tm.forEach((p,i)=>{const cols=ti===0?cfg.homeCols:cfg.awayCols,wh=ti===0;const AJ=awayJersey(cfg.awayCols);const L=p.look||{};pl.push({src:p,m:makePlayer(sc,base,{skin:p.skin||'#8d5a3b',hairc:p.hair||'#151515',hair:L.hair??0,beard:L.beard||0,band:L.band||0,bandc:wh?cols[0]:'#ffffff',num:L.num??(i*7+3),abbr:ti===0?cfg.homeAbbr:cfg.awayAbbr,jersey:wh?'#f4f4f4':AJ[0],shorts:wh?'#f4f4f4':AJ[0],trim:wh?homeTrim(cols):AJ[1],numc:wh?homeTrim(cols):'#ffffff',socks:L.socks,shoe:L.shoe,bulk:L.bulk||1,leg:L.leg||1.1,blob,me:p.me,scale:L.scale||1,yaw:ti===0?Math.PI/2:-Math.PI/2})})}));
   const ballM=new THREE.Mesh(new THREE.SphereGeometry(.12,18,14),M('#e8742a',{roughness:.55}));sc.add(ballM);const ballS=new THREE.Mesh(new THREE.PlaneGeometry(.45,.45),new THREE.MeshBasicMaterial({map:blob,transparent:true,depthWrite:false}));ballS.rotation.x=-Math.PI/2;ballS.position.y=.012;sc.add(ballS);
   const HOOP=s=>W3(s>0?88.75:5.25,25,3.05);
-  const camX={v:0,init:0};let flPrev=false,flS=null,lastBp=null,flId=-1,flT0=0,flHigh=false,flDur=500;let focus=0,fz=0,fSrc=null,fp=0,fMode='';const fpPos=new THREE.Vector3();let alive=true,last=performance.now(),acc=0;
+  const camX={v:0,init:0};let lastSlam=0,camShk=0,slamK=0,flPrev=false,flS=null,lastBp=null,flId=-1,flT0=0,flHigh=false,flDur=500;let focus=0,fz=0,fSrc=null,fp=0,fMode='';const fpPos=new THREE.Vector3();let alive=true,last=performance.now(),acc=0;
   const ang=(a,b)=>{let d=b-a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d};
   function frame(now){if(!alive)return;const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     const B=cfg.ball,fDone=!!(B.fl&&B.toP&&flId===B.fid&&now-flT0>=flDur),hold=B.hold&&!B.fl?B.hold:(fDone?B.toP:null);/* 패스가 먼저 도착하면 받은 선수가 바로 드리블 (공 들고 뛰지 않게) */
@@ -288,7 +291,10 @@ export async function create(el,cfg){
     if(hold&&B.thru==null){const q=pl.find(o=>o.src===hold).m;q.root.updateMatrixWorld(true);const sc_=q.root.scale.y,hc=new THREE.Vector3().setFromMatrixPosition(q.bones.Head.matrixWorld).add(new THREE.Vector3(0,.09*sc_,0)),fw=new THREE.Vector3(Math.sin(q.yaw),0,Math.cos(q.yaw)),d=bp.clone().sub(hc),mn=.12+.13*sc_;
       if(d.length()<mn){d.addScaledVector(fw,.06).y+=.03;if(d.lengthSq()<1e-6)d.copy(fw);bp=hc.clone().add(d.normalize().multiplyScalar(mn))}}
     /* 그물 흔들림 */
-    {const thru=B.thru;for(const N of NETS){const act=thru!=null&&N.sd===cfg.dir();if(act&&!N.on){N.t=0;N.amp=1}N.on=act;N.t+=dt;const decay=Math.exp(-N.t*2.6)*N.amp;if(decay<.003&&!act)continue;
+    {const thru=B.thru;/* 덩크 임팩트: 림·백보드 흔들림, 카메라 흔들림, 관중 폭발 */if(B.slam&&B.slam!==lastSlam){lastSlam=B.slam;for(const N of NETS)if(N.sd===cfg.dir()){N.shk=1;N.t=0;N.amp=1.6}camShk=1;slamK=1}
+    camShk*=Math.exp(-dt*3.2);slamK*=Math.exp(-dt*.6);
+    for(const N of NETS){if(N.shk>.002){N.shk*=Math.exp(-dt*2.4);const w=Math.sin(now/1000*38)*N.shk;N.rim.rotation.y=w*.12;N.rim.position.y=N.ry-.05*N.shk*Math.abs(Math.sin(now/1000*20));N.bb.position.x=N.bx+w*.025;N.fr.position.x=N.bb.position.x}}
+    for(const N of NETS){const act=thru!=null&&N.sd===cfg.dir();if(act&&!N.on){N.t=0;N.amp=1}N.on=act;N.t+=dt;const decay=Math.exp(-N.t*2.6)*N.amp;if(decay<.003&&!act)continue;
       const pa=N.m.geometry.attributes.position,o=N.o,by=act?(.21-thru*.5):9;for(let i=0;i<pa.count;i++){const x=o[i*3],y=o[i*3+1],z=o[i*3+2],d=.21-y,depth=Math.max(0,d/.42);
         const bulge=act?Math.exp(-Math.pow((y-(by)) / .1,2))*.45:0,sw=Math.sin(N.t*16+y*8)*.05*decay*depth;const r=1+bulge+Math.sin(N.t*22)*.06*decay*depth;
         pa.array[i*3]=x*r+sw;pa.array[i*3+2]=z*r+sw*.6;pa.array[i*3+1]=y-(act?.04*bulge:0)+Math.sin(N.t*18)*.03*decay*depth}pa.needsUpdate=true}}
@@ -304,9 +310,9 @@ export async function create(el,cfg){
       cam.fov=24-fz*7-fp*(fMode==='rim'?3:6);cam.updateProjectionMatrix();
       const nx=camX.v*.82+fz*camX.v*.12,ny=6.4-fz*1.6,nz=16.8-fz*2,lx=camX.v+fz*cfg.dir()*1.2,ly=.2+fz*.9,lz=-1.2;
       const hp_=HOOP(cfg.dir()),hoopM=fMode==='hoop',rim=fMode==='rim'||hoopM,wH=hoopM?.8:.45,cx_=rim?(fpPos.x*(1-wH)+hp_.x*wH):fpPos.x,zx=cx_-cfg.dir()*(rim?3.2:2.2),zy=hoopM?4.1:rim?3.6:2.4,zz=(rim?(fpPos.z*(1-wH)+hp_.z*wH):fpPos.z)+(rim?(hoopM?12.5:11):8.5);
-      cam.position.set(nx+(zx-nx)*fp,ny+(zy-ny)*fp,nz+(zz-nz)*fp);cam.lookAt(lx+((rim?cx_:fpPos.x+cfg.dir()*.6)-lx)*fp,ly+((hoopM?3.3:rim?2.2:1.5)-ly)*fp,lz+((rim?(fpPos.z*(1-wH)+hp_.z*wH):fpPos.z)-lz)*fp);
+      cam.position.set(nx+(zx-nx)*fp+(Math.random()-.5)*.16*camShk,ny+(zy-ny)*fp+(Math.random()-.5)*.12*camShk,nz+(zz-nz)*fp+(Math.random()-.5)*.1*camShk);cam.lookAt(lx+((rim?cx_:fpPos.x+cfg.dir()*.6)-lx)*fp,ly+((hoopM?3.3:rim?2.2:1.5)-ly)*fp,lz+((rim?(fpPos.z*(1-wH)+hp_.z*wH):fpPos.z)-lz)*fp);
     {const v=cfg.shot?cfg.shot():null;const txt=v==null?'':v<5?Math.max(0,v).toFixed(1):String(Math.ceil(v));for(const S of SCK){if(S.last===txt)continue;S.last=txt;const x=S.cv.getContext('2d');x.fillStyle='#0a0a0a';x.fillRect(0,0,256,128);x.font='900 104px "Courier New",monospace';x.textAlign='center';x.textBaseline='middle';x.fillStyle=v!=null&&v<5?'#ff2b2b':'#ffb020';x.shadowColor=x.fillStyle;x.shadowBlur=18;x.fillText(txt,128,68);S.tx.needsUpdate=true}}
-    if(CROWD){const C=CROWD,t=now/1000,exc=cfg.hype?cfg.hype():0;for(let k=0;k<40;k++){const i=(Math.random()*C.n)|0,[x,y,z,h,ph]=C.crowdY[i];const b=Math.max(0,Math.sin(t*(3+exc*4)+ph))*(.03+exc*.18);C.m.compose(new THREE.Vector3(x,y+.25*h+b,z),new THREE.Quaternion(),new THREE.Vector3(1,h,1));C.body.setMatrixAt(i,C.m);C.m.makeTranslation(x,y+.6*h+b,z);C.head.setMatrixAt(i,C.m)}C.body.instanceMatrix.needsUpdate=C.head.instanceMatrix.needsUpdate=true}
+    if(CROWD){const C=CROWD,t=now/1000,exc=Math.max(cfg.hype?cfg.hype():0,slamK);for(let k=0;k<40;k++){const i=(Math.random()*C.n)|0,[x,y,z,h,ph]=C.crowdY[i];const b=Math.max(0,Math.sin(t*(3+exc*4)+ph))*(.03+exc*.18);C.m.compose(new THREE.Vector3(x,y+.25*h+b,z),new THREE.Quaternion(),new THREE.Vector3(1,h,1));C.body.setMatrixAt(i,C.m);C.m.makeTranslation(x,y+.6*h+b,z);C.head.setMatrixAt(i,C.m)}C.body.instanceMatrix.needsUpdate=C.head.instanceMatrix.needsUpdate=true}
     if(globalThis.__b3cam)globalThis.__b3cam(cam,pl,cfg.ball,lastBp,THREE);ren.render(sc,cam);requestAnimationFrame(frame)}
   requestAnimationFrame(frame);
   return {focus(v){focus=v?1:0},zoom(src,mode){fSrc=src||null;fMode=mode||''},dispose(){alive=false;ren.dispose();ren.domElement.remove();sc.traverse(o=>{if(o.geometry)o.geometry.dispose()})},resize(){const w=el.clientWidth,h=el.clientHeight;ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}};

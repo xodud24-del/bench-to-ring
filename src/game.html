@@ -1788,10 +1788,10 @@ function liveGame(cfg){
       if(zone&&o.i<5){let z=zone[o.i];if(dk==='box1'&&o.i===0)return null;if(s<0)z=[94-z[0],50-z[1]];const b=ball.hold||ball;return[z[0]+(b.y-25)*.0+(b.x-z[0])*.12,z[1]+(b.y-z[1])*.22]}
       const t=dk==='drop'&&o.i===4?.55:.2;return[o.tx+(h[0]-o.tx)*t+(s>0?1:-1)*.8,o.ty+(h[1]-o.ty)*t]};
     const withDef=(tg,off,s,dk)=>{const D=P[1-off[0].team];off.forEach((o,i)=>{const t=tg.get(o)||[o.x,o.y];const ds=defSpot({i,tx:t[0],ty:t[1]},s,dk);tg.set(D[i],ds||[t[0]+(HOOPF(s)[0]-t[0])*.2,t[1]+(HOOPF(s)[1]-t[1])*.2])});return tg};
-    const MVT={jab:[800,1],pump:[900,1],jshot:[800,.7],jfade:[1050,.66],spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[700,1],mlegs:[750,1],hook:[1100,.66],shot:[1200,.5],pull:[1250,.55],stepback:[1150,.87],fade:[1400,.55],turn:[2000,.65],lay:[950,.62],clutch:[1000,.74],dunk:[1500,.48],dunk2:[1500,.48],toma:[1650,.5]};
+    const MVT={jab:[800,1],pump:[900,1],jshot:[800,.7],jfade:[1050,.66],spin:[1300,1],behind:[900,1],mshot:[3000,.53],mpull:[3260,.585],mshot3:[3450,.39],mcross:[700,1],mlegs:[750,1],hook:[1100,.66],shot:[1200,.5],pull:[1250,.55],stepback:[1150,.87],fade:[1400,.55],turn:[2000,.65],lay:[950,.62],clutch:[1000,.74],dunk:[1750,.48],dunk2:[1750,.48],toma:[1900,.5],wind:[2000,.53]};
     const rt=ms=>ms*speed;/* 실제 시간(ms) → tween 시간: 동작·공은 배속과 상관없이 실제 속도 */
     const MVSET=(o,n,d,scaled)=>{o.mv=n;o.mvT=performance.now();o.mvD=scaled?(d/speed):(d||MVT[n][0])};
-    const pickMove=sh=>sh==='3'?pick(['jshot','jshot','jshot','stepback']):sh==='mid'?pick(['jshot','jshot','jfade','stepback']):sh==='post'?pick(['hook','hook','hook','lay']):sh==='dunk'?pick(['dunk','dunk','dunk2','toma']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
+    const pickMove=sh=>sh==='3'?pick(['jshot','jshot','jshot','stepback']):sh==='mid'?pick(['jshot','jshot','jfade','stepback']):sh==='post'?pick(['hook','hook','hook','lay']):sh==='dunk'?pick(['dunk','dunk2','toma','wind','wind']):sh==='lay'||sh==='float'?pick(['lay','lay','clutch']):'shot';
     let lastTeam=-1;
     const anim=async e=>{
       const s=e.team===0?1:-1,off=P[e.team],D=P[1-e.team],dk=e.team===0?cfg.oppDef:cfg.myDef,h=HOOPF(s);curOff=e.team;curDir=s;const ACT=(o,a,d)=>{o.act=a;o.actT=performance.now();o.actD=d/speed};shotT=e.play==='trans'?ri(16,22):ri(10,19);shotAt=performance.now();shotRate=2.4;
@@ -1833,7 +1833,7 @@ function liveGame(cfg){
         if((ball.hold||A)!==A)await step(300,[[A,fc([25,21],s)]],{to:A});
         const fd=D.reduce((a,d)=>Math.hypot(d.x-A.x,d.y-A.y)<Math.hypot(a.x-A.x,a.y-A.y)?d:a,D[0]);R3.zoom(A,'rim');
         await step(rt(560),[[A,fc([25+(R()<.5?-3:3),8],s)],[fd,fc([25,6],s)]]);ACT(fd,'block',500);ACT(A,'reb',450);pops.push({s:'파울!',x:A.x,y:A.y,t:60,c:'#ff6b6b'});await tween(rt(800),()=>{});R3.zoom(null);
-        const lane=[[18.5,7],[31.5,7],[18.5,10.5],[31.5,10.5],[18.5,14],[31.5,14]],tgL=new Map([[A,fc([25,15],s)]]),oth=off.filter(o=>o!==A),dd=D.slice();
+        const lane=[[18.5,7],[31.5,7],[18.5,11],[31.5,11],[18.5,14.5],[31.5,14.5]],tgL=new Map([[A,fc([25,19.2],s)]]),oth=off.filter(o=>o!==A),dd=D.slice();
         dd.slice(0,4).forEach((d,i)=>tgL.set(d,fc(lane[i],s)));tgL.set(dd[4],fc([25,30],s));tgL.set(oth[0],fc(lane[4],s));tgL.set(oth[1],fc(lane[5],s));oth.slice(2).forEach((o,i)=>tgL.set(o,fc([10+i*30,24],s)));
         ball.hold=A;await move(rt(1400),tgL);const mk=Math.min(2,e.v||0),order=mk===1?(R()<.5?[1,0]:[0,1]):[mk>0?1:0,mk>1?1:0];
         for(let t=0;t<2;t++){if(skip||closed)return;pops.push({s:`자유투 ${t+1}/2`,x:A.x,y:A.y,t:40,c:'#fff'});ball.hold=A;await tween(rt(500),()=>{});
@@ -1842,13 +1842,14 @@ function liveGame(cfg){
           if(t===0){await tween(rt(400),()=>{});R3.zoom(null);/* 심판이 공을 다시 줌 */ball.hold=null;await move(rt(500),new Map(),{to:A})}
           else if(!order[t]){const rb=D[ri(0,3)];ACT(rb,'reb',700);await step(rt(900),[],{to:rb});R3.zoom(null)}else R3.zoom(null)}
         return}
+      if(window.__shotlog)window.__shotlog.push('ev:'+e.play+':'+e.shot+(e.blk!=null?':blk':'')+(e.to?':to':''));
       /* finisher spot */
       let sp;if(e.shot==='3'){const c3=[[2.5,3],[47.5,3],[6,19],[44,19],[25,28.5]];const cur=[s>0?A.y:50-A.y,s>0?94-A.x:A.x];sp=fc(c3.sort((a,b)=>dist(a,cur)-dist(b,cur))[0],s)}
-      else if(e.shot==='mid'){sp=fc([25+(R()<.5?-9:9),14],s)}else if(e.shot==='post'){sp=fc([27,5],s)}else if(e.shot==='ft'){sp=fc([25,15],s)}else sp=fc([25+(R()<.5?-2:2),4.5],s);
+      else if(e.shot==='mid'){sp=fc([25+(R()<.5?-9:9),14],s)}else if(e.shot==='post'){sp=fc([27,5],s)}else if(e.shot==='ft'){sp=fc([25,19.2],s)}else sp=fc([25+(R()<.5?-2:2),4.5],s);
       if(e.ast!=null&&e.team===0&&off[e.ast]!==holder&&off[e.ast]!==A){await step(240,[],{to:off[e.ast]})}
       const drive=R3&&['lay','dunk','float'].includes(e.shot)&&e.blk==null;const isPost=R3&&e.shot==='post'&&e.blk==null;let drDone=false;
       const hd2=ball.hold||holder;const postIn=fc([28.5,11.5],s);if(hd2!==A)await step(300,drive?[]:[[A,isPost?postIn:sp]],{to:A});
-      if(drive&&(ball.hold===A)){if(R()<.4){/* 헤지테이션: 속도를 줄였다가 방향 바꿔 치고 나감 */const hx=[A.x+(sp[0]-A.x)*.15+(R()<.5?2.5:-2.5)*s*0,A.y+(sp[1]-A.y)*.15+(R()<.5?3:-3)];await step(rt(420),[[A,hx]])}if(R3&&(e.make||A.me))R3.zoom(A,'rim');/* 드리블로 림 근처까지 달려간 뒤(점프 지점 약 2m 앞), 거기서 뛰어서 마무리 */const canDunk=!A.me||(+((me&&me.p&&me.p.h)||190))>=186;if(e.shot==='lay'&&canDunk&&R()<(A.me?.55:.65))e.shot='dunk';const mvn=pickMove(e.shot);const st=[A.x,A.y],ddx=sp[0]-st[0],ddy=sp[1]-st[1],dl=Math.hypot(ddx,ddy)||1,take=Math.max(0,dl-6.5),tk=[st[0]+ddx/dl*take,st[1]+ddy/dl*take];
+      if(drive&&(ball.hold===A)){if(R()<.4){/* 헤지테이션: 속도를 줄였다가 방향 바꿔 치고 나감 */const hx=[A.x+(sp[0]-A.x)*.15+(R()<.5?2.5:-2.5)*s*0,A.y+(sp[1]-A.y)*.15+(R()<.5?3:-3)];await step(rt(420),[[A,hx]])}if(R3&&(e.make||A.me))R3.zoom(A,'rim');/* 드리블로 림 근처까지 달려간 뒤(점프 지점 약 2m 앞), 거기서 뛰어서 마무리 */if(window.__shotlog)window.__shotlog.push('drive:'+e.shot);const canDunk=!A.me||(+((me&&me.p&&me.p.h)||190))>=186;if(e.shot==='lay'&&canDunk&&R()<(A.me?.55:.65))e.shot='dunk';const mvn=pickMove(e.shot);const st=[A.x,A.y],ddx=sp[0]-st[0],ddy=sp[1]-st[1],dl=Math.hypot(ddx,ddy)||1,take=Math.max(0,dl-6.5),tk=[st[0]+ddx/dl*take,st[1]+ddy/dl*take];
         if(take>1)await step(rt(take*.3048/7*1000),[[A,tk]]);MVSET(A,mvn);const wu=rt(MVT[mvn][0]*MVT[mvn][1]);await move(wu,new Map([[A,[sp[0]-ddx/dl*.6,sp[1]-ddy/dl*.6]]]));drDone=true}
       else if(isPost&&ball.hold===A){/* 포스트업: 림을 등지고 드리블하며 수비를 밀고 들어감 */const pd=D.reduce((a,d)=>Math.hypot(d.x-A.x,d.y-A.y)<Math.hypot(a.x-A.x,a.y-A.y)?d:a,D[0]);A.postUp=1;const st=[A.x,A.y];
         for(let b2=1;b2<=2;b2++){const p=[st[0]+(sp[0]-st[0])*b2/2,st[1]+(sp[1]-st[1])*b2/2],hx=h[0]-p[0],hy=h[1]-p[1],hl=Math.hypot(hx,hy)||1;await step(rt(520),[[A,p],[pd,[p[0]+hx/hl*1.6,p[1]+hy/hl*1.6]]]);await tween(rt(160),()=>{})}A.postUp=0}
@@ -1869,6 +1870,7 @@ function liveGame(cfg){
       if(e.shot==='ft'){pops.push({s:`자유투 ${e.v}/${Math.max(2,e.v)}`,x:A.x,y:A.y,t:50,c:'#fff'});await move(260,new Map(),{pt:h,arc:4})}
       else await move(R3?rt(e.shot==='3'?1150:e.shot==='dunk'?380:e.shot==='mid'?950:800):(e.shot==='3'?560:e.shot==='dunk'?240:420),new Map(),{pt:[h[0],h[1]],arc:e.shot==='dunk'?1.5:e.shot==='3'?9:6,miss:!e.make});
       
+      if(e.make&&R3&&e.shot==='dunk'){ball.slam=performance.now();pops.push({s:pick(['SLAM!','BOOM!','POSTER!']),x:A.x,y:A.y-3,t:60,c:'#ffb02e'})}
       if(e.make&&R3&&e.shot!=='ft'){ball.thru=0;await tween(rt(420),k=>{ball.thru=k});ball.thru=null;await tween(rt(350),()=>{})}
       if(R3&&e.make)R3.zoom(null);
       if(e.make){pops.push({s:'+'+e.v,x:h[0]-6*s,y:h[1]-4,t:42,c:e.team===0?'#ffd34d':'#ff9b9b'});ball.hold=null;ball.x=h[0];ball.y=h[1]}
