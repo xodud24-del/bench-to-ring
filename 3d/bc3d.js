@@ -30,6 +30,7 @@ const _v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_v3=new THREE.Vector3(),_q
 function ccdStep(bone,foot,T){bone.updateMatrixWorld(true);_v1.setFromMatrixPosition(bone.matrixWorld);_v2.setFromMatrixPosition(foot.matrixWorld).sub(_v1);_v3.copy(T).sub(_v1);
   if(_v2.lengthSq()<1e-6||_v3.lengthSq()<1e-6)return;_v2.normalize();_v3.normalize();_q1.setFromUnitVectors(_v2,_v3);const an=2*Math.acos(Math.min(1,Math.abs(_q1.w)));if(an>.35)_q1.slerp(_q2.identity(),1-.35/an);
   bone.parent.getWorldQuaternion(_q2);const pinv=_q2.clone().invert();bone.quaternion.premultiply(pinv.multiply(_q1).multiply(_q2));bone.updateMatrixWorld(true)}
+const SM=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 function armIK(B,side,T){const up=B[side+'Arm'],lo=B[side+'ForeArm'],h=B[side+'Hand'];for(let i=0;i<4;i++){ccdStep(lo,h,T);ccdStep(up,h,T)}}
 function legIK(B,side,T){const up=B[side+'UpLeg'],lo=B[side+'Leg'],ft=B[side+'Foot'];for(let i=0;i<2;i++){ccdStep(lo,ft,T);ccdStep(up,ft,T)}}
 const lum=h=>{const c=new THREE.Color(h);return .299*c.r+.587*c.g+.114*c.b};
@@ -249,6 +250,8 @@ export async function create(el,cfg){
       {const dy=ang(yaw0,m.yaw),lim=(mvS?9:hold===s?11:6.5)*dt;if(Math.abs(dy)>lim)m.yaw=yaw0+Math.sign(dy)*lim;m.root.rotation.y=m.yaw}/* 몸 돌리는 속도 제한 */
       let rx=0,rz=0,ry=0;if(act!=='block')m.lunge=0;if(m.mcD&&m.mcR){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=(fw.x*m.mcD[1]+lf.x*m.mcD[0])*m.mcw;rz=(fw.z*m.mcD[1]+lf.z*m.mcD[0])*m.mcw}
       if(mvS){const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x);rx=fw.x*mvS.root[0]+lf.x*mvS.root[1];rz=fw.z*mvS.root[0]+lf.z*mvS.root[1];ry=mvS.root[2];m.root.rotation.y=m.yaw+mvS.yaw}
+      /* 덩크: 림을 잡고 매달리는 구간엔 몸을 림 바로 앞·아래에 둠 (손이 림에 닿게) */m.dk=0;if(mvS&&/^(dunk|dunk2|toma|wind)$/.test(s.mv)){const kk=(now-s.mvT)/s.mvD,Hh=HOOP(cfg.dir()),toP=new THREE.Vector3(wp.x-Hh.x,0,wp.z-Hh.z);if(toP.lengthSq()<1e-4)toP.set(-cfg.dir(),0,0);toP.normalize();const rel={dunk:.48,dunk2:.48,toma:.5,wind:.53}[s.mv];
+        const w=SM(rel-.1,rel,kk)*(1-SM(.84,.95,kk));if(w>0){const sc_=m.root.scale.y,tx=Hh.x+toP.x*.34-wp.x,tz=Hh.z+toP.z*.34-wp.z,ty=Math.max(0,3.1-2.3*sc_);rx+=(tx-rx)*w;rz+=(tz-rz)*w;ry+=(ty-ry)*w;m.dk=w;m.dkE=Hh.clone().setY(3.07).add(toP.clone().multiplyScalar(.21));m.dkL=new THREE.Vector3(toP.z,0,-toP.x);m.dk2=s.mv==='dunk2'||kk>rel+.06}}
       /* 동작 전환 블렌딩: 상태가 바뀌면 직전 자세에서 0.22초 동안 부드럽게 넘어감 */
       {const lab=(mcN||'')+'|'+(mvS?s.mv:'')+'|'+(act||'')+'|'+(typeof pose==='string'?pose:'');const BL=m.bl||(m.bl=Object.values(m.bones));
        if(m.lab!==undefined&&lab!==m.lab&&m.prevQ)m.xb={q:m.prevQ.map(q=>q.clone()),t:0};m.lab=lab;
@@ -256,6 +259,8 @@ export async function create(el,cfg){
        if(!m.prevQ)m.prevQ=BL.map(bn=>bn.quaternion.clone());else BL.forEach((bn,i)=>m.prevQ[i].copy(bn.quaternion))}
       if(m.lunge){rx+=Math.sin(m.yaw)*m.lunge;rz+=Math.cos(m.yaw)*m.lunge}m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.ik(dt,sp,((m.yoff||0)+jump+ry)>.05||(act&&act!=='pass'&&act!=='cele'));
       /* 드리블: 손에 붙어 있다가(받아서 밀어내기) 바닥 찍고 다시 손으로. 박자는 매번 조금씩 다르고 가끔 멈칫(헤지테이션) */
+      if(m.dk>0){/* 손을 림 앞쪽 테두리에 (임팩트 순간부터 매달린 동안) */m.root.updateMatrixWorld(true);const R_=new THREE.Vector3().setFromMatrixPosition(m.bones.RightHand.matrixWorld),L_=new THREE.Vector3().setFromMatrixPosition(m.bones.LeftHand.matrixWorld);
+        armIK(m.bones,'Right',R_.lerp(m.dkE.clone().addScaledVector(m.dkL,-.11).add(new THREE.Vector3(0,.03,0)),m.dk));if(m.dk2)armIK(m.bones,'Left',L_.lerp(m.dkE.clone().addScaledVector(m.dkL,.11).add(new THREE.Vector3(0,.03,0)),m.dk))}
       m.dball=null;const legsOn=s.mv==='mlegs'&&now-s.mvT<s.mvD&&hold===s;
       if((hold===s&&mcN&&/^d(run|idle)$/.test(mcN)&&!m.busy)||legsOn){m.root.updateMatrixWorld(true);const fw=new THREE.Vector3(Math.sin(m.yaw),0,Math.cos(m.yaw)),lf=new THREE.Vector3(fw.z,0,-fw.x),hipY=new THREE.Vector3().setFromMatrixPosition(m.bones.Hips.matrixWorld).y,Hh=Math.max(.55,hipY-.04);
         if(legsOn){/* 레그스루: 오른손 → 두 다리 사이 바닥 → 왼손 */const kk=Math.min(1,(now-s.mvT)/s.mvD),R_=new THREE.Vector3().setFromMatrixPosition(m.bones.RightHand.matrixWorld),L_=new THREE.Vector3().setFromMatrixPosition(m.bones.LeftHand.matrixWorld),mid=m.root.position.clone().setY(.12).add(fw.clone().multiplyScalar(.12));
