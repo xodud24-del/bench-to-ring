@@ -1938,10 +1938,10 @@ function liveGame(cfg){
       const shoot=async(S,make,three)=>{const mvn='jshot';if(R3)R3.zoom(S);S.mv=mvn;S.mvT=performance.now();S.mvD=MVT[mvn][0]/speed;const wu=MVT[mvn][0]*MVT[mvn][1];hype=1;
         /* 수비가 끝까지 붙어서 손을 뻗음 */const opp=P[S.team===0?1:0];const cd=opp.reduce((a,d)=>Math.hypot(d.x-S.x,d.y-S.y)<Math.hypot(a.x-S.x,a.y-S.y)?d:a,opp[0]);const hs=HOOPF(S.team===0?1:-1),dx=hs[0]-S.x,dy=hs[1]-S.y,dl=Math.hypot(dx,dy)||1;
         setTimeout(()=>{if(!closed)ACT(cd,'block',900)},wu*.62);const help=opp.filter(d=>d!==cd).sort((a,b)=>Math.hypot(a.x-S.x,a.y-S.y)-Math.hypot(b.x-S.x,b.y-S.y))[0];
-        const tgm=new Map([[cd,[S.x+dx/dl*1.4,S.y+dy/dl*1.4]]]);if(help)tgm.set(help,[S.x+dx/dl*3+(help.y>S.y?2:-2),S.y+dy/dl*3]);await move(wu,tgm);await move(1100,new Map(),{pt:[h[0],h[1]],arc:three?9:6,miss:!make});
+        const tgm=new Map([[cd,[S.x+dx/dl*1.4,S.y+dy/dl*1.4]]]);if(help)tgm.set(help,[S.x+dx/dl*3+(help.y>S.y?2:-2),S.y+dy/dl*3]);await move(wu,tgm);if(R3)R3.zoom(S,'hoop');/* 버저비터: 공이 림에 어떻게 되는지 끝까지 림을 비춤 */await move(1500,new Map(),{pt:[h[0],h[1]],arc:three?9:6,miss:!make});
         if(make){ball.thru=0;await tween(500,k=>{ball.thru=k});ball.thru=null;pops.push({s:three?'+3':'+2',x:h[0],y:h[1],t:60,c:'#ffd34d'})}
-        else{ball.hy0=3.05;await move(520,new Map(),{pt:[h[0]-5*s,h[1]+ri(-8,8)],arc:2});ball.hy0=null}};
-      const ft=async(S,n,make)=>{tg=new Map();tg.set(S,fc([25,15],s));await move(500,tg);for(let i=0;i<n;i++){ball.hold=S;await tween(300,()=>{});await shoot(S,make[i],false);ball.x=S.x;ball.y=S.y}};
+        else{ball.hy0=3.05;await move(900,new Map(),{pt:[h[0]-5*s,h[1]+ri(-8,8)],arc:2});ball.hy0=null}};
+      const ft=async(S,n,make)=>{tg=new Map();tg.set(S,fc([25,19.2],s));await move(500,tg);for(let i=0;i<n;i++){ball.hold=S;await tween(300,()=>{});await shoot(S,make[i],false);ball.x=S.x;ball.y=S.y}};
       if(sc0.id===1){
         if(o.k==='shot')await shoot(A,win,true);
         else if(o.k==='pass'){const T=order[1];await move(420,new Map(),{to:T});await shoot(T,win,true)}
