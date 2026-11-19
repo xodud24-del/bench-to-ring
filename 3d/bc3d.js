@@ -59,6 +59,7 @@ P_.FROLL={...P_.LAY,RightArm:[0,1.25,-1.05],RightForeArm:[0,0,-.05],RightHand:[0
 P_.FLT={RightArm:[0,1.15,-.95],RightForeArm:[0,0,-.25],RightHand:[0,0,.55],LeftArm:[0,-.6,-.4],LeftForeArm:[0,-.5,0],Spine:[-.05,0,0],RightUpLeg:[-.85,0,.05],LeftUpLeg:[.15,0,-.05],RightLeg:[1.1,0,0],LeftLeg:[.25,0,0],RightFoot:[.2,0,0],LeftFoot:[.45,0,0]};
 P_.IVR={RightArm:[0,.2,1.25],RightForeArm:[0,.5,0],LeftArm:[0,-.6,-.9],LeftForeArm:[0,-.8,0],Spine:[.5,0,.25],Spine1:[.12,0,.1],RightUpLeg:[-.95,0,.35],LeftUpLeg:[-.3,0,-.15],RightLeg:[1.15,0,0],LeftLeg:[.55,0,0],RightFoot:[-.2,0,0],LeftFoot:[-.25,0,0],_y:-.24};
 P_.IVL=mir(P_.IVR);
+P_.SHR={...P_.IVR,RightUpLeg:[-1.15,0,.5],LeftUpLeg:[.2,0,-.35],RightLeg:[1.35,0,0],LeftLeg:[.35,0,0],RightFoot:[-.15,0,0],LeftFoot:[-.35,0,0],_y:-.28};P_.SHL=mir(P_.SHR);/* 크로스오버 발놀림: 한쪽으로 크게 딛고 반대로 밀어냄 */
 P_.FTD={...P_.JDIP,...LEGS(-.45,.7,-.25,.05),_y:-.1};
 P_.WIND1={RightArm:[0,-.5,1.0],RightForeArm:[0,0,-.1],LeftArm:[0,-.6,-.4],LeftForeArm:[0,-.4,0],Spine:[.05,0,0],...LEGS(-.9,1.3,.3)};
 P_.WIND2={RightArm:[0,-.6,-.6],RightForeArm:[0,0,-.1],LeftArm:[0,-.7,-.7],LeftForeArm:[0,-.3,0],Spine:[-.2,0,0],...LEGS(-1.05,1.55,.35)};
@@ -84,8 +85,8 @@ P_.STAND={RightArm:[0,0,1.25],LeftArm:[0,0,-1.25],RightForeArm:[0,.25,0],LeftFor
 const DB=(t,amp=1)=>.12+Math.abs(Math.cos(t*Math.PI*2.6))*.7*amp;/* dribble bounce height */
 /* key: [t, pose, ball[f,l,u] | 'dr'|'dl' (dribble), root[f,l,u], yawDeg] */
 const MV={
- cross:{k:[[0,'DR','dr',[0,0,0],0],[.28,'IVR',[.4,-.58,.58],[0,-.42,0],-24],[.5,'LOW',[.5,0,.13],[.05,0,-.04],0],[.72,'IVL',[.4,.6,.58],[.1,.48,0],26],[1,'DL','dl',[.15,.55,0],14]]},
- iverson:{k:[[0,'DR','dr',[0,0,0],0],[.22,'IVR',[.32,-.75,.62],[0,-.5,0],-34],[.4,'IVR',[.38,-.7,.5],[0,-.55,0],-36],[.56,'LOW',[.5,0,.12],[.05,-.05,-.05],0],[.76,'IVL',[.4,.72,.58],[.15,.65,0],34],[1,'DL','dl',[.3,.7,0],18]]},
+ cross:{k:[[0,'DR','dr',[0,0,0],0],[.14,'SHR',[.38,-.45,.4],[0,-.22,.03],-14],[.28,'IVR',[.4,-.58,.58],[0,-.45,0],-24],[.42,'SHR',[.48,-.25,.25],[.02,-.38,.04],-12],[.52,'LOW',[.5,0,.13],[.05,-.15,-.04],0],[.63,'SHL',[.46,.3,.28],[.07,.2,.05],14],[.76,'IVL',[.4,.6,.58],[.1,.5,0],26],[.88,'SHL',[.3,.55,.45],[.13,.55,.03],18],[1,'DL','dl',[.15,.58,0],14]]},
+ iverson:{k:[[0,'DR','dr',[0,0,0],0],[.12,'SHR',[.34,-.5,.45],[0,-.25,.04],-18],[.24,'IVR',[.32,-.75,.62],[0,-.52,0],-34],[.36,'SHR',[.36,-.7,.42],[0,-.6,.03],-32],[.46,'IVR',[.38,-.7,.5],[0,-.58,0],-36],[.57,'LOW',[.5,0,.12],[.05,-.1,-.05],0],[.67,'SHL',[.45,.4,.3],[.1,.3,.05],22],[.78,'IVL',[.4,.72,.58],[.15,.66,0],34],[.9,'SHL',[.32,.7,.45],[.25,.72,.04],24],[1,'DL','dl',[.3,.72,0],18]]},
  legs:{k:[[0,'DR','dr',[0,0,0],0],[.25,'LUNGE',[.3,-.45,.45],[0,-.25,-.02],-16],[.48,'LUNGE',[.15,0,.15],[0,0,-.04],-10],[.7,'LUNGE',[.12,.28,.4],[0,.08,0],-6],[1,'DL','dl',[.05,.1,0],0]]},
  spin:{k:[[0,'DR','dr',[0,0,0],0],[.18,'LOW',[.35,-.25,.3],[.05,0,0],-20],[.38,'SPIN',[.05,-.32,.95],[.15,-.1,.05],-150],[.6,'SPINL',[-.05,.3,.95],[.15,-.15,.05],-270],[.8,'LOW',[.3,.25,.4],[.08,-.08,0],-345],[1,'DL','dl',[0,0,0],-360]]},
  behind:{k:[[0,'DR','dr',[0,0,0],0],[.3,'IVR',[-.1,-.55,.58],[0,-.3,0],-14],[.5,'LOW',[-.32,0,.3],[.05,0,-.04],10],[.72,'IVL',[.2,.58,.58],[.12,.45,0],22],[1,'DL','dl',[.1,.45,0],10]]},
@@ -271,7 +272,7 @@ export async function create(el,cfg){
        if(m.lab!==undefined&&lab!==m.lab&&m.prevQ)m.xb={q:m.prevQ.map(q=>q.clone()),t:0};m.lab=lab;
        if(m.xb){m.xb.t+=dt;const u=Math.min(1,m.xb.t/.22),w=1-u*u*(3-2*u);if(w<=.001)m.xb=null;else BL.forEach((bn,i)=>bn.quaternion.slerp(m.xb.q[i],w))}
        if(!m.prevQ)m.prevQ=BL.map(bn=>bn.quaternion.clone());else BL.forEach((bn,i)=>m.prevQ[i].copy(bn.quaternion))}
-      if(m.lunge){rx+=Math.sin(m.yaw)*m.lunge;rz+=Math.cos(m.yaw)*m.lunge}m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.ik(dt,sp,((m.yoff||0)+jump+ry)>.05||(act&&act!=='pass'&&act!=='cele'));
+      if(m.lunge){rx+=Math.sin(m.yaw)*m.lunge;rz+=Math.cos(m.yaw)*m.lunge}m.root.position.set(wp.x+rx,(m.yoff||0)+jump+ry,wp.z+rz);m.ik(dt,sp,((m.yoff||0)+jump+ry)>.05||!!mvS||(act&&act!=='pass'&&act!=='cele'));/* 기술 동작 중엔 발을 고정하지 않음 (스텝이 살아 있게) */
       /* 드리블: 손에 붙어 있다가(받아서 밀어내기) 바닥 찍고 다시 손으로. 박자는 매번 조금씩 다르고 가끔 멈칫(헤지테이션) */
       if(hold===s&&mvS&&mvS.ball&&mvS.ball[2]<.95&&/^(cross|iverson|behind|legs)$/.test(s.mv)){/* 드리블 기술 중에도 공이 올라오면 손이 공 위에 붙음 (공 쪽 손) */m.root.updateMatrixWorld(true);const ya=m.yaw+mvS.yaw,fw=new THREE.Vector3(Math.sin(ya),0,Math.cos(ya)),lf=new THREE.Vector3(fw.z,0,-fw.x),sc_=m.root.scale.x,bpn=m.root.position.clone().setY(0).add(fw.clone().multiplyScalar(mvS.ball[0]*sc_)).add(lf.clone().multiplyScalar(mvS.ball[1]));bpn.y=mvS.ball[2]*m.root.scale.y;
         const side=mvS.ball[1]>=0?'Left':'Right',w=SM(.25,.5,bpn.y);if(w>0){const H_=new THREE.Vector3().setFromMatrixPosition(m.bones[side+'Hand'].matrixWorld);armIK(m.bones,side,H_.lerp(bpn.clone().add(new THREE.Vector3(0,.13,0)).sub(fw.clone().multiplyScalar(.06)),w))}}

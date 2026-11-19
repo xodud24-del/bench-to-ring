@@ -1662,7 +1662,7 @@ const LV={};
 /* half-court spot (X across, Y from baseline) -> full court feet for side s (1 = attacks right hoop, -1 = left) */
 const fc=(p,s)=>s>0?[94-p[1],p[0]]:[p[1],50-p[0]];
 const HOOPF=s=>s>0?[88.75,25]:[5.25,25];
-const MVNAME={jshot:'',pull:'풀업 ',stepback:'스텝백 ',jfade:'페이드어웨이 ',turnf:'턴어라운드 페이드어웨이',hook:'훅슛',lay:'레이업',froll:'핑거롤 레이업',reverse:'리버스 레이업',clutch:'더블클러치',euro:'유로스텝 레이업',floater:'플로터',dunk:'원핸드 덩크',dunk2:'투핸드 덩크',toma:'토마호크 덩크',wind:'윈드밀 덩크'},PRENAME={iverson:'아이버슨 크로스오버 → ',cross:'크로스오버 → ',legs:'레그스루 → ',behind:'비하인드 백 → '};
+const MVNAME={jshot:'',pull:'풀업 ',stepback:'스텝백 ',jfade:'페이드어웨이 ',turnf:'턴어라운드 페이드어웨이',hook:'훅슛',lay:'레이업',froll:'핑거롤 레이업',reverse:'리버스 레이업',clutch:'더블클러치',euro:'유로스텝 레이업',floater:'플로터',dunk:'원핸드 덩크',dunk2:'투핸드 덩크',toma:'토마호크 덩크',wind:'윈드밀 덩크'},PRENAME={iverson:'크로스오버 → ',cross:'크로스오버 → ',legs:'레그스루 → ',behind:'비하인드 백 → '};
 /* 실제로 보여 준 동작 이름으로 중계 문구 (스텝백 3점슛, 턴어라운드 페이드어웨이, 더블클러치 …) */
 const descOf=(e,mvn,pre)=>{let t=MVNAME[mvn];if(t==null)return null;if(e.shot==='3')t=t+(t.endsWith(' ')||!t?'3점슛':'');else if(e.shot==='mid')t=t+(t.endsWith(' ')?'점퍼':!t?'미드레인지 점퍼':'');return (pre&&PRENAME[pre]?PRENAME[pre]:'')+t};
 const SHOTTXT={'3':'3점슛','dunk':'덩크','lay':'레이업','mid':'미드레인지 점퍼','post':'훅슛','float':'플로터','ft':'자유투'};
@@ -1887,7 +1887,7 @@ function liveGame(cfg){
       if(e.make&&R3&&e.shot!=='ft'){ball.thru=0;await tween(rt(420),k=>{ball.thru=k});ball.thru=null;await tween(rt(350),()=>{})}
       if(R3&&e.make)R3.zoom(null);
       if(e.make){pops.push({s:'+'+e.v,x:h[0]-6*s,y:h[1]-4,t:42,c:e.team===0?'#ffd34d':'#ff9b9b'});ball.hold=null;ball.x=h[0];ball.y=h[1]}
-      else{const rb=e.reb!=null?P[0][e.reb]:e.oreb!=null?P[0][e.oreb]:(R()<.72?D[ri(2,4)]:off[ri(3,4)]);ACT(rb,'reb',700);await step(R3?rt(900):300,[[rb,[h[0]-4*s,h[1]+ri(-5,5)]]].filter(([o])=>off.includes(o)),{to:rb});if(R3)R3.zoom(null);if(!off.includes(rb)){}}
+      else{const rb=e.reb!=null?P[0][e.reb]:e.oreb!=null?P[0][e.oreb]:D[ri(2,4)];/* 공격 리바운드는 기록에 있을 때만 */ACT(rb,'reb',700);await step(R3?rt(900):300,[[rb,[h[0]-4*s,h[1]+ri(-5,5)]]].filter(([o])=>off.includes(o)),{to:rb});if(R3)R3.zoom(null);if(!off.includes(rb)){}}
     };
     const apply=e=>{
       const nm=i=>i===mi&&me?me.name:(e.team===0?cfg.home.names:cfg.away.names)[i];
@@ -1912,6 +1912,8 @@ function liveGame(cfg){
     /* 중계 균형: 상대 공격(득점·실패·턴오버)과 우리 팀 공격 실패도 보여 줌 */
     {const opp=poss.map((e,i)=>[e,i]).filter(([e,i])=>e.team===1&&!picks.has(i));shuffle(opp).slice(0,me?8:10).forEach(([e,i])=>picks.add(i));
      const miss=poss.map((e,i)=>[e,i]).filter(([e,i])=>e.team===0&&!e.make&&!picks.has(i));shuffle(miss).slice(0,4).forEach(([e,i])=>picks.add(i))}
+    /* 수비 리바운드·턴오버로 공이 넘어간 장면 다음에는, 넘겨받은 팀의 공격도 이어서 보여 줌 (공격권이 안 넘어간 것처럼 보이지 않게) */
+    {const add=[];for(const i of picks){const e=poss[i];if(i+1<poss.length&&!e.make&&e.oreb==null&&!picks.has(i+1))add.push(i+1)}add.forEach(i=>picks.add(i))}
     function finishAll(){for(let i=cur;i<poss.length;i++){apply(poss[i])}cur=poss.length;sc[0]=cfg.final[0];sc[1]=cfg.final[1];upd({q:4,clock:0});if(cfg.clutch&&!clDone){runClutch().then(end)}else end()}
     /* 승부처: 경기 막판 3가지 선택 → 실제 장면으로 보여 줌 */
     let clDone=false,clMode=false;
