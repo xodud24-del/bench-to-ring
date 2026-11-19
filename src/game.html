@@ -834,7 +834,7 @@ function ovr(x,pos){const w=W[pos];let s=0,t=0;for(const k in w){s+=x[k]*w[k];t+
 const grp=(x,keys)=>Math.round(keys.reduce((a,k)=>a+x[k],0)/keys.length);
 const potText=p=>p>=95?'세계적 재능':p>=88?'최상급 유망주':p>=80?'상급 유망주':p>=72?'유망주':'노력형';
 /* 스카우트 평가는 추정치일 뿐: 실제 한계는 숨겨져 있고, 어릴 때는 계속 바뀜 */
-const scoutEst=(pot,seed)=>clamp(pot+(hash(String(seed)+"sc")%13)-6,55,99);
+const scoutEst=(pot,seed)=>clamp(pot+(hash(String(seed)+"sc")%21)-10,55,99);
 
 /* ---------- league helpers ---------- */
 function teamStr(lg,name){G.ts=G.ts||{};const k=lg+'|'+name;if(G.ts[k]==null)G.ts[k]=L[lg].str+((hash(k)%13)-6);return G.ts[k]}
@@ -1087,7 +1087,11 @@ function progress(){
   const gap=gearStrip(G.p);
   const p=G.p,x=p.x,last=p.log[p.log.length-1]||{min:0},mb=last.min/36*2,age=p.age;
   const top=Math.max(0,(p.pot-72)*.8),room=k=>Math.max(0,Math.min(p.pot+top+(['spd','jmp','str','sta'].includes(k)?3:0),attrCap(p,k)+6)-x[k]);
-  if(age<=24){p.pot=Math.round(clamp(p.pot+gauss()*2.8+(mb>=1.4?.5:0)-.2,55,99));p.scout=Math.round(clamp(.6*(p.scout??p.pot)+.4*(p.pot+gauss()*3),55,99))}
+  if(age<=24){/* 노력이 한계치를 바꿈: 출전 시간·훈련 집중 */const eff=(mb-1.15)*1.3+(p.focus&&p.focus.length?.25:0)+(p.buff&&p.buff.train?.4:0);p.pot=Math.round(clamp(p.pot+gauss()*3.2+eff-.9,55,99));p.scout=Math.round(clamp(.6*(p.scout??p.pot)+.4*(p.pot+gauss()*4.5),55,99))}
+  /* 늦게 터지는 선수 / 거품 선수 (21~26세) */p.bloomT=Math.max(0,(p.bloomT||0)-1);p.bustT=Math.max(0,(p.bustT||0)-1);
+  if(age>=21&&age<=26){const r=R(),up=.06+(mb>=1.4?.03:0)+(p.focus&&p.focus.length?.01:0),dn=.05+(mb<.6?.03:0);
+    if(r<up){const d=ri(8,15);p.pot=Math.min(99,p.pot+d);p.bloomT=2;p.scout=Math.min(99,(p.scout??p.pot)+d);try{toast('🔥 늦게 터졌다! 잠재력이 크게 올랐어요')}catch(e){}}
+    else if(r>1-dn){const d=ri(8,15);p.pot=Math.max(55,p.pot-d);p.bustT=2;p.scout=Math.max(55,(p.scout??p.pot)-Math.round(d*.7));try{toast('📉 성장이 멈춘 것 같아요…')}catch(e){}}}
   const fk=new Set(p.focus.flatMap(f=>FOCUS[f]));
   const before={...x};
   for(const [k] of A){
@@ -1098,6 +1102,8 @@ function progress(){
     else g=rf(-.7,.3);
     if(fk.has(k))g+=(age<=25?rf(1.4,2.9):age<=28?rf(.7,1.8):rf(.2,1))*(p.buff&&p.buff.train?1.5:1)*luxMul(p,'grow');
     if(k==='iq')g+=age<34?rf(.5,1.8):0;
+    if(p.bloomT>0)g+=room(k)*rf(.05,.1);if(p.bustT>0&&g>0)g*=.35;
+    if(g>0&&x[k]>=86)g*=Math.max(.06,Math.pow((99.5-x[k])/13.5,1.6));/* 90 이상은 갈수록 오르기 어려움 (오버롤 99는 극소수만) */
     const DECL=Math.min(p.decl,p.iron?33:32)-1+ageDelay(p),DR=p.drate*1.6*ageMul(p);
     if(age>=DECL){
       const d=(age-DECL+1)*DR*.8;
