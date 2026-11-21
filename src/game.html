@@ -4036,9 +4036,19 @@ function ghofInner(){
   const val=e=>GH.tab==='pts'?`${e.pts.toLocaleString()}점`:GH.tab==='titles'?`🏆 ${e.titles}`:GH.tab==='mvp'?`MVP ${e.mvp}`:`점수 ${e.score}`;
   return `<div class="ch"><h2>명예의 전당</h2><button class="rklink" id="rkopen">전체 랭킹 ›</button></div><p class="sub" style="margin:-4px 0 8px">${note}</p>
    <div class="seg" id="ghtab">${tabs.map(([k,t])=>`<button class="${k===GH.tab?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
-   ${list.length?list.map((e,i)=>`<div class="rank"><b class="no">${i+1}</b><div>${bustImg({...e.a,num:e.num,nat:e.nat,pos:e.pos,name:e.name},44)}</div><div class="f1"><b>${esc(e.name)}${e.me&&shared?' <span class="ghme">나</span>':''}</b><span>${esc(e.pos)} · ${flag(e.nat)} ${C[e.nat]?C[e.nat].n:''} · ${e.seasons}시즌</span></div><div class="rt"><b>${val(e)}</b><span>${GH.tab==='score'?`🏆 ${e.titles} · MVP ${e.mvp}`:`점수 ${e.score}`}</span></div></div>`).join(''):`<p class="sub" style="padding:12px 0">아직 은퇴한 선수가 없어요. 첫 번째 이름을 남겨 보세요.</p>`}`;
+   ${list.length?list.map((e,i)=>`<div class="rank"><b class="no">${i+1}</b><div>${bustImg({...e.a,num:e.num,nat:e.nat,pos:e.pos,name:e.name},44)}</div><div class="f1"><b>${esc(e.name)}${e.me&&shared?' <span class="ghme">나</span>':''}</b><span>${esc(e.pos)} · ${flag(e.nat)} ${C[e.nat]?C[e.nat].n:''} · ${e.seasons}시즌</span></div><div class="rt"><b>${val(e)}</b><span>${GH.tab==='score'?`🏆 ${e.titles} · MVP ${e.mvp}`:`점수 ${e.score}`}</span></div></div>`).join(''):`<p class="sub" style="padding:12px 0">아직 은퇴한 선수가 없어요. 첫 번째 이름을 남겨 보세요.</p>`}${b5HTML(shared?null:local)}`;
 }
-function ghBind(){const ro=document.getElementById('rkopen');if(ro)ro.onclick=rkOpen;const t=document.getElementById('ghtab');if(t)t.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(GH.tab===b.dataset.k)return;GH.tab=b.dataset.k;if(GH.db){GH.st='loading';ghSub()}ghRender()})}
+/* 명예의 전당 베스트 5: 포지션마다 레거시 점수 1위 (오늘 · 전체) */
+const B5={at:0,rows:null,day:null,busy:false};
+function b5Load(){if(!GH.db||B5.busy||Date.now()-B5.at<300000)return;B5.busy=true;const f=GH_FS;
+  f.getDocs(f.query(f.collection(GH.db,'hof'),f.orderBy('score','desc'),f.limit(200))).then(sn=>{B5.rows=sn.docs.map(d=>{const v=d.data()||{};return{...ghClean(v),me:v.dev===GH_DEV}});B5.at=Date.now();B5.busy=false;ghRender()}).catch(()=>{B5.busy=false})}
+function b5Pick(rows){return POS.map(pos=>{const c=rows.filter(e=>e.pos===pos).sort((a,b)=>b.score-a.score);return [pos,c[0]||null]})}
+function b5HTML(local){
+  let rows=local;if(!rows){b5Load();rows=B5.rows}if(!rows||!rows.length)return '';
+  const today=new Date(Date.now()+9*36e5).toISOString().slice(0,10),mode=GH.b5||'all',src=mode==='day'?rows.filter(e=>e.when===today):rows,pk=b5Pick(src);
+  return `<div class="ch" style="margin-top:18px"><h2>베스트 5</h2><div class="seg" id="b5tab" style="width:auto">${[['all','역대'],['day','오늘']].map(([k,t])=>`<button class="${k===mode?'on':''}" data-k="${k}">${t}</button>`).join('')}</div></div>
+   ${pk.map(([pos,e])=>`<div class="rank"><b class="no" style="width:30px">${pos}</b>${e?`<div>${bustImg({...e.a,num:e.num,nat:e.nat,pos:e.pos,name:e.name},40)}</div><div class="f1"><b>${esc(e.name)}${e.me?' <span class="ghme">나</span>':''}</b><span>${flag(e.nat)} ${C[e.nat]?C[e.nat].n:''} · ${e.seasons}시즌</span></div><div class="rt"><b>점수 ${e.score}</b><span>🏆 ${e.titles} · MVP ${e.mvp}</span></div>`:`<div class="f1"><span class="sub">아직 없어요</span></div>`}</div>`).join('')}`}
+function ghBind(){$$('#b5tab button').forEach(b=>b.onclick=()=>{GH.b5=b.dataset.k;ghRender()});const ro=document.getElementById('rkopen');if(ro)ro.onclick=rkOpen;const t=document.getElementById('ghtab');if(t)t.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(GH.tab===b.dataset.k)return;GH.tab=b.dataset.k;if(GH.db){GH.st='loading';ghSub()}ghRender()})}
 
 
 /* ---------- 랭킹 화면 (선수 · 감독 · 구단주) ---------- */
@@ -4584,11 +4594,11 @@ function seasonRanks(e){
   const has=re=>(e.aw||[]).some(a=>re.test(a));
   const rk=(win,v,lead,k)=>win?1:Math.max(2,Math.round(2+Math.max(0,lead-v)*k)+h(lead));
   const out=[];
-  if(LG.pro||LG.col){const sc=e.ppg/scoreT*10+(e.rpg+e.apg)/3-(Math.max(1,e.rank)-1)*.55+(e.po==='우승'?1:0);out.push(['MVP 투표',has(/정규리그 MVP/)?1:Math.max(2,Math.round(2+Math.max(0,13.5-sc)*1.7)+h('m')),15])}
+  {const sc=e.ppg/scoreT*10+(e.rpg+e.apg)/3-(Math.max(1,e.rank)-1)*.55+(e.po==='우승'?1:0);out.push(['MVP 투표',has(/정규리그 MVP/)?1:Math.max(2,Math.round(2+Math.max(0,13.5-sc)*1.7)+h('m')),15])}
   out.push(['득점',rk(has(/득점왕/),e.ppg,scoreT+3.5,1.5),30],['리바운드',rk(has(/리바운드왕/),e.rpg,11.8,2.4),30],['어시스트',rk(has(/어시스트왕/),e.apg,8.8,2.8),30],['스틸',rk(has(/스틸왕/),e.spg,2.1,14),30],['블록',rk(has(/블록왕/),e.bpg,2.5,11),30]);
   return out.map(([n,r,cap])=>[n,qual?(r<=cap?r:null):null])}
 function best5(e){
-  const lg=e.lg,LG=L[lg];if(!LG||!(LG.pro||LG.col)||!T[lg])return null;const p=G.p,ls=LG.str,scoreT=20+(ls-58)*.35,mine=(e.aw||[]).some(a=>/퍼스트 팀|^베스트5$/.test(a)),pi=POS.indexOf(p.pos);
+  const lg=e.lg,LG=L[lg];if(!LG||!T[lg])return null;const p=G.p,ls=LG.str,scoreT=20+(ls-58)*.35,mine=(e.aw||[]).some(a=>/퍼스트 팀|^베스트5$/.test(a)),pi=POS.indexOf(p.pos);
   const top=T[lg].slice().sort((a,b)=>teamStr(lg,b)-teamStr(lg,a)).slice(0,Math.max(5,Math.ceil(T[lg].length*.6)));
   return POS.map((pos,i)=>{if(mine&&i===pi)return{pos,me:1,n:p.name,t:e.team,ppg:e.ppg,rpg:e.rpg,apg:e.apg};
     const hh=hash(e.y+lg+pos+'b5'),t=top[hh%top.length],n=rosterNames(lg,t)[i],big=i>=3,gd=i<=1;
