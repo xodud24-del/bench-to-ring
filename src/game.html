@@ -1052,6 +1052,7 @@ function simSeason(){
   if(LG.col&&!half)p.colY=(p.colY||0)+1;
   const label=half?`${G.year} 후반기`:`${G.year}–${String(G.year+1).slice(2)}`;
   const entry={y:label,age:p.age,lg,team:p.team,role,gp:s.gp,start:s.start,min:s.gp?+(s.min/s.gp).toFixed(1):0,ppg:+ppg.toFixed(1),rpg:+rpg.toFixed(1),apg:+apg.toFixed(1),spg:+spg.toFixed(1),bpg:+bpg.toFixed(1),fg:+(fg*100).toFixed(1),tp:+(tp*100).toFixed(1),hi:s.hi,ovr:o,grade,rank,w:s.w,l:s.l,po:po?(po.won?'우승':roundName(lg,po.series.length?po.series[po.series.length-1].left:po.rounds)):'탈락',aw};
+  /* 시즌 합계와 3점슛 개수 */entry.pts=s.pts;entry.treb=s.reb;entry.tast=s.ast;entry.tstl=s.stl;entry.tblk=s.blk;{const f=clamp(.03+(p.x.three-50)*.008,0,.42),pm=s.pts*f/3;entry.tpm=Math.round(pm);entry.tpa=Math.round(pm/Math.max(.15,entry.tp/100||.3));entry.tpg=entry.gp?+(pm/entry.gp).toFixed(1):0}
   p.log.push(entry);
   // reactions
   const acl=!!(inj&&/십자인대/.test(inj));if(acl)p.aclY=G.year;
@@ -4567,11 +4568,11 @@ function bindEvent(e){
 /* season record recap: this season vs. career, with personal records flagged */
 function seasonRecap(e){
   const p=G.p,prev=(p.log||[]).filter(x=>x!==e&&x.gp>=1),full=prev.filter(x=>x.gp>=10);
-  const K=[['ppg','득점',1,'점'],['rpg','리바운드',1,'개'],['apg','어시스트',1,'개'],['spg','스틸',1,'개'],['bpg','블록',1,'개'],['fg','야투율',1,'%'],['tp','3점 성공률',1,'%'],['hi','한 경기 최다 득점',0,'점']];
+  const K=[['tpm','시즌 3점슛',0,'개'],['ppg','득점',1,'점'],['rpg','리바운드',1,'개'],['apg','어시스트',1,'개'],['spg','스틸',1,'개'],['bpg','블록',1,'개'],['fg','야투율',1,'%'],['tp','3점 성공률',1,'%'],['hi','한 경기 최다 득점',0,'점']];
   const all=[...prev,e],gp=all.reduce((a,x)=>a+(x.gp||0),0)||1,avg=k=>(all.reduce((a,x)=>a+(x[k]||0)*(x.gp||0),0)/gp).toFixed(1);
   const recs=[];
   const rowsH=K.map(([k,n,_,u])=>{const v=+e[k]||0,best=full.length?Math.max(...full.map(x=>+x[k]||0)):null,isRec=e.gp>=10&&best!=null&&v>best&&v>0;if(isRec)recs.push(`${n} ${v}${u}`);
-    const car=k==='hi'?Math.max(...all.map(x=>+x.hi||0)):avg(k);
+    const car=k==='hi'?Math.max(...all.map(x=>+x.hi||0)):k==='tpm'?'통산 '+all.reduce((t,x)=>t+(+x.tpm||0),0).toLocaleString():avg(k);
     return `<div class="r"><span>${n}</span><b>${v}${u}${isRec?' <i class="up">신기록</i>':''} <em class="sub" style="font-weight:500">커리어 ${car}${u}</em></b></div>`}).join('');
   const totPts=all.reduce((a,x)=>a+Math.round((x.ppg||0)*(x.gp||0)),0),totG=all.reduce((a,x)=>a+(x.gp||0),0);
   return `<div class="card"><div class="ch"><h2>시즌 기록 정리</h2><span class="sub">통산 ${totG}경기 ${totPts.toLocaleString()}점</span></div>${recs.length?`<p class="b" style="margin:0 0 10px">커리어 신기록 · ${esc(recs.join(', '))}</p>`:full.length?'':`<p class="sub" style="margin:0 0 10px">첫 시즌 기록이 커리어 기준이 돼요.</p>`}${rowsH}</div>`;
@@ -4597,11 +4598,22 @@ function careerTable(){
   return `<details class="card"><summary><b>시즌별 기록</b> <span class="sub">${lg.length}시즌</span></summary>
    <div style="overflow-x:auto"><table class="ctab"><tr><th>시즌</th><th>팀</th><th>경기</th><th>득점</th><th>리바</th><th>어시</th><th>성적</th><th>수상</th></tr>
    ${lg.map(x=>`<tr><td>${esc(x.y)}</td><td>${esc(x.team)}</td><td>${x.gp}</td><td>${x.ppg}</td><td>${x.rpg}</td><td>${x.apg}</td><td>${x.rank?x.rank+'위':''}${x.po&&x.po!=='탈락'?' · '+esc(x.po):''}</td><td>${(x.aw||[]).length?esc(x.aw.slice(0,2).join(', '))+(x.aw.length>2?` 외 ${x.aw.length-2}`:''):''}</td></tr>`).join('')}</table></div></details>`}
+
+/* 실제 NBA 단일 시즌·단일 경기 기록 (내 선수가 깨면 그때부터 내 기록이 리그 기록) */
+const NBA_REC={ppg:[50.4,'윌트 체임벌린','1961-62','점'],pts:[4029,'윌트 체임벌린','1961-62','점'],tpm:[402,'스테픈 커리','2015-16','개'],tpg:[5.1,'스테픈 커리','2015-16','개'],rpg:[27.2,'윌트 체임벌린','1960-61','개'],treb:[2149,'윌트 체임벌린','1960-61','개'],apg:[14.5,'존 스탁턴','1989-90','개'],tast:[1164,'존 스탁턴','1990-91','개'],spg:[3.67,'앨빈 로버트슨','1985-86','개'],tstl:[301,'앨빈 로버트슨','1985-86','개'],bpg:[5.56,'마크 이턴','1984-85','개'],tblk:[456,'마크 이턴','1984-85','개'],hi:[100,'윌트 체임벌린','1962','점']};
+const REC_N={ppg:'평균 득점',pts:'시즌 총득점',tpm:'시즌 3점슛',tpg:'경기당 3점슛',rpg:'평균 리바운드',treb:'시즌 총리바운드',apg:'평균 어시스트',tast:'시즌 총어시스트',spg:'평균 스틸',tstl:'시즌 총스틸',bpg:'평균 블록',tblk:'시즌 총블록',hi:'한 경기 최다 득점'};
+function leagueRecords(e){
+  if(e.lg!=='NBA'||!e.gp)return [];G.rec=G.rec||{};const out=[],perQ=e.gp>=58;
+  for(const k in NBA_REC){if(['ppg','tpg','rpg','apg','spg','bpg'].includes(k)&&!perQ)continue;const v=+e[k]||0,cur=G.rec[k]||NBA_REC[k];
+    if(e.recDone&&e.recDone[k]){out.push([k,v,e.recDone[k]]);continue}
+    if(v>cur[0]){const prev=[...cur];G.rec[k]=[v,G.p.name,e.y,cur[3]];e.recDone=e.recDone||{};e.recDone[k]=prev;out.push([k,v,prev])}}
+  return out}
 function renderResult(r){
   const e=r.entry,p=G.p;
   const o0=r.o0,o1=r.half?curOvr():(r.o1||curOvr()),d=o1-o0;
   const grow=[];if(r.before){const ch=A.map(([k,n])=>[n,p.x[k],p.x[k]-r.before[k]]).filter(x=>x[2]>0).sort((a,b)=>b[2]-a[2]).slice(0,2);grow.push(...ch)}
-  const lst=[['출전',`${e.gp}경기${e.start?` · 선발 ${e.start}`:''}`],['평균 기록',`${e.ppg}점 · ${e.rpg}리바 · ${e.apg}어시`],['야투 · 3점',`${e.fg}% · ${e.tp}%`],['시즌 최다',`${e.hi}점`],['시즌 평가',e.grade,'blue']];
+  const recs=r.half?[]:leagueRecords(e),isR=k=>recs.some(x=>x[0]===k)?' <i class="up">리그 신기록</i>':'';
+  const lst=[['출전',`${e.gp}경기${e.start?` · 선발 ${e.start}`:''}`],['평균 기록',`${e.ppg}점${isR('ppg')} · ${e.rpg}리바${isR('rpg')} · ${e.apg}어시${isR('apg')}`],...(e.pts!=null?[['시즌 합계',`${e.pts.toLocaleString()}점${isR('pts')} · ${e.treb}리바 · ${e.tast}어시`],['3점슛',`${e.tpm}개 성공${isR('tpm')} · ${e.tpa}개 시도 (${e.tp}%)`],['스틸 · 블록',`${e.tstl}개${isR('tstl')} · ${e.tblk}개${isR('tblk')}`]]:[]),['야투 · 3점',`${e.fg}% · ${e.tp}%`],['시즌 최다',`${e.hi}점${isR('hi')}`],['시즌 평가',e.grade,'blue']];
   if(!r.half)lst.push(['종합 능력치',`${o0} → ${o1} <i class="${d>=0?'up':'dn'}">${d>=0?'+':''}${d}</i>`]);
   grow.forEach(([n,v,dd])=>lst.push([n,`${v} <i class="up">+${dd}</i>`]));
   lst.push(['평판',`${p.rep} <i class="${r.repD>=0?'up':'dn'}">${r.repD>=0?'+':''}${r.repD}</i>`]);
@@ -4613,6 +4625,7 @@ function renderResult(r){
   return head(`${r.label} 시즌이 끝났어요`,'')+`<h1 class="h1x">${r.half?'후반기를<br>마쳤어요':`종합 능력치가<br><span class="blue">${o1}</span>${josa(o1)} 됐어요`}</h1>`+
   `<div class="card">${rows(lst)}${r.grow?`<p class="sub" style="margin-top:6px">키가 ${r.grow}cm 자랐어요.</p>`:''}</div>`+seasonRecap(e)+`
    <div class="card"><div class="ch"><h2>대회 결과</h2></div>${comp.map(c=>`<div class="ev">${c[3]?badge(c[3],40):`<span class="lg">${esc(L[r.lg].n.slice(0,3))}</span>`}<div class="f1"><b>${c[0]}</b><span>${c[1]}</span></div><b class="rt">${c[2]}</b></div>`).join('')}</div>
+   ${recs.length?`<div class="card"><div class="ch"><h2>🏆 NBA 리그 신기록</h2></div>${recs.map(([k,v,pv])=>`<div class="r"><span>${REC_N[k]}</span><b>${(+v).toLocaleString()}${NBA_REC[k][3]} <em class="sub" style="font-weight:500">종전 ${esc(pv[1])} ${(+pv[0]).toLocaleString()}${pv[3]} (${esc(pv[2])})</em></b></div>`).join('')}</div>`:''}
    ${(()=>{if(r.half)return '';const sr=seasonRanks(e).filter(x=>x[1]!=null);return sr.length?`<div class="card"><div class="ch"><h2>개인 순위</h2><span class="sub">${esc(lgName(r.lg))}</span></div>${rows(sr.map(([n,v])=>[n,`${v}위${v===1?' 🥇':v<=3?' 🏅':''}`,v<=3?'blue':'']))}</div>`:''})()}
    ${e.aw.length?`<div class="card"><div class="ch"><h2>시즌 수상 · 선정</h2></div>${e.aw.map(a=>`<p class="li0">${/정규리그 MVP|파이널 MVP/.test(a)?'🏆':'🏅'} ${esc(a)}</p>`).join('')}</div>`:''}
    ${(()=>{if(r.half)return '';const b=best5(e);return b?`<div class="card"><div class="ch"><h2>${r.lg==='NBA'?'올-NBA 퍼스트 팀':'리그 베스트 5'}</h2><span class="sub">${esc(e.y)}</span></div>${b.map(x=>`<div class="r"><span><b style="display:inline-block;width:32px">${x.pos}</b>${esc(x.n)}${x.me?' <i class="up">나</i>':''} <em class="sub">${esc(x.t)}</em></span><b>${x.ppg}점 ${x.rpg}리 ${x.apg}어</b></div>`).join('')}</div>`:''})()}
