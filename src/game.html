@@ -1109,7 +1109,7 @@ function progress(){
   if(age<=24){/* 노력이 한계치를 바꿈: 출전 시간·훈련 집중 */const eff=(mb-1.15)*1.3+(p.focus&&p.focus.length?.25:0)+(p.buff&&p.buff.train?.4:0);p.pot=Math.round(clamp(p.pot+gauss()*3.2+eff-.9,55,99));p.scout=Math.round(clamp(.6*(p.scout??p.pot)+.4*(p.pot+gauss()*4.5),55,99))}
   /* 늦게 터지는 선수 / 거품 선수 (21~26세) */p.bloomT=Math.max(0,(p.bloomT||0)-1);p.bustT=Math.max(0,(p.bustT||0)-1);
   if(age>=21&&age<=26){const r=R(),up=.06+(mb>=1.4?.03:0)+(p.focus&&p.focus.length?.01:0),dn=.05+(mb<.6?.03:0);
-    if(r<up){const d=ri(8,15);p.pot=Math.min(99,p.pot+d);p.bloomT=2;p.scout=Math.min(99,(p.scout??p.pot)+d);try{toast('🔥 늦게 터졌다! 잠재력이 크게 올랐어요')}catch(e){}}
+    if(r<up){const d=ri(8,15);p.pot=Math.min(99,p.pot+d);p.bloomT=2;p.scout=Math.min(99,(p.scout??p.pot)+d);try{toast('🔥 늦게 터졌다! 올해 성장이 눈에 띄게 빨라질 거예요')}catch(e){}}
     else if(r>1-dn){const d=ri(8,15);p.pot=Math.max(55,p.pot-d);p.bustT=2;p.scout=Math.max(55,(p.scout??p.pot)-Math.round(d*.7));try{toast('📉 성장이 멈춘 것 같아요…')}catch(e){}}}
   const fk=new Set(p.focus.flatMap(f=>FOCUS[f]));
   const before={...x};
@@ -1274,7 +1274,7 @@ function graduation(){
   const prep=o>=72||(o>=70&&p.pot>=88);
   if(prep)opts.unshift({act:'draft',lg:'NBA',label:'NBA 드래프트 직행',sub:`고졸 프로 · OVR ${o} · 로터리 지명 유력`});
   if(prep)return{type:'choice',eye:'졸업',t:'고교 무대는\n이미 좁아요',x:`유스 3년 동안 OVR ${o}까지 올라왔어요. NBA 스카우트들이 대학을 건너뛰고 바로 드래프트에 나오라고 해요.`,opts};
-  return{type:'choice',eye:'졸업',t:'졸업 이후,\n어디로 갈까요?',x:`유스 3년 동안 OVR ${o}까지 올라왔어요. 스카우트 평가는 "${potText(p.scout??p.pot)}"이에요.`,opts};
+  return{type:'choice',eye:'졸업',t:'졸업 이후,\n어디로 갈까요?',x:`유스 3년 동안 OVR ${o}까지 올라왔어요.`,opts};
 }
 function collegeExit(){
   const p=G.p,o=curOvr(),opts=[],nbaOk=o>=66&&p.age>=19;
@@ -2349,11 +2349,11 @@ function sigBlock(){const s=G&&G.p&&G.p.sig;return s?`<div class="sigdoc"><div><
 function buyAll(kind){
   const p=G.p,g=gearInit(p);let n=0,spent=0;
   if(kind==='gear'){gearStock(p).slice().sort((a,b)=>a[5]-b[5]).forEach(it=>{if(p.cash>=it[5]&&!g.inv.includes(it[0])){p.cash-=it[5];spent+=it[5];g.inv.push(it[0]);n++;const cur=gearOf(g.eq[it[1]]);if(!cur||cur[2]<it[2])g.eq[it[1]]=it[0]}});gearApply(p)}
-  else SHOP.slice().sort((a,b)=>a[3]-b[3]).forEach(it=>{if(p.shop[it[0]]!==G.year&&p.cash>=it[3]){p.cash-=it[3];spent+=it[3];p.shop[it[0]]=G.year;it[4](p);n++}});
+  else trainStock(p).slice().sort((a,b)=>a[3]-b[3]).forEach(it=>{if(p.shop[it[0]]!==G.year&&p.cash>=it[3]){p.cash-=it[3];spent+=it[3];p.shop[it[0]]=G.year;it[4](p);n++}});
   save();toast(n?`${n}개 구매 · ${won(spent)} 사용`:'살 수 있는 게 없어요');
   const sh=$('#sheet .sh'),st=sh?sh.scrollTop:0;if(kind==='shop')openSheet(trainSheet(),bindTrain);else openSheet(shopSheet(),bindShop);$('#sheet .sh').scrollTop=st;
 }
-function buyAllCost(kind){const p=G.p,g=gearInit(p);let c=0;if(kind==='gear')gearStock(p).forEach(it=>{if(!g.inv.includes(it[0]))c+=it[5]});else SHOP.forEach(it=>{if(p.shop[it[0]]!==G.year)c+=it[3]});return c}
+function buyAllCost(kind){const p=G.p,g=gearInit(p);let c=0;if(kind==='gear')gearStock(p).forEach(it=>{if(!g.inv.includes(it[0]))c+=it[5]});else trainStock(p).forEach(it=>{if(p.shop[it[0]]!==G.year)c+=it[3]});return c}
 
 /* 선수 주식 */
 const STK_POOL=[['NBA',0],['NBA',1],['NBA',2],['EURO',0],['CBA',0],['KBL',0],['NBA',3],['EURO',1]];
@@ -4228,7 +4228,7 @@ function bindWizard(){
 function summarySheet(){
   const d=D,{x,pot}=baseAttrs(d);
   return `<div class="shh"><b class="big">${esc(d.name)}</b><span class="pill">${POSN[d.pos]}</span></div><p class="sub">${d.style} · 등번호 ${d.num} · 16세</p>
-   <div style="margin:14px 0">${rows([['소속',esc(d.school||T['Y_'+d.start][0])],['국적',`${flag(d.nat)} ${C[d.nat].n}`],['키 · 윙스팬',`${d.h}cm · ${d.ws}cm`],['OVR',ovr(x,d.pos)],['스카우트 평가',potText(scoutEst(pot,d.seed))],['집중 육성',d.focus.join(', ')]])}</div>
+   <div style="margin:14px 0">${rows([['소속',esc(d.school||T['Y_'+d.start][0])],['국적',`${flag(d.nat)} ${C[d.nat].n}`],['키 · 윙스팬',`${d.h}cm · ${d.ws}cm`],['OVR',ovr(x,d.pos)],['집중 육성',d.focus.join(', ')]])}</div>
    <div class="two"><button class="btn sec" id="shback">다시 보기</button><button class="btn" id="shgo">고1 시즌 시작</button></div>`;
 }
 function bindSummary(){$('#shback').onclick=closeSheet;$('#shgo').onclick=()=>{closeSheet();startCareer();ui.wiz=0;ui.tab='home';render();window.scrollTo(0,0)}}
@@ -4313,7 +4313,7 @@ function tabSeason(){
 function tabPlayer(){
   const p=G.p,x=p.x;
   let h=`<div class="card center"><div class="bigav">${avatarBox(p,200,{full:1,pose:'dunk',maxH:'340px'})}</div><b class="big">${esc(p.name)}</b><p class="sub">${POSN[p.pos]} · ${p.style} · ${flag(p.nat)} ${C[p.nat].n}</p></div>
-  <div class="card">${rows([['키',p.h+'cm'],['윙스팬',`${p.ws}cm (${p.ws-p.h>=0?'+':''}${p.ws-p.h})`],['몸무게',p.wt+'kg'],['OVR',curOvr()],['스카우트 평가',potText(p.scout??p.pot)]])}</div>
+  <div class="card">${rows([['키',p.h+'cm'],['윙스팬',`${p.ws}cm (${p.ws-p.h>=0?'+':''}${p.ws-p.h})`],['몸무게',p.wt+'kg'],['OVR',curOvr()]])}</div>
   <div class="card"><div class="ch"><h2>능력치</h2></div>${bars(x,GROUP.map(([n,k])=>[n,grp(x,k)]))}<div class="hr"></div>${bars(x,A.map(([k,n])=>[n,x[k]]))}</div>`;
   {const sp=p.spons||[];h+=`<div class="card"><div class="ch"><h2>스폰서</h2><span class="sub">${sp.length?`연 ${sponsorPay(p).toFixed(1)}억 원`:'평판이 오르면 제안이 와요'}</span></div>${sp.length?sp.map(x=>`<div class="r"><span>${esc(x.b)} <em class="sub">${BCAT[x.cat]}${x.sig?' · 시그니처':''}</em></span><b>연 ${x.pay.toFixed(1)}억 · ${x.yrs}년 남음</b></div>`).join(''):'<p class="sub">아직 스폰서가 없어요. 프로에서 평판 22 이상이면 시즌이 끝날 때 광고 제안이 들어와요.</p>'}</div>`}
   h+=`<div class="card list"><button class="li" id="logobtn"><div class="f1"><b>팀 로고 넣기</b><span>리그별로 팀 로고 이미지를 넣어요</span></div>${ICON.chev}</button></div>`;
@@ -4416,11 +4416,14 @@ const LUX=[
  ['space','민간 우주여행 티켓','평판 +6',4000,{rep:6}],
  ['island','개인 섬','평판 +10',8000,{rep:10}]];
 const luxHas=(p,k)=>(p.lux||[]).includes(k);
+function seasonPick(arr,n,tag){const r=mulberry(hash(String(G.p&&G.p.name||'')+G.year+tag)),a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,n)}
+function trainStock(p){const n=4+(hash(String(p.name||'')+G.year+'tn')%3);const pick=seasonPick(SHOP,n,'train');return SHOP.filter(it=>pick.includes(it))}
+function luxStock(p){const ly=p.luxY||{},n=2+(hash(String(p.name||'')+G.year+'ln')%3);const pick=seasonPick(LUX,LUX.length,'lux').filter(l=>!luxHas(p,l[0])||ly[l[0]]===G.year).slice(0,n);return LUX.filter(it=>pick.includes(it))}
 function luxMul(p,f){return LUX.reduce((m,l)=>m*(luxHas(p,l[0])&&l[4][f]?l[4][f]:1),1)}
-function luxBuy(p,it){p.lux=p.lux||[];p.lux.push(it[0]);const e=it[4];if(e.rep)p.rep=clamp(p.rep+e.rep,0,100);if(e.x)for(const k in e.x)p.x[k]=Math.min(99,p.x[k]+e.x[k])}
+function luxBuy(p,it){p.lux=p.lux||[];p.lux.push(it[0]);p.luxY=p.luxY||{};p.luxY[it[0]]=G.year;const e=it[4];if(e.rep)p.rep=clamp(p.rep+e.rep,0,100);if(e.x)for(const k in e.x)p.x[k]=Math.min(99,p.x[k]+e.x[k])}
 function shopSheet(){
   const p=G.p;if(p.cash==null)p.cash=p.earn||0;p.shop=p.shop||{};
-  return `<b class="big">상점</b><p class="sub" style="margin:6px 0 4px">연봉과 광고 수입으로 살 수 있어요. 농구화는 시즌마다 새 모델이 들어오고, 스타가 되면 내 이름을 건 시그니처 농구화가 나와요. 노화 방지 상품은 가끔 들어와요.</p>
+  return `<b class="big">상점</b><p class="sub" style="margin:6px 0 4px">연봉과 광고 수입으로 살 수 있어요. 농구화는 시즌마다 새 모델이 들어오고, 스타가 되면 내 이름을 건 시그니처 농구화가 나와요. 사치품과 노화 방지 상품은 시즌마다 들어오는 게 달라요.</p>
    ${rows([['보유 자금',won(p.cash),'blue']])}
    <div class="ch" style="margin-top:14px"><h2>이번 시즌 농구화</h2><span class="sub">시즌마다 바뀌어요</span></div>
    ${buyAllCost('gear')?`<button class="btn sec" id="ballg" style="margin:4px 0 6px"${p.cash>=Math.min(...gearStock(p).map(i=>i[5]))?'':' disabled'}>농구화 모두 구매 · ${won(buyAllCost('gear'))}</button>`:''}
@@ -4430,21 +4433,21 @@ function shopSheet(){
    ${(p.anti||[]).length?`<p class="sub" style="margin:0 0 6px">보유: ${AGE_ITEMS.filter(a=>(p.anti||[]).includes(a[0])).map(a=>a[1]).join(', ')}</p>`:''}
    ${ageStock(p).length?'':'<p class="sub" style="margin:0 0 6px">이번 시즌엔 들어온 상품이 없어요.</p>'}
    ${ageStock(p).map(([k,n,d,c])=>{const own=(p.anti||[]).includes(k),can=!own&&p.cash>=c;return `<div class="slot"><div class="f1"><b>${n}</b><span>${d}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-abuy="${k}"${can?'':' disabled'}>${own?'보유 중':won(c)}</button></div></div>`}).join('')}
-   <div class="ch" style="margin-top:18px"><h2>사치품</h2><span class="sub">한 번 사면 계속</span></div>
-   ${LUX.map(it=>{const own=luxHas(p,it[0]),can=!own&&p.cash>=it[3];return `<div class="slot"><div class="f1"><b>${it[1]}</b><span>${it[2]}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-lbuy="${it[0]}"${can?'':' disabled'}>${own?'보유 중':won(it[3])}</button></div></div>`}).join('')}
+   <div class="ch" style="margin-top:18px"><h2>사치품</h2><span class="sub">시즌마다 들어오는 물건이 바뀌어요</span></div>
+   ${luxStock(p).length?'':'<p class="sub" style="margin:0 0 6px">이번 시즌엔 들어온 사치품이 없어요.</p>'}${(p.lux||[]).length?`<p class="sub" style="margin:0 0 6px">보유: ${LUX.filter(l=>luxHas(p,l[0])).map(l=>l[1]).join(', ')}</p>`:''}${luxStock(p).map(it=>{const own=luxHas(p,it[0]),can=!own&&p.cash>=it[3];return `<div class="slot"><div class="f1"><b>${it[1]}</b><span>${it[2]}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-lbuy="${it[0]}"${can?'':' disabled'}>${own?'보유 중':won(it[3])}</button></div></div>`}).join('')}
    <p class="sub" style="margin-top:10px">훈련·관리는 홈의 "훈련" 메뉴로 옮겼어요.</p>
    <button class="btn sec" id="shclose" style="margin-top:12px">닫기</button>`;
 }
 function trainSheet(){
   const p=G.p;if(p.cash==null)p.cash=p.earn||0;p.shop=p.shop||{};
-  return `<b class="big">훈련</b><p class="sub" style="margin:6px 0 4px">코치·캠프·관리 프로그램이에요. 항목마다 시즌에 한 번씩 할 수 있어요.</p>
+  return `<b class="big">훈련</b><p class="sub" style="margin:6px 0 4px">코치·캠프·관리 프로그램이에요. 시즌마다 열리는 프로그램이 바뀌고, 항목마다 시즌에 한 번씩 할 수 있어요.</p>
    ${rows([['보유 자금',won(p.cash),'blue']])}
    ${buyAllCost('shop')?`<button class="btn sec" id="balls" style="margin:10px 0 6px">남은 훈련 모두 하기 · ${won(buyAllCost('shop'))}</button>`:''}
-   ${SHOP.map(([k,n,d,c])=>{const done=p.shop[k]===G.year,can=!done&&p.cash>=c;return `<div class="slot"><div class="f1"><b>${n}</b><span>${d}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-buy="${k}"${can?'':' disabled'}>${done?'완료':won(c)}</button></div></div>`}).join('')}
+   ${trainStock(p).map(([k,n,d,c])=>{const done=p.shop[k]===G.year,can=!done&&p.cash>=c;return `<div class="slot"><div class="f1"><b>${n}</b><span>${d}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-buy="${k}"${can?'':' disabled'}>${done?'완료':won(c)}</button></div></div>`}).join('')}
    <button class="btn sec" id="shclose" style="margin-top:12px">닫기</button>`;
 }
 function bindTrain(){
-  $$('[data-buy]').forEach(b=>b.onclick=()=>{const p=G.p,it=SHOP.find(s=>s[0]===b.dataset.buy);if(!it||p.cash<it[3]||p.shop[it[0]]===G.year)return;
+  $$('[data-buy]').forEach(b=>b.onclick=()=>{const p=G.p,it=trainStock(p).find(s=>s[0]===b.dataset.buy);if(!it||p.cash<it[3]||p.shop[it[0]]===G.year)return;
     p.cash-=it[3];p.shop[it[0]]=G.year;it[4](p);save();toast(`${it[1]} 완료`);const sh=$('#sheet .sh'),st=sh?sh.scrollTop:0;openSheet(trainSheet(),bindTrain);$('#sheet .sh').scrollTop=st});
   const bs=$('#balls');if(bs)bs.onclick=()=>buyAll('shop');
   $('#shclose').onclick=()=>{closeSheet();render()};
@@ -4452,7 +4455,7 @@ function bindTrain(){
 function bindShop(){
   $$('[data-gbuy]').forEach(b=>b.onclick=()=>{const p=G.p,it=gearOf(b.dataset.gbuy),g=gearInit(p);if(!it||p.cash<it[5]||g.inv.includes(it[0]))return;
     p.cash-=it[5];g.inv.push(it[0]);if(!g.eq[it[1]]){g.eq[it[1]]=it[0];gearApply(p)}save();toast(`${it[3]} 구매${g.eq[it[1]]===it[0]?' · 바로 착용':''}`);const sh=$('#sheet .sh'),st=sh?sh.scrollTop:0;openSheet(shopSheet(),bindShop);$('#sheet .sh').scrollTop=st});
-  $$('[data-buy]').forEach(b=>b.onclick=()=>{const p=G.p,it=SHOP.find(s=>s[0]===b.dataset.buy);if(!it||p.cash<it[3]||p.shop[it[0]]===G.year)return;
+  $$('[data-buy]').forEach(b=>b.onclick=()=>{const p=G.p,it=trainStock(p).find(s=>s[0]===b.dataset.buy);if(!it||p.cash<it[3]||p.shop[it[0]]===G.year)return;
     p.cash-=it[3];p.shop[it[0]]=G.year;it[4](p);save();toast(`${it[1]} 완료`);const sh=$('#sheet .sh'),st=sh?sh.scrollTop:0;openSheet(shopSheet(),bindShop);$('#sheet .sh').scrollTop=st});
   $$('[data-lbuy]').forEach(b=>b.onclick=()=>{const p=G.p,it=LUX.find(a=>a[0]===b.dataset.lbuy);if(!it||p.cash<it[3]||luxHas(p,it[0]))return;
     p.cash-=it[3];luxBuy(p,it);save();toast(`${it[1]} 구매`);const sh=$('#sheet .sh'),st=sh?sh.scrollTop:0;openSheet(shopSheet(),bindShop);$('#sheet .sh').scrollTop=st});
