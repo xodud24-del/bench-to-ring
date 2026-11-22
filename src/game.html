@@ -1937,7 +1937,7 @@ function liveGame(cfg){
      const miss=poss.map((e,i)=>[e,i]).filter(([e,i])=>e.team===0&&!e.make&&!picks.has(i));shuffle(miss).slice(0,4).forEach(([e,i])=>picks.add(i))}
     /* 수비 리바운드·턴오버로 공이 넘어간 장면 다음에는, 넘겨받은 팀의 공격도 이어서 보여 줌 (공격권이 안 넘어간 것처럼 보이지 않게) */
     {const add=[];for(const i of picks){const e=poss[i];if(i+1<poss.length&&!e.make&&e.oreb==null&&!picks.has(i+1))add.push(i+1)}add.forEach(i=>picks.add(i))}
-    function finishAll(){for(let i=cur;i<poss.length;i++){apply(poss[i])}cur=poss.length;sc[0]=cfg.final[0];sc[1]=cfg.final[1];upd({q:4,clock:0});if(cfg.clutch&&!clDone){runClutch().then(end)}else end()}
+    function finishAll(){for(let i=cur;i<poss.length;i++){apply(poss[i])}cur=poss.length;sc[0]=cfg.final[0];sc[1]=cfg.final[1];upd({q:4,clock:0});if(cfg.clutch&&!clDone){if(skip){clDone=true;const C=cfg.clutch,sc0=C.sc,o=pick(sc0.o),win=R()<o.p,fin=C.resolve(o,win);sc[0]=fin.final[0];sc[1]=fin.final[1];cfg.final=fin.final;upd({q:4,clock:0});feed(4,`승부처 · ${esc(o.l)} → <b>${esc(win?o.ok:o.ng)}</b>`,win?'me':'opp');end()}else runClutch().then(end)}else end()}
     /* 승부처: 경기 막판 3가지 선택 → 실제 장면으로 보여 줌 */
     let clDone=false,clMode=false;
     async function runClutch(){
