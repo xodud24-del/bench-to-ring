@@ -4419,7 +4419,9 @@ const LUX=[
  ['island','개인 섬','평판 +10',8000,{rep:10}]];
 const luxHas=(p,k)=>(p.lux||[]).includes(k);
 function seasonPick(arr,n,tag){const r=mulberry(hash(String(G.p&&G.p.name||'')+G.year+tag)),a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,n)}
-function trainStock(p){const n=4+(hash(String(p.name||'')+G.year+'tn')%3);const pick=seasonPick(SHOP,n,'train');return SHOP.filter(it=>pick.includes(it))}
+function trainStock(p){const n=4+(hash(String(p.name||'')+G.year+'tn')%3);const pick=seasonPick(SHOP,n,'train');const m=trainMul(p);return SHOP.filter(it=>pick.includes(it)).map(it=>[it[0],it[1],it[2],+(it[3]*m).toFixed(it[3]*m>=10?0:1),it[4]])}
+/* 시즌이 지날수록 훈련비가 오름 (시즌당 25%, 최대 40배) */
+function trainMul(p){const n=Math.max(0,(p.log||[]).length-1);return Math.min(40,Math.pow(1.25,n))}
 function luxStock(p){const ly=p.luxY||{},n=2+(hash(String(p.name||'')+G.year+'ln')%3);const pick=seasonPick(LUX,LUX.length,'lux').filter(l=>!luxHas(p,l[0])||ly[l[0]]===G.year).slice(0,n);return LUX.filter(it=>pick.includes(it))}
 function luxMul(p,f){return LUX.reduce((m,l)=>m*(luxHas(p,l[0])&&l[4][f]?l[4][f]:1),1)}
 function luxBuy(p,it){p.lux=p.lux||[];p.lux.push(it[0]);p.luxY=p.luxY||{};p.luxY[it[0]]=G.year;const e=it[4];if(e.rep)p.rep=clamp(p.rep+e.rep,0,100);if(e.x)for(const k in e.x)p.x[k]=Math.min(99,p.x[k]+e.x[k])}
@@ -4442,7 +4444,7 @@ function shopSheet(){
 }
 function trainSheet(){
   const p=G.p;if(p.cash==null)p.cash=p.earn||0;p.shop=p.shop||{};
-  return `<b class="big">훈련</b><p class="sub" style="margin:6px 0 4px">코치·캠프·관리 프로그램이에요. 시즌마다 열리는 프로그램이 바뀌고, 항목마다 시즌에 한 번씩 할 수 있어요.</p>
+  return `<b class="big">훈련</b><p class="sub" style="margin:6px 0 4px">코치·캠프·관리 프로그램이에요. 시즌마다 열리는 프로그램이 바뀌고, 항목마다 시즌에 한 번씩 할 수 있고, 시즌이 지날수록 비용이 올라가요.</p>
    ${rows([['보유 자금',won(p.cash),'blue']])}
    ${buyAllCost('shop')?`<button class="btn sec" id="balls" style="margin:10px 0 6px">남은 훈련 모두 하기 · ${won(buyAllCost('shop'))}</button>`:''}
    ${trainStock(p).map(([k,n,d,c])=>{const done=p.shop[k]===G.year,can=!done&&p.cash>=c;return `<div class="slot"><div class="f1"><b>${n}</b><span>${d}</span></div><div class="sbtn"><button class="mini${can?' blue':''}" data-buy="${k}"${can?'':' disabled'}>${done?'완료':won(c)}</button></div></div>`}).join('')}
