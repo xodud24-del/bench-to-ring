@@ -1092,7 +1092,7 @@ const CAP_B={
  PF:{three:-2,drive:-6,handle:-12,pass:-8,perD:-6,stl:-8,spd:-8},
  C:{three:-14,mid:-8,drive:-10,handle:-18,pass:-10,perD:-10,stl:-10,spd:-12,sta:-4}};
 function attrCap(p,k){const b=BODY_IDEAL[p.pos]||[200,100],dh=clamp(((+p.h||b[0])-b[0])/4,-3,3),ape=clamp(((+p.ws||p.h)-(+p.h||0))/3,-2,3);
-  let c=Math.max(p.pot,73)+5+((CAP_B[p.pos]||{})[k]||0);
+  let c=Math.max(p.pot,p.legend?97:73)+5+((CAP_B[p.pos]||{})[k]||0);
   if(['reb','blk','intD','inside'].includes(k))c+=dh*1.3;if(['handle','spd','three'].includes(k))c-=dh*1.3;
   if(['blk','stl','reb','perD'].includes(k))c+=ape;
   if((p.focus||[]).some(f=>FOCUS[f].includes(k)))c+=4;if(((W[p.pos]||{})[k]||0)>=1.1)c+=2;
@@ -1103,8 +1103,10 @@ var PTSK=1.05;
 function recW(rec){let best=null;for(const k in L){const n=lgName(k);if(n&&String(rec).includes(n)&&(!best||n.length>best[0].length))best=[n,L[k].str]}return best?clamp((best[1]-40)/30,.25,1.4):1}
 function medW(m){m=String(m);return /올림픽/.test(m)?1.5:/월드컵/.test(m)?1.2:/유로바스켓|아메리컵/.test(m)?.8:/아시아컵|아시안게임/.test(m)?.45:.6}
 /* 83부터 오르기 어려워지고 90 초중반부터는 크게 막힘 */
-const hiDamp=(v,p)=>v>=83?Math.min(1,Math.max(.08,Math.pow((99.5-v)/16.5,1.7))*(p&&p.pot>=96?1.45:1)):1;/* 타고난 초특급 재능만 90 후반까지 */
+const hiDamp=(v,p)=>p&&p.legend?1:v>=83?Math.min(1,Math.max(.08,Math.pow((99.5-v)/16.5,1.7))*(p&&(p.pot>=96||p.legend)?1.45:1)):1;/* 타고난 초특급 재능만 90 후반까지 */
 function progress(){
+  if(G.p.legend==null)G.p.legend=R()<.03;/* 숨은 세대급 재능 (약 3%) */
+  if(G.p.legend)G.p.pot=Math.max(G.p.pot,97);
   const gap=gearStrip(G.p);
   const p=G.p,x=p.x,last=p.log[p.log.length-1]||{min:0},mb=last.min/36*2,age=p.age;
   const top=Math.max(0,(p.pot-72)*.5),room=k=>Math.max(0,Math.min(Math.max(82,p.pot+top)+(['spd','jmp','str','sta'].includes(k)?3:0),attrCap(p,k)+6)-x[k]);
