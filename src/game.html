@@ -1103,7 +1103,7 @@ var PTSK=1.05;
 function recW(rec){let best=null;for(const k in L){const n=lgName(k);if(n&&String(rec).includes(n)&&(!best||n.length>best[0].length))best=[n,L[k].str]}return best?clamp((best[1]-40)/30,.25,1.4):1}
 function medW(m){m=String(m);return /올림픽/.test(m)?1.5:/월드컵/.test(m)?1.2:/유로바스켓|아메리컵/.test(m)?.8:/아시아컵|아시안게임/.test(m)?.45:.6}
 /* 83부터 오르기 어려워지고 90 초중반부터는 크게 막힘 */
-const hiDamp=v=>v>=83?Math.max(.04,Math.pow((99.5-v)/16.5,2)):1;
+const hiDamp=(v,p)=>v>=83?Math.min(1,Math.max(.08,Math.pow((99.5-v)/16.5,1.7))*(p&&p.pot>=96?1.45:1)):1;/* 타고난 초특급 재능만 90 후반까지 */
 function progress(){
   const gap=gearStrip(G.p);
   const p=G.p,x=p.x,last=p.log[p.log.length-1]||{min:0},mb=last.min/36*2,age=p.age;
@@ -1124,7 +1124,7 @@ function progress(){
     if(fk.has(k))g+=(age<=25?rf(1.4,2.9):age<=28?rf(.7,1.8):rf(.2,1))*(p.buff&&p.buff.train?1.5:1)*luxMul(p,'grow');
     if(k==='iq')g+=age<34?rf(.5,1.8):0;
     if(p.bloomT>0)g+=room(k)*rf(.05,.1);if(p.bustT>0&&g>0)g*=.35;
-    if(g>0)g*=hiDamp(x[k]);/* 90 이상은 갈수록 오르기 어려움 (오버롤 99는 극소수만) */
+    if(g>0)g*=hiDamp(x[k],p);/* 90 이상은 갈수록 오르기 어려움 (오버롤 99는 극소수만) */
     const DECL=Math.min(p.decl,p.iron?33:32)-1+ageDelay(p),DR=p.drate*1.6*ageMul(p);
     if(age>=DECL){
       const d=(age-DECL+1)*DR*.8;
@@ -4347,7 +4347,7 @@ function bindLogo(){
       toast(ok?'로고를 넣었어요':'저장 공간이 부족해요. 다른 이미지를 지워 주세요');reLogo()};im.src=rd.result};rd.readAsDataURL(file)};
 }
 /* ---------- shop / retire / national-team retire / new career ---------- */
-function upX(p,o){for(const k in o)p.x[k]=Math.round(clamp(p.x[k]+o[k]*hiDamp(p.x[k])*(p.age>=31?(['spd','jmp','str','sta'].includes(k)?.25:.6):1),15,Math.max(p.x[k],attrCap(p,k))))}
+function upX(p,o){for(const k in o)p.x[k]=Math.round(clamp(p.x[k]+o[k]*hiDamp(p.x[k],p)*(p.age>=31?(['spd','jmp','str','sta'].includes(k)?.25:.6):1),15,Math.max(p.x[k],attrCap(p,k))))}
 /* ---------- gear ---------- */
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const GSLOT=[['shoe','농구화','👟']];/* 장비는 농구화만 (시그니처 농구화 중심) */
