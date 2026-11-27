@@ -2040,8 +2040,10 @@ function cabinet(p){
 }
 const AWICON=k=>/MVP/.test(k)?'🏆':/챔피언$/.test(k)?'💍':/올스타/.test(k)?'⭐':/수비|블록|스틸/.test(k)?'🛡️':/콘테스트/.test(k)?'🎯':'🏅';
 /* ---------- hall of fame / retired numbers ---------- */
+/* 시즌 기록에 남은 모든 수상(올스타·올-NBA 등 포함). 화면용 p.awards는 MVP만 남기지만 점수·명예의 전당은 이걸로 계산 */
+function honors(p){const h=(p.log||[]).flatMap(e=>(e.aw||[]).map(a=>`${parseInt(e.y)} ${lgName(e.lg)} ${a}`));return h.length>=(p.awards||[]).length?h:(p.awards||[])}
 function legacyOf(p){
-  const A=re=>p.awards.filter(a=>re.test(a)).length;
+  const HN=honors(p),A=re=>HN.filter(a=>re.test(a)).length;
   const nbaRings=p.titles.filter(t=>/NBA 우승/.test(t)).length;
   const nbaLog=p.log.filter(e=>e.lg==='NBA'),nbaGP=nbaLog.reduce((s,e)=>s+e.gp,0),nbaPts=nbaLog.reduce((s,e)=>s+Math.round(e.ppg*e.gp),0);
   const nba=A(/NBA 정규리그 MVP/)*14+A(/NBA 파이널 MVP/)*8+nbaRings*5+A(/올-NBA 퍼스트/)*6+A(/올-NBA 세컨드/)*4+A(/올-NBA 서드/)*2.5+A(/NBA 올스타$/)*2.5+A(/NBA 올해의 수비수/)*5+A(/NBA 신인상/)*2+A(/NBA 득점왕/)*3+A(/올-디펜시브/)*1.5+nbaGP/100+nbaPts/2000*2+p.nt.medals.length*1.5;
@@ -2056,7 +2058,7 @@ function legacyOf(p){
   for(const t of new Set(p.teams)){
     const lgs=p.log.filter(e=>e.team===t);if(!lgs.length)continue;const lg=lgs[0].lg;if(!L[lg]||!L[lg].pro)continue;
     const yrs=new Set(lgs.map(e=>parseInt(e.y))),inY=a=>yrs.has(parseInt(a));
-    const ti=p.titles.filter(x=>x.includes(`(${t})`)).length,mv=p.awards.filter(a=>inY(a)&&/정규리그 MVP|파이널 MVP/.test(a)).length,as=p.awards.filter(a=>inY(a)&&/올스타$/.test(a)).length,an=p.awards.filter(a=>inY(a)&&/올-NBA|베스트5/.test(a)).length;
+    const ti=p.titles.filter(x=>x.includes(`(${t})`)).length,mv=HN.filter(a=>inY(a)&&/정규리그 MVP|파이널 MVP/.test(a)).length,as=HN.filter(a=>inY(a)&&/올스타$/.test(a)).length,an=HN.filter(a=>inY(a)&&/올-NBA|베스트5/.test(a)).length;
     const sc=lgs.length*2+ti*6+mv*8+as*2+an*1.5;
     if(lgs.length>=5&&sc>=24||lgs.length>=4&&ti>=2)ret.push({team:t,lg,yrs:lgs.length,num:p.num});
   }
@@ -2694,9 +2696,9 @@ Object.assign(KO,{
 
 /* ---------- end ---------- */
 function endCareer(){
-  const p=G.p,c=G.coach;if(!p.legacyDone)legacyEvents();
-  const sc=Math.round(p.tot.pts/100+p.titles.reduce((t,a)=>t+25*recW(a),0)+p.awards.filter(a=>/MVP/.test(a)).reduce((t,a)=>t+30*recW(a),0)+p.awards.filter(a=>/올스타/.test(a)).reduce((t,a)=>t+5*recW(a),0)+p.nt.medals.reduce((t,m)=>t+8*medW(m),0));
-  const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:p.awards.filter(a=>/정규리그 MVP/.test(a)).length,nbamvp:p.awards.filter(a=>/NBA 정규리그 MVP/.test(a)).length,povr:Math.max(0,...(p.log||[]).map(e=>+e.ovr||+e.o||0),curOvr()),awn:p.awards.length,allstar:p.awards.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,score:sc,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
+  const p=G.p,c=G.coach,HN=honors(p);if(!p.legacyDone)legacyEvents();
+  const sc=Math.round(p.tot.pts/100+p.titles.reduce((t,a)=>t+25*recW(a),0)+HN.filter(a=>/MVP/.test(a)).reduce((t,a)=>t+30*recW(a),0)+HN.filter(a=>/올스타/.test(a)).reduce((t,a)=>t+5*recW(a),0)+p.nt.medals.reduce((t,m)=>t+8*medW(m),0));
+  const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:HN.filter(a=>/정규리그 MVP/.test(a)).length,nbamvp:HN.filter(a=>/NBA 정규리그 MVP/.test(a)).length,povr:Math.max(0,...(p.log||[]).map(e=>+e.ovr||+e.o||0),curOvr()),awn:HN.length,allstar:HN.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,score:sc,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
   /* 감독·구단주 모드는 없어짐: 선수 기록만 남김 */
   const hof=store.get('b2r_hof')||[];hof.push(e);store.set('b2r_hof',hof);ghPush(e);
   G.done=true;G.final=e;G.q=[];
@@ -4082,11 +4084,12 @@ function rkSub(){
     const map=snap=>snap.docs.map(d=>{const v=d.data()||{};return {...ghClean(v),me:v.dev===GH_DEV,id:d.id}});
     const ua=f.onSnapshot(qa,sn=>{got.a=map(sn);done()},()=>{got.a=[];done()}),ub=f.onSnapshot(qb,sn=>{got.b=map(sn);done()},()=>{got.b=got.b||[];if(!got.a){clearTimeout(to);RK.st='err';RK.rows=local.map(e=>({...e,me:true}));rkRender()}});
     RK.unsub=()=>{ua();ub()};return}
-  const fk=RK.sort;RK.unsub=f.onSnapshot(f.query(col,f.orderBy(fk,'desc'),f.limit(100)),snap=>{
-    clearTimeout(to);RK.rows=snap.docs.map(d=>{const v=d.data()||{};return {...ghClean(v),me:v.dev===GH_DEV,id:d.id}});RK.st='ok';rkRender();
+  const fk=RK.sort;RK.unsub=f.onSnapshot(f.query(col,f.orderBy(fk,'desc'),f.limit(200)),snap=>{
+    clearTimeout(to);/* 예전 감독·구단주 점수를 뺀 값으로 다시 정렬 */RK.rows=snap.docs.map(d=>{const v=d.data()||{};return {...ghClean(v),me:v.dev===GH_DEV,id:d.id}}).sort((a,b)=>(b[fk]||0)-(a[fk]||0)).slice(0,100);
+    if(RK.mine){const i=RK.rows.findIndex(r=>r.me&&r.name===RK.mine.name&&r.pts===RK.mine.pts);if(i>=0)RK.myRank=i+1}RK.st='ok';rkRender();
   },()=>{clearTimeout(to);RK.st='err';RK.rows=local.map(e=>({...e,me:true}));rkRender()});
   if(RK.mine&&f.getCountFromServer){const key=RK.sort,mv=RK.mine[key]||0;
-    f.getCountFromServer(f.query(col,f.where(key,'>',mv))).then(c=>{if(RK.sort===key){RK.myRank=c.data().count+1;rkRender()}}).catch(()=>{})}
+    f.getCountFromServer(f.query(col,f.where(key,'>',mv))).then(c=>{if(RK.sort===key&&!(RK.rows||[]).some(r=>r.me&&r.name===RK.mine.name&&r.pts===RK.mine.pts)){RK.myRank=c.data().count+1;rkRender()}}).catch(()=>{})}
 }
 function rkOpen(){
   let v=document.getElementById('rankv');
