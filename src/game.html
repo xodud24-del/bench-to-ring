@@ -4067,8 +4067,9 @@ function ghBind(){$$('#b5tab button').forEach(b=>b.onclick=()=>{GH.b5=b.dataset.
 const RK={role:'p',sort:'legend',unsub:null,rows:[],st:'idle',mine:null,myRank:null};
 const RK_DEF={
   p:{n:'선수',sorts:[['legend','NBA MVP 순'],['score','레거시 점수'],['pts','통산 득점'],['titles','우승'],['mvp','전체 MVP']],has:e=>true}};
-const rkLeg=(a,b)=>(b.nbamvp||0)-(a.nbamvp||0)||(b.povr||0)-(a.povr||0)||(b.awn||0)-(a.awn||0)||(b.pts||0)-(a.pts||0);
-function rkVal(e,k){if(k==='legend')return `NBA MVP ${e.nbamvp||0}${e.povr?` · OVR ${e.povr}`:''}`;const v=e[k]||0;return k==='pts'||k==='cw'?`${v.toLocaleString()}`:k==='oval'?won(v):k==='oy'?`${v}년`:k==='score'||k==='cscore'||k==='oscore'?`${v}점`:`${v}회`}
+/* NBA MVP가 같으면 레거시 점수 순. (예전 기록은 최고 OVR·수상 수가 저장 안 돼 있어서 그걸로 정렬하면 맨 아래로 밀림) */
+const rkLeg=(a,b)=>(b.nbamvp||0)-(a.nbamvp||0)||(b.score||0)-(a.score||0)||(b.pts||0)-(a.pts||0);
+function rkVal(e,k){if(k==='legend')return `NBA MVP ${e.nbamvp||0} · ${e.score||0}점`;const v=e[k]||0;return k==='pts'||k==='cw'?`${v.toLocaleString()}`:k==='oval'?won(v):k==='oy'?`${v}년`:k==='score'||k==='cscore'||k==='oscore'?`${v}점`:`${v}회`}
 function rkLocal(){return (store.get('b2r_hof')||[]).map(ghClean).filter(RK_DEF[RK.role].has)}
 function rkSub(){
   if(RK.unsub){RK.unsub();RK.unsub=null}
