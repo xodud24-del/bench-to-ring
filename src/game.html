@@ -2698,7 +2698,7 @@ Object.assign(KO,{
 function endCareer(){
   const p=G.p,c=G.coach,HN=honors(p);if(!p.legacyDone)legacyEvents();
   const sc=Math.round(p.tot.pts/100+p.titles.reduce((t,a)=>t+25*recW(a),0)+HN.filter(a=>/MVP/.test(a)).reduce((t,a)=>t+30*recW(a),0)+HN.filter(a=>/올스타/.test(a)).reduce((t,a)=>t+5*recW(a),0)+p.nt.medals.reduce((t,m)=>t+8*medW(m),0));
-  const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:HN.filter(a=>/정규리그 MVP/.test(a)).length,nbamvp:HN.filter(a=>/NBA 정규리그 MVP/.test(a)).length,povr:Math.max(0,...(p.log||[]).map(e=>+e.ovr||+e.o||0),curOvr()),awn:HN.length,allstar:HN.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,score:sc,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
+  const e={name:p.name,nat:p.nat,pos:p.pos,num:p.num,seasons:p.log.length,teams:p.teams.slice(0,6),pts:p.tot.pts,gp:p.tot.gp,hi:p.hi.pts,titles:p.titles.length,mvp:HN.filter(a=>/정규리그 MVP/.test(a)).length,nbamvp:HN.filter(a=>/NBA 정규리그 MVP/.test(a)).length,povr:Math.max(0,...(p.log||[]).map(e=>+e.ovr||+e.o||0),curOvr()),awn:HN.length,allstar:HN.filter(a=>/올스타/.test(a)).length,medals:p.nt.medals.length,score:sc,hv:2,hofs:(p.hof||[]).map(h=>h.n),ret:(p.retNum||[]).map(r=>r.team),when:new Date().toISOString().slice(0,10),a:{skin:p.skin,hair:p.hair,hairc:p.hairc,eyec:p.eyec,eyes:p.eyes,mouth:p.mouth,band:p.band,fw:p.fw,ey:p.ey,es:p.es,esz:p.esz,by:p.by,ny:p.ny,my:p.my,num:p.num}};
   /* 감독·구단주 모드는 없어짐: 선수 기록만 남김 */
   const hof=store.get('b2r_hof')||[];hof.push(e);store.set('b2r_hof',hof);ghPush(e);
   G.done=true;G.final=e;G.q=[];
@@ -3991,11 +3991,13 @@ function head(eye,title,desc){return `<div class="hd">${eye?`<p class="eye">${es
 /* ---------- 전체 명예의 전당 (공유) ---------- */
 const GH={db:null,runs:[],st:'loading',tab:'score',ro:false,pending:[]};
 function ghClean(e){const n=v=>Number.isFinite(+v)?+v:0,t=v=>String(v||'').slice(0,30);
-  const o={name:String(e.name||'').slice(0,20),nat:String(e.nat||''),pos:String(e.pos||''),num:n(e.num),seasons:n(e.seasons),pts:n(e.pts),gp:n(e.gp),hi:n(e.hi),titles:n(e.titles),mvp:n(e.mvp),allstar:n(e.allstar),score:n(e.score),teams:(e.teams||[]).slice(0,6).map(String),when:String(e.when||''),a:JSON.parse(JSON.stringify(e.a||{}))};
+  const o={hv:e.hv||(e.a&&e.a.hv)||0,name:String(e.name||'').slice(0,20),nat:String(e.nat||''),pos:String(e.pos||''),num:n(e.num),seasons:n(e.seasons),pts:n(e.pts),gp:n(e.gp),hi:n(e.hi),titles:n(e.titles),mvp:n(e.mvp),allstar:n(e.allstar),score:n(e.score),teams:(e.teams||[]).slice(0,6).map(String),when:String(e.when||''),a:JSON.parse(JSON.stringify(e.a||{}))};
   for(const k of ['seasons','titles','mvp','score','pts','cscore','cw','ctitles','coty','oscore','otitles','oy'])if(o.a['r_'+k]!=null){e={...e,[k]:o.a['r_'+k]};if(k in o)o[k]=n(o.a['r_'+k])}
   {const nm=n(e.nbamvp!=null?e.nbamvp:(e.a&&e.a.nbamvp));o.a.nbamvp=nm;o.nbamvp=nm;const po=n(e.povr!=null?e.povr:(e.a&&e.a.povr)),aw=n(e.awn!=null?e.awn:(e.a&&e.a.awn));o.a.povr=po;o.povr=po;o.a.awn=aw;o.awn=aw}
   /* 예전 기록의 감독·구단주 점수는 빼고 선수 기록만 (기록 개편) */if(e.cscore!=null||n(e.ctitles)>0)o.score=Math.max(0,o.score-n(e.ctitles)*20-n(e.cy));
   if(e.oscore!=null||n(e.otitles)>0)o.score=Math.max(0,o.score-n(e.otitles)*20-n(e.oy)*2);
+  /* 11/21~11/27 사이 은퇴 기록은 올스타 등 시즌 수상이 점수에서 빠졌음: 득점으로 올스타 횟수를 추정해 보정 */
+  if(!o.hv&&o.allstar===0&&String(e.when||'')>='2026-11-21'&&String(e.when||'')<='2026-11-27'&&o.pts>=5000){const est=Math.min(Math.max(0,o.seasons-3),Math.round(o.pts/2300));o.allstar=est;o.score+=Math.round(est*6.5)}
   return o}
 
 function ghRender(){const el=document.getElementById('ghof');if(el)el.innerHTML=ghofInner();ghBind()}
@@ -4013,7 +4015,7 @@ async function ghRetry(){/* 예전에 저장 실패한 내 기록을 다시 올�
   for(const e of h){try{const q=await f.getDocs(f.query(f.collection(GH.db,'hof'),f.where('dev','==',GH_DEV),f.where('when','==',String(e.when||'')),f.where('score','==',Math.min(99999,+e.score||0)),f.limit(1)));if(q.empty)await ghPush(e);else ghMarkSent(e)}catch(err){}}}
 async function ghPush(e){
   if(!GH.db){GH.pending.push(e);return}
-  try{const d={...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()};delete d.nbamvp;delete d.povr;delete d.awn;
+  try{const d={...ghClean(e),dev:GH_DEV,at:GH_FS.serverTimestamp()};if(d.hv)d.a.hv=d.hv;delete d.hv;delete d.nbamvp;delete d.povr;delete d.awn;
     /* 서버 규칙 한도를 넘는 값은 실제 값을 a에 보관하고 본 필드는 한도 안으로 */
     const cap=(k,mx)=>{if(d[k]>mx){d.a['r_'+k]=d[k];d[k]=mx}};cap('seasons',40);cap('titles',40);cap('mvp',40);cap('score',99999);cap('pts',199999);
     if('cscore' in d){cap('cscore',99999);cap('cw',9999);cap('ctitles',60);cap('coty',60)}if('oscore' in d){cap('oscore',99999);cap('otitles',80);cap('oy',80)}
